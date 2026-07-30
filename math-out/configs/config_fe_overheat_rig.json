@@ -1,0 +1,89 @@
+{
+    "providerName": "overheat",
+    "gameName": "OVERHEAT",
+    "gameID": "overheat_rig",
+    "rtp": 0.97,
+    "numReels": 0,
+    "numRows": [],
+    "betModes": {
+        "idle": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 1.2
+        },
+        "eco": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 1.5
+        },
+        "standard": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 2.0
+        },
+        "boost": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 3.0
+        },
+        "overclock": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 5.0
+        },
+        "nitro": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 7.0
+        },
+        "furnace": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 10.0
+        },
+        "inferno": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 15.0
+        },
+        "meltdown": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 25.0
+        },
+        "reactor": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 50.0
+        },
+        "plasma": {
+            "cost": 1.0,
+            "feature": true,
+            "buyBonus": false,
+            "rtp": 0.97,
+            "max_win": 100.0
+        }
+    },
+    "symbols": [],
+    "paddingReels": {}
+}
