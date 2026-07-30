@@ -1,0 +1,6 @@
+math-sdk/
+web-sdk/
+env/
+__pycache__/
+*.pyc
+math-out/

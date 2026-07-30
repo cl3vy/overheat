@@ -1,0 +1,70 @@
+{
+    "modes": [
+        {
+            "name": "idle",
+            "cost": 1.0,
+            "events": "books_idle.jsonl.zst",
+            "weights": "lookUpTable_idle_0.csv"
+        },
+        {
+            "name": "eco",
+            "cost": 1.0,
+            "events": "books_eco.jsonl.zst",
+            "weights": "lookUpTable_eco_0.csv"
+        },
+        {
+            "name": "standard",
+            "cost": 1.0,
+            "events": "books_standard.jsonl.zst",
+            "weights": "lookUpTable_standard_0.csv"
+        },
+        {
+            "name": "boost",
+            "cost": 1.0,
+            "events": "books_boost.jsonl.zst",
+            "weights": "lookUpTable_boost_0.csv"
+        },
+        {
+            "name": "overclock",
+            "cost": 1.0,
+            "events": "books_overclock.jsonl.zst",
+            "weights": "lookUpTable_overclock_0.csv"
+        },
+        {
+            "name": "nitro",
+            "cost": 1.0,
+            "events": "books_nitro.jsonl.zst",
+            "weights": "lookUpTable_nitro_0.csv"
+        },
+        {
+            "name": "furnace",
+            "cost": 1.0,
+            "events": "books_furnace.jsonl.zst",
+            "weights": "lookUpTable_furnace_0.csv"
+        },
+        {
+            "name": "inferno",
+            "cost": 1.0,
+            "events": "books_inferno.jsonl.zst",
+            "weights": "lookUpTable_inferno_0.csv"
+        },
+        {
+            "name": "meltdown",
+            "cost": 1.0,
+            "events": "books_meltdown.jsonl.zst",
+            "weights": "lookUpTable_meltdown_0.csv"
+        },
+        {
+            "name": "reactor",
+            "cost": 1.0,
+            "events": "books_reactor.jsonl.zst",
+            "weights": "lookUpTable_reactor_0.csv"
+        },
+        {
+            "name": "plasma",
+            "cost": 1.0,
+            "events": "books_plasma.jsonl.zst",
+            "weights": "lookUpTable_plasma_0.csv"
+        }
+    ]
+}
