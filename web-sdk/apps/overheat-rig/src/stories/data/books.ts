@@ -1,81 +1,103 @@
-import {
-	RTP,
-	SALVAGE_PAYOUT,
-	SALVAGE_PROB,
-	WIN_TIERS,
-	type RigId,
-	type WinTier,
-} from '../../game/constants';
+import { LADDERS, type RigId, type WinTier } from '../../game/constants';
 import type { BookEvent } from '../../game/typesBookEvent';
 
 export type FixtureBook = {
 	id: number;
 	payoutMultiplier: number;
 	events: BookEvent[];
-	criteria: WinTier | 'salvage' | 'bust';
+	criteria: WinTier | 'bank' | 'bust';
 };
 
-type WinOptions = { tier?: WinTier; couldHaveReached?: number };
-type BustOptions = { crashTemp: number; salvage?: boolean };
+const floor2 = (x: number) => Math.floor(x * 100) / 100;
 
-const winBook = (id: number, rigTier: RigId, targetTemp: number, options: WinOptions = {}): FixtureBook => {
+type WinOptions = { tier?: WinTier; couldHaveReached?: number };
+
+const winBook = (id: number, rigTier: RigId, options: WinOptions = {}): FixtureBook => {
+	const ladder = LADDERS[rigTier];
 	const tier = options.tier ?? 'clean';
-	const mult = WIN_TIERS.find((t) => t.tier === tier)!.mult;
-	const bankedAt = Math.round(targetTemp * mult * 100) / 100;
+	const bankedAt = ladder.tiers.find((t) => t.tier === tier)!.payout;
 	const payout = Math.round(bankedAt * 100);
 	const events: BookEvent[] = [
-		{ index: 0, type: 'boot', rigTier, targetTemp, hashrate: 420 },
+		{ index: 0, type: 'boot', rigTier, targetTemp: ladder.target, hashrate: 420 },
 		{ index: 1, type: 'heat', crashTemp: bankedAt },
-		{
-			index: 2,
-			type: 'shutdown',
-			bankedAt,
-			couldHaveReached: Math.max(options.couldHaveReached ?? bankedAt, bankedAt),
-			tier,
-		},
-		{ index: 3, type: 'setTotalWin', amount: payout },
-		{ index: 4, type: 'finalWin', amount: payout },
 	];
+	ladder.rungs.forEach((rung, i) => {
+		events.push({
+			index: 2 + i,
+			type: 'bank',
+			temp: rung.temp,
+			amount: Math.round(rung.bank * 100),
+		});
+	});
+	let index = 2 + ladder.rungs.length;
+	events.push({
+		index: index++,
+		type: 'shutdown',
+		bankedAt,
+		couldHaveReached: Math.max(options.couldHaveReached ?? bankedAt, bankedAt),
+		tier,
+	});
+	events.push({ index: index++, type: 'setTotalWin', amount: payout });
+	events.push({ index: index, type: 'finalWin', amount: payout });
 	return { id, payoutMultiplier: payout, events, criteria: tier };
 };
 
-const bustBook = (id: number, rigTier: RigId, targetTemp: number, options: BustOptions): FixtureBook => {
-	const payout = options.salvage ? Math.round(SALVAGE_PAYOUT * 100) : 0;
+const bustBook = (id: number, rigTier: RigId, crashTemp: number): FixtureBook => {
+	const ladder = LADDERS[rigTier];
+	const crossed = ladder.rungs.filter((rung) => crashTemp >= rung.temp - 1e-9);
+	const payout = crossed.length ? Math.round(crossed[crossed.length - 1].bank * 100) : 0;
 	const events: BookEvent[] = [
-		{ index: 0, type: 'boot', rigTier, targetTemp, hashrate: 420 },
-		{ index: 1, type: 'heat', crashTemp: options.crashTemp },
-		{ index: 2, type: 'meltdown', crashTemp: options.crashTemp },
+		{ index: 0, type: 'boot', rigTier, targetTemp: ladder.target, hashrate: 420 },
+		{ index: 1, type: 'heat', crashTemp },
 	];
-	let index = 3;
-	if (options.salvage) {
-		events.push({ index: index++, type: 'salvage', amount: payout });
-	}
+	crossed.forEach((rung, i) => {
+		events.push({
+			index: 2 + i,
+			type: 'bank',
+			temp: rung.temp,
+			amount: Math.round(rung.bank * 100),
+		});
+	});
+	let index = 2 + crossed.length;
+	events.push({ index: index++, type: 'meltdown', crashTemp, amount: payout });
 	events.push({ index: index++, type: 'setTotalWin', amount: payout });
 	events.push({ index: index, type: 'finalWin', amount: payout });
-	return { id, payoutMultiplier: payout, events, criteria: options.salvage ? 'salvage' : 'bust' };
+	return { id, payoutMultiplier: payout, events, criteria: crossed.length ? 'bank' : 'bust' };
 };
 
-export const bustInstant = bustBook(1, 'standard', 2, { crashTemp: 1.0 });
-export const bustFar = bustBook(2, 'overclock', 5, { crashTemp: 1.42 });
-export const bustMid = bustBook(3, 'furnace', 10, { crashTemp: 6.35 });
-export const bustNearMiss = bustBook(4, 'overclock', 5, { crashTemp: 4.87 });
-export const bustSalvage = bustBook(8, 'overclock', 5, { crashTemp: 3.21, salvage: true });
-export const winEco = winBook(5, 'eco', 1.5, { couldHaveReached: 2.1 });
-export const winOverclock = winBook(6, 'overclock', 5, { couldHaveReached: 8.3 });
-export const winPlasma = winBook(7, 'plasma', 100, { couldHaveReached: 233.6 });
-export const winOverdrive = winBook(9, 'overclock', 5, {
+// fixtures anchored to the real ladders so bank events always match
+const oc = LADDERS.overclock;
+const furnace = LADDERS.furnace;
+const plasma = LADDERS.plasma;
+
+export const bustInstant = bustBook(1, 'standard', 1.0);
+/** fried before the first checkpoint: a true zero */
+export const bustFar = bustBook(2, 'overclock', floor2(Math.max(1.01, oc.rungs[0].temp - 0.02)));
+/** a couple of rungs secured, still below stake */
+export const bankEarly = bustBook(3, 'furnace', floor2(furnace.rungs[2].temp + 0.01));
+/** deep partial: most of the ladder banked, well above stake */
+export const bankDeep = bustBook(4, 'plasma', floor2(plasma.rungs[10].temp + 0.05));
+/** died one notch short of the next checkpoint (rung near miss) */
+export const bankNearRung = bustBook(5, 'furnace', floor2(furnace.rungs[6].temp - 0.02));
+/** died within sight of the target (signature near miss) */
+export const bustNearMiss = bustBook(6, 'overclock', floor2(oc.target - 0.07));
+export const winEco = winBook(7, 'eco', { couldHaveReached: 2.1 });
+export const winOverclock = winBook(8, 'overclock', { couldHaveReached: 8.3 });
+export const winPlasma = winBook(9, 'plasma', { couldHaveReached: 233.6 });
+export const winOverdrive = winBook(10, 'overclock', {
 	tier: 'overdrive',
 	couldHaveReached: 9.4,
 });
-export const winCritical = winBook(10, 'boost', 3, { tier: 'critical', couldHaveReached: 11.2 });
-export const winGolden = winBook(11, 'furnace', 10, { tier: 'golden', couldHaveReached: 142.7 });
+export const winCritical = winBook(11, 'boost', { tier: 'critical', couldHaveReached: 11.2 });
+export const winGolden = winBook(12, 'furnace', { tier: 'golden', couldHaveReached: 142.7 });
 
 export const allBooks: FixtureBook[] = [
 	bustInstant,
 	bustFar,
-	bustMid,
+	bankEarly,
+	bankDeep,
+	bankNearRung,
 	bustNearMiss,
-	bustSalvage,
 	winEco,
 	winOverclock,
 	winPlasma,
@@ -84,32 +106,44 @@ export const allBooks: FixtureBook[] = [
 	winGolden,
 ];
 
-const floor2 = (x: number) => Math.floor(x * 100) / 100;
+/** hyperbolic draw inside [lo, hi): P(C >= x | interval), inverse transform */
+const drawInInterval = (lo: number, hi: number) => {
+	const u = Math.random();
+	const x = 1 / (1 / lo - u * (1 / lo - 1 / hi));
+	return Math.min(Math.max(floor2(x), lo), floor2(hi - 0.01));
+};
 
 /**
- * Draw a book from the true spicy distribution, mirroring the math generator:
- * win tiers pay mult x target with probability rtpShare x RTP / payout,
- * salvage pays 0.4x on ~9.7% of spins, the rest bust. Storybook only --
- * live play draws from the RGS weighted lookup tables, but this keeps the
- * "random" demo story honest about the odds.
+ * Draw a book from the true checkpoint-banking distribution, mirroring the
+ * math generator's exact class probabilities (shipped in ladders.json).
+ * Storybook only -- live play draws from the RGS weighted lookup tables, but
+ * this keeps the "random" demo story honest about the odds.
  */
-export const drawRealisticBook = (rigTier: string, targetTemp: number): FixtureBook => {
+export const drawRealisticBook = (rigTier: RigId): FixtureBook => {
+	const ladder = LADDERS[rigTier];
 	let u = Math.random();
-	for (const { tier, mult, rtpShare } of WIN_TIERS) {
-		const p = (rtpShare * RTP) / (mult * targetTemp);
-		if (u < p) {
-			// post-mortem tease: P(X >= x | X >= banked) = banked / x
-			const banked = targetTemp * mult;
+
+	for (const tier of ladder.tiers) {
+		if (u < tier.prob) {
 			const couldHaveReached = floor2(
-				Math.min(banked / Math.max(Math.random(), 1e-9), 5000),
+				Math.min(tier.payout / Math.max(Math.random(), 1e-9), 5000),
 			);
-			return winBook(Date.now(), rigTier as RigId, targetTemp, { tier, couldHaveReached });
+			return winBook(Date.now(), rigTier, { tier: tier.tier, couldHaveReached });
 		}
-		u -= p;
+		u -= tier.prob;
 	}
-	const salvage = u < SALVAGE_PROB;
-	// bust crash temp: P(C = 1) = 1 - RTP, else P(C >= x) = RTP / x, capped below target
-	const raw = Math.random() >= RTP ? 1.0 : Math.min(1 / Math.max(Math.random(), 1e-9), 5000);
-	const crashTemp = Math.max(1.0, Math.min(floor2(raw), floor2(targetTemp - 0.01)));
-	return bustBook(Date.now(), rigTier as RigId, targetTemp, { crashTemp, salvage });
+
+	for (let i = 0; i < ladder.rungs.length; i += 1) {
+		const rung = ladder.rungs[i];
+		if (u < rung.prob) {
+			const hi = i + 1 < ladder.rungs.length ? ladder.rungs[i + 1].temp : ladder.target;
+			return bustBook(Date.now(), rigTier, drawInInterval(rung.temp, hi));
+		}
+		u -= rung.prob;
+	}
+
+	// bust below the first rung; some fry on boot
+	const crashTemp =
+		Math.random() < 0.12 ? 1.0 : drawInInterval(1.0, ladder.rungs[0].temp);
+	return bustBook(Date.now(), rigTier, crashTemp);
 };

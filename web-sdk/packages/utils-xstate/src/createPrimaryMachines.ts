@@ -6,15 +6,29 @@ import { requestBet, requestEndRound } from 'rgs-requests';
 
 import type { BaseBet } from './types';
 
+const placeBet = () =>
+	requestBet({
+		rgsUrl: stateUrlDerived.rgsUrl(),
+		sessionID: stateUrlDerived.sessionID(),
+		currency: stateBet.currency,
+		mode: stateBet.activeBetModeKey,
+		amount: stateBet.betAmount,
+	});
+
+const isActiveRoundError = (data: { error?: string; message?: string } | undefined) =>
+	data?.error === 'ERR_VAL' && `${data?.message ?? ''}`.includes('active round');
+
 const handleRequestBet = async ({ onError }: { onError: () => void }) => {
 	try {
-		const data = await requestBet({
-			rgsUrl: stateUrlDerived.rgsUrl(),
-			sessionID: stateUrlDerived.sessionID(),
-			currency: stateBet.currency,
-			mode: stateBet.activeBetModeKey,
-			amount: stateBet.betAmount,
-		});
+		let data = await placeBet();
+
+		// Self-heal a stranded round: if a previous round's end-round call was
+		// dropped (e.g. rate limited), the RGS rejects every new play with
+		// "player has active round". Close the stale round and retry once.
+		if (isActiveRoundError(data)) {
+			await handleRequestEndRound();
+			data = await placeBet();
+		}
 
 		if (data?.error) {
 			throw data;
@@ -42,26 +56,35 @@ const handleRequestBet = async ({ onError }: { onError: () => void }) => {
 const handleRequestEndRound = async () => {
 	if(stateUrlDerived.replay()) return;
 
-	try {
-		const data = await requestEndRound({
-			sessionID: stateUrlDerived.sessionID(),
-			rgsUrl: stateUrlDerived.rgsUrl(),
-		});
+	// The RGS rejects the next /wallet/play while a round is still open, so a
+	// silently dropped end-round strands the player on their next bet. Retry
+	// transient failures with a short backoff before giving up.
+	const attempts = 3;
+	for (let attempt = 1; attempt <= attempts; attempt += 1) {
+		try {
+			const data = await requestEndRound({
+				sessionID: stateUrlDerived.sessionID(),
+				rgsUrl: stateUrlDerived.rgsUrl(),
+			});
 
-		if (data?.error) {
-			throw data;
-		}
+			if (data?.error) {
+				throw data;
+			}
 
-		if (data?.balance?.amount !== undefined) {
-			return data;
-		} else {
-			throw {
-				error: 'Empty amount in data.balance',
-				message: JSON.stringify({ data }),
-			};
+			if (data?.balance?.amount !== undefined) {
+				return data;
+			} else {
+				throw {
+					error: 'Empty amount in data.balance',
+					message: JSON.stringify({ data }),
+				};
+			}
+		} catch (error) {
+			console.error(error);
+			if (attempt < attempts) {
+				await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
+			}
 		}
-	} catch (error) {
-		console.error(error);
 	}
 };
 

@@ -168,14 +168,15 @@ export const playOverdriveSurge = (multiple: number) => {
 	} catch {}
 };
 
-/** Scrap clatter + small register ding: partial salvage on a bust. */
-export const playSalvage = () => {
+/** Checkpoint rung locked mid-climb: vault click + coin ding, rising with
+ * every rung crossed so a deep run literally sounds like an ascent. */
+export const playBankTick = (rungIndex: number) => {
 	if (!enabled()) return;
 	try {
-		beep(140, 60, { type: 'square', volume: 0.05, delayMs: 0 });
-		beep(110, 80, { type: 'square', volume: 0.04, delayMs: 90 });
-		beep(1320, 90, { type: 'triangle', volume: 0.045, delayMs: 220 });
-		beep(1760, 140, { type: 'triangle', volume: 0.04, delayMs: 320 });
+		const base = 660 + Math.min(rungIndex, 10) * 70;
+		beep(150, 40, { type: 'square', volume: 0.05 });
+		beep(base, 60, { type: 'triangle', volume: 0.045, delayMs: 45 });
+		beep(base * 1.5, 90, { type: 'triangle', volume: 0.04, delayMs: 110 });
 	} catch {}
 };
 

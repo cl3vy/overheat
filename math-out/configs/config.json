@@ -15,12 +15,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_idle_0.csv",
-                    "sha256": "905ef95cbb0d32fafc4d2945100404fd5afe89656482ba07edd22ce42c4526e0"
+                    "sha256": "cfa99ca96ed458be908f697302a014645e0771828e5462c9061a67e39b153943"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 0.7292,
+            "std": 1.1047,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -28,7 +28,7 @@
             "maxWin": 12.0,
             "booksFile": {
                 "file": "books_idle.jsonl.zst",
-                "sha256": "3afc421d64e393b68023d197c0c99c41696bc9d0c6a9dfc9e6ba4423af0919d3"
+                "sha256": "424d15d6e46a5ecf153675ecf929e1c22fe02708b145405341bdfa21b04b4ea8"
             }
         },
         {
@@ -36,12 +36,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_eco_0.csv",
-                    "sha256": "2f5bb56507fdca433fb1b83919991ec0e4874d3f74db8215c467d2620083f20b"
+                    "sha256": "29972e7898f870afde569faa6c7336f0276631a8f3634d4d08caad25c03b75b6"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 0.9453,
+            "std": 1.2631,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -49,7 +49,7 @@
             "maxWin": 15.0,
             "booksFile": {
                 "file": "books_eco.jsonl.zst",
-                "sha256": "d2211dc98ff4d87d56f27c62c8c8afbf851fbe2fbcdab7528260165397e6ac30"
+                "sha256": "7c13362061adf8a9b5c287b62d1b555979669968e8f9e72dc1290a373d66cc8a"
             }
         },
         {
@@ -57,12 +57,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_standard_0.csv",
-                    "sha256": "99d01116237e1d9966731574ba1fb2211fe1b8bab4533dd39d026b9cf9e2c3ca"
+                    "sha256": "0b3ad085e842e5e352d57caf8053ec7217941cfea822eae1100473c971d3fd9b"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 1.2234,
+            "std": 1.4838,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -70,7 +70,7 @@
             "maxWin": 20.0,
             "booksFile": {
                 "file": "books_standard.jsonl.zst",
-                "sha256": "889d631ddc2100c3678897d1642cb30d5b30c57d85d0c61579ecf998f25055a3"
+                "sha256": "7f78bb6ed934ae9d4e7098ff365e6ccf44a6509e3dc3cbdf62cee1c904a3f5fe"
             }
         },
         {
@@ -78,12 +78,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_boost_0.csv",
-                    "sha256": "683edd1462370af8023fe49106841dbabc3da01b6d6b90fdf20c4fc344afa1f0"
+                    "sha256": "13006afbd0ecbe591f45f92f2200c1233a5fe1fb70acd1ed700d94173f1a5863"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 1.6441,
+            "std": 1.8356,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -91,7 +91,7 @@
             "maxWin": 30.0,
             "booksFile": {
                 "file": "books_boost.jsonl.zst",
-                "sha256": "4ac684d33e6b5e0c374556bb4d56dbef824662e1c0f098e361f85881d6fa8e45"
+                "sha256": "d8e58e2c1b370a6076312ee43da45cc993bf2e68f80f8d7b61ba632175e146d4"
             }
         },
         {
@@ -99,12 +99,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_overclock_0.csv",
-                    "sha256": "fcef408166a5b2931e615eda85868dad743089034e520ac2b152d6c5cdef9232"
+                    "sha256": "313098df5cf5ecd900a7fefc52288fddca0502510079c8b00a43e201b29a0ef0"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 2.2617,
+            "std": 2.3485,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -112,7 +112,7 @@
             "maxWin": 50.0,
             "booksFile": {
                 "file": "books_overclock.jsonl.zst",
-                "sha256": "af95bba8bef23556a1b5f778feac272d65b40c8e7dc63d5a4ad50dcbc1cd203d"
+                "sha256": "de1022ff4676bc60ace14f177d3c311fa534b6659b2ff00aa4190884af52cabb"
             }
         },
         {
@@ -120,12 +120,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_nitro_0.csv",
-                    "sha256": "4cf941c45cd91632d9dbdde59951fa68693cd08a60ef9f6f107ec7e8f218cfb7"
+                    "sha256": "e20907945a324df4a7d55d94c967e0952c90b9159fd9fbd6d799d60da8a12bf4"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 2.7437,
+            "std": 2.7467,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -133,7 +133,7 @@
             "maxWin": 70.0,
             "booksFile": {
                 "file": "books_nitro.jsonl.zst",
-                "sha256": "ea0d362115e144e0c283e6ef7a51760bd107a4a22f5acb958e2984ade8d024a3"
+                "sha256": "534bb7bd65f850770429d65f25c4d2becc701d57787c12165585948851910d82"
             }
         },
         {
@@ -141,12 +141,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_furnace_0.csv",
-                    "sha256": "0e8b3b6b33d930528aa2df543dfa328da03d77a5dd44701b0a98fc9ec6b35371"
+                    "sha256": "06e64a52891c04ad4da9810feac9b8109968c321c442b65acd733328547eb437"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 3.3387,
+            "std": 3.2303,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -154,7 +154,7 @@
             "maxWin": 100.0,
             "booksFile": {
                 "file": "books_furnace.jsonl.zst",
-                "sha256": "70a0d4d60054594db80dddbf66affb3408796002c60f9bfced3573e5f216529d"
+                "sha256": "d192495d528c9c58021f0b95ec2969840afb3c66fd71c44111ac2e4d8c623d07"
             }
         },
         {
@@ -162,12 +162,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_inferno_0.csv",
-                    "sha256": "9dd8e843f13a3a7e5bef4a9838f7c908af5f96253e8c3375686b08003fa33dec"
+                    "sha256": "9ea3573c89434c71b1247551d032ff3c9d59b8b4b287a13ac1ab727d56232699"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 4.1446,
+            "std": 4.024,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -175,7 +175,7 @@
             "maxWin": 150.0,
             "booksFile": {
                 "file": "books_inferno.jsonl.zst",
-                "sha256": "b9e44f80005192edde59ff3e45c20c0a721b76aba4d15928783c54852a9ecaa6"
+                "sha256": "44b4ac242b47b961e2b6750fc897d0c8656b042000f3222216c2b80b42b61365"
             }
         },
         {
@@ -183,12 +183,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_meltdown_0.csv",
-                    "sha256": "8678a5d31055812fbc4b1a7090a59f76c8c96dfe999984942d0b34b48f56b2d6"
+                    "sha256": "2a4b3db93b9acfbd9e85a70f410e09ca5ecfab7fb0d451157b11b6a87f838aef"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 5.4074,
+            "std": 5.0707,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -196,7 +196,7 @@
             "maxWin": 250.0,
             "booksFile": {
                 "file": "books_meltdown.jsonl.zst",
-                "sha256": "c646e0b18ef80a7ecb72464b4c9ddd03b105e492fe1fa7c195258659c0bccebc"
+                "sha256": "dd238d6e4c16a54831f06037974ba7481244701c668ffaf9dc4176eb307696d9"
             }
         },
         {
@@ -204,12 +204,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_reactor_0.csv",
-                    "sha256": "9d13622bfea40f2b272ef6ae5d1e7dc527f1ea53ffe9f47544fe3065bf1658c0"
+                    "sha256": "a655f85c0e4b468e19d534106c97950258a61e230691dc30bfce970c6e9edf3e"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 7.7069,
+            "std": 4.4543,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -217,7 +217,7 @@
             "maxWin": 500.0,
             "booksFile": {
                 "file": "books_reactor.jsonl.zst",
-                "sha256": "5671efcea68b8a4125afcc130c49f58e474624eabfa847076359d2b588a9b5ad"
+                "sha256": "16aca0a91053c410bd03ea3959a6c698d3873b52d4d94fefccd96ed9b2269b14"
             }
         },
         {
@@ -225,12 +225,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_plasma_0.csv",
-                    "sha256": "5ef3a1070f7adb62a58bce7f1885776a25d42ef2a23a321930f461c9c7f113f9"
+                    "sha256": "12d7a650bef881fe5cc9f4187109881a53b6d7f9e1eeef2c3ccbc05d6c62626e"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 10.9412,
+            "std": 5.4573,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -238,7 +238,7 @@
             "maxWin": 1000.0,
             "booksFile": {
                 "file": "books_plasma.jsonl.zst",
-                "sha256": "58a716c615b38e2244d86f8ae86f0e597b22848fcc038e38a64aab673505d29e"
+                "sha256": "73ffdf5a75f87ff9ad38588dc27a24f1516b22186a4ac41acbb01515ce0edc7d"
             }
         }
     ]

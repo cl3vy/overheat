@@ -177,6 +177,20 @@ button.term-btn.danger {
 	letter-spacing: 0.2em;
 }
 
+/* R2 3.1: plain meaning is the bright primary label */
+.dial-title {
+	color: var(--green);
+	font-weight: bold;
+	text-shadow: 0 0 8px rgba(51, 255, 102, 0.45);
+}
+
+.dial-subtitle {
+	font-size: 0.72em;
+	letter-spacing: 0.18em;
+	opacity: 0.6;
+	margin-top: 1px;
+}
+
 .dial-rig-name {
 	font-weight: bold;
 	color: var(--amber);
@@ -194,7 +208,17 @@ button.term-btn.danger {
 
 .heat-low .dial-mult { color: var(--green); text-shadow: 0 0 14px rgba(0, 255, 65, 0.6); }
 .heat-mid .dial-mult { color: var(--amber); text-shadow: 0 0 14px rgba(255, 176, 0, 0.6); }
-.heat-high .dial-mult { color: var(--red); text-shadow: 0 0 14px rgba(255, 43, 43, 0.6); }
+/* caution end of the dial is gold, not red -- red is the meltdown's alone */
+.heat-high .dial-mult { color: var(--gold); text-shadow: 0 0 14px rgba(255, 215, 0, 0.6); }
+
+/* plain-language translation of the target (type tier 2, brief 7) */
+.dial-translate {
+	display: block;
+	margin-top: 2px;
+	font-size: 1.1em;
+	letter-spacing: 0.08em;
+	color: var(--green);
+}
 
 .dial-flavor { display: block; margin-top: 2px; }
 
@@ -285,7 +309,7 @@ button.term-btn.danger {
 
 .heat-low .dial-odds { color: var(--green); }
 .heat-mid .dial-odds { color: var(--amber); }
-.heat-high .dial-odds { color: var(--red); }
+.heat-high .dial-odds { color: var(--gold); }
 
 .boot-btn {
 	display: block;
@@ -350,11 +374,12 @@ button.term-btn.danger {
 	margin-bottom: 8px;
 }
 
+/* two columns since R2 1.1/1.2: ambient log left, the game center-right */
 .run-grid {
 	flex: 1;
 	min-height: 0;
 	display: grid;
-	grid-template-columns: minmax(190px, 1.05fr) minmax(0, 1.9fr) minmax(160px, 0.85fr);
+	grid-template-columns: minmax(180px, 0.9fr) minmax(0, 2.4fr);
 	gap: clamp(10px, 2.2vw, 30px);
 }
 
@@ -368,13 +393,20 @@ button.term-btn.danger {
 
 .run-left { justify-content: flex-end; }
 
+/* atmosphere, not information (R2 1.4): dim, small, never competing */
+.sys-log-ambient {
+	font-size: 0.78em;
+	opacity: 0.55;
+	max-height: 40vh;
+	overflow: hidden;
+	align-self: end;
+}
+
 .col-title {
 	letter-spacing: 0.2em;
 	margin-bottom: 6px;
 	opacity: 0.8;
 }
-
-.ladder-title { margin-top: 16px; }
 
 .run-center {
 	display: flex;
@@ -550,58 +582,12 @@ button.term-btn.danger {
 	letter-spacing: 0.08em;
 }
 
-.tele-row {
-	display: flex;
-	justify-content: space-between;
-	gap: 8px;
-	font-variant-numeric: tabular-nums;
-	padding: 1px 0;
-}
-
-.ladder {
-	display: flex;
-	flex-direction: column;
-	gap: 2px;
-}
-
-.rung {
-	color: var(--green-dim);
-	letter-spacing: 0.08em;
-	transition: color 0.15s;
-	font-variant-numeric: tabular-nums;
-}
-
-.rung.lit {
-	color: var(--green);
-	text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
-	animation: rung-flash 0.5s;
-}
-
-@keyframes rung-flash {
-	0% {
-		color: #eaffea;
-		text-shadow: 0 0 18px rgba(0, 255, 65, 1);
-	}
-	100% {
-		color: var(--green);
-		text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
-	}
-}
-
-.rung.target { letter-spacing: 0.12em; }
-.rung.target.lit {
-	color: var(--amber);
-	text-shadow: 0 0 10px rgba(255, 176, 0, 0.7);
-}
-
-.rung-mark { margin-right: 6px; }
-
 .settling { margin-top: 6px; }
 
-/* narrow screens: keep the money center-stage, drop side columns */
+/* narrow screens: keep the money center-stage, drop the log column */
 @media (max-width: 720px) {
 	.run-grid { grid-template-columns: 1fr; }
-	.run-left, .run-right { display: none; }
+	.run-left { display: none; }
 }
 
 .gauge-row {
@@ -611,14 +597,6 @@ button.term-btn.danger {
 }
 
 .log-line { white-space: pre-wrap; word-break: break-all; }
-
-.hash-line {
-	color: var(--green-dim);
-	white-space: pre;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	opacity: 0.8;
-}
 
 .banner {
 	border: 1px double;
@@ -1006,21 +984,38 @@ button.term-btn.danger {
 	margin-top: 10px;
 }
 
-.rebet-btn {
-	border-color: var(--green);
+/* BOOT AGAIN is the primary control on the result screen (brief 5): same
+   solid-green block voice as BOOT RIG, brightest thing after the hero */
+button.rebet-btn {
+	padding: 10px 22px;
+	color: var(--bg);
+	background: var(--green);
+	border: none;
 	font-weight: bold;
-	box-shadow: 0 0 10px rgba(0, 255, 65, 0.25);
+	font-size: 1.1em;
+	letter-spacing: 0.18em;
+	box-shadow: 0 0 18px rgba(0, 255, 65, 0.5);
 }
 
-.rebet-btn:disabled {
-	border-color: var(--green-dim);
+button.rebet-btn:hover:not(:disabled) {
+	color: var(--bg);
+	background: var(--green);
+	box-shadow: 0 0 28px rgba(0, 255, 65, 0.8);
+}
+
+button.rebet-btn:disabled {
+	background: transparent;
+	color: var(--green-dim);
+	border: 1px solid var(--green-dim);
 	box-shadow: none;
 	font-weight: normal;
 }
 
-/* --------------------------------------------------- spicy distribution */
+button.rebet-btn .key-hint { color: var(--bg); opacity: 0.75; }
 
-/* dial copy advertising overdrive tiers and salvage */
+/* --------------------------------------- checkpoint-banking distribution */
+
+/* dial copy advertising the overdrive tiers */
 .dial-spice {
 	text-align: center;
 	font-size: 0.85em;
@@ -1040,7 +1035,8 @@ button.term-btn.danger {
 	text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
 }
 
-.chip-salvage {
+/* partial bank: the rig fried but checkpoints paid something */
+.chip-part {
 	border-color: var(--amber);
 	color: var(--amber);
 	opacity: 0.85;
@@ -1067,18 +1063,6 @@ button.term-btn.danger {
 }
 
 /* overdrive rungs above BANK on the milestone ladder */
-.rung.od { color: rgba(255, 176, 0, 0.4); }
-.rung.od.lit {
-	color: var(--amber);
-	text-shadow: 0 0 10px rgba(255, 176, 0, 0.75);
-}
-
-.rung.gold { color: rgba(255, 215, 0, 0.35); }
-.rung.gold.lit {
-	color: var(--gold);
-	text-shadow: 0 0 14px rgba(255, 215, 0, 0.9);
-}
-
 /* golden shutdown treatments */
 .yield-box.golden {
 	border-color: var(--gold);
@@ -1115,16 +1099,229 @@ button.term-btn.danger {
 	100% { text-shadow: 0 0 26px rgba(255, 215, 0, 1), 0 0 60px rgba(255, 176, 0, 0.55); }
 }
 
-/* salvage consolation: amber, deliberately quieter than a win banner */
-.salvage-line {
+/* checkpoints-held consolation: amber, deliberately quieter than a win */
+.secured-line {
 	margin-top: 8px;
 	padding: 4px 12px;
 	border: 1px dashed var(--amber);
 	font-size: 0.95em;
-	animation: salvage-in 0.4s ease-out;
+	animation: secured-in 0.4s ease-out;
 }
 
-@keyframes salvage-in {
+.secured-line.dim { border-color: var(--green-dim); }
+
+@keyframes secured-in {
 	from { opacity: 0; transform: translateY(6px); }
 	to { opacity: 1; transform: translateY(0); }
+}
+
+/* near-miss readout under the meltdown banner */
+/* the loss screen hero (brief 5): "so close, go again" at type tier 2 */
+.near-miss-hero {
+	margin-top: 8px;
+	font-size: 1.35em;
+	font-weight: bold;
+	letter-spacing: 0.06em;
+	text-shadow: 0 0 12px rgba(255, 176, 0, 0.55);
+	animation: secured-in 0.4s ease-out;
+}
+
+.aimed-line {
+	margin-top: 4px;
+	font-size: 0.95em;
+	letter-spacing: 0.05em;
+}
+
+/* target label pinned at the end of the big gauge */
+.gauge-target {
+	margin-left: 6px;
+	font-size: 0.7em;
+	color: var(--green-dim);
+	letter-spacing: 0.06em;
+}
+
+/* plain meaning of an overdrive/golden tier, shown as it lands */
+.win-translate {
+	margin-top: 2px;
+	font-size: 0.9em;
+	letter-spacing: 0.06em;
+}
+
+/* the loop, one plain sentence, prominent for a first-ever player (brief 2) */
+.loop-callout {
+	margin: 4px 0 10px;
+	padding: 10px 14px;
+	border: 1px solid rgba(51, 255, 102, 0.45);
+	background: rgba(0, 20, 5, 0.5);
+	white-space: normal;
+}
+
+.loop-title {
+	font-size: 0.8em;
+	letter-spacing: 0.14em;
+	margin-bottom: 4px;
+}
+
+.loop-text {
+	font-size: 1.12em;
+	line-height: 1.5;
+	letter-spacing: 0.04em;
+	color: var(--green);
+	text-shadow: 0 0 8px rgba(51, 255, 102, 0.35);
+}
+
+/* personal best flash (celebration + settled actions) */
+.new-best {
+	margin-top: 6px;
+	letter-spacing: 0.18em;
+	animation: tier-blink 0.5s step-end infinite;
+}
+
+/* ------------------------------------------------ checkpoint ladder UI */
+
+/* run screen ladder: temp on the left, locked value on the right */
+/* rig select: mini preview of where the locks sit (log scale) */
+.ladder-preview { margin-top: 10px; }
+
+.ladder-preview-track {
+	position: relative;
+	height: 10px;
+	border: 1px solid var(--green-dim);
+	border-left: none;
+	border-right: none;
+	margin: 0 2px;
+}
+
+.ladder-tick {
+	position: absolute;
+	top: 1px;
+	bottom: 1px;
+	width: 3px;
+	transform: translateX(-50%);
+}
+
+.ladder-tick.tick-scrap { background: rgba(0, 255, 65, 0.28); }
+
+.ladder-tick.tick-profit {
+	background: var(--green);
+	box-shadow: 0 0 6px rgba(0, 255, 65, 0.7);
+}
+
+.ladder-tick.tick-target {
+	background: var(--amber);
+	box-shadow: 0 0 8px rgba(255, 176, 0, 0.8);
+	width: 4px;
+}
+
+.ladder-preview-caption {
+	margin-top: 3px;
+	font-size: 0.8em;
+	letter-spacing: 0.03em;
+	text-align: center;
+}
+
+.profile-tag { letter-spacing: 0.1em; }
+
+/* rank + streak strip (localStorage meta, cosmetic only) */
+.record-strip {
+	margin: 2px 0 4px;
+	font-size: 0.88em;
+	letter-spacing: 0.04em;
+	white-space: normal;
+}
+
+/* personal peaks lead the strip: biggest, brightest, first (brief 2.3) */
+.peak-strip {
+	display: flex;
+	align-items: baseline;
+	gap: 18px;
+	flex-wrap: wrap;
+	margin: 10px 0 0;
+	font-size: 1.08em;
+	letter-spacing: 0.08em;
+	color: var(--green);
+	text-shadow: 0 0 10px rgba(51, 255, 102, 0.55);
+}
+
+.peak-strip .amber {
+	color: var(--amber);
+	text-shadow: 0 0 10px rgba(255, 176, 0, 0.55);
+}
+
+.peak-value {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+/* chip weight tiers: same values, the eye lands on the wins (brief 2.3) */
+.chip-big {
+	font-size: 1em;
+	padding: 2px 9px;
+	text-shadow: 0 0 10px currentColor;
+	opacity: 1;
+}
+
+.chip-mid {
+	font-size: 0.85em;
+	opacity: 0.9;
+}
+
+.chip-low {
+	font-size: 0.72em;
+	padding: 1px 5px;
+	opacity: 0.5;
+}
+
+/* multiplier history as upward bars -- never a net P/L line (brief 2.1) */
+/* provably-fair panel (brief 1.6): terminal pop, truth only */
+.fairness-btn {
+	background: none;
+	border: 1px solid rgba(51, 255, 102, 0.35);
+	color: var(--dim);
+	font: inherit;
+	font-size: 0.78em;
+	letter-spacing: 0.1em;
+	padding: 3px 8px;
+	cursor: pointer;
+}
+
+.fairness-btn:hover {
+	color: var(--green);
+	border-color: var(--green);
+	text-shadow: 0 0 8px rgba(51, 255, 102, 0.6);
+}
+
+.fairness-pop {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	width: min(340px, 80vw);
+	padding: 12px 14px;
+	background: rgba(0, 10, 2, 0.96);
+	border: 1px solid var(--green);
+	box-shadow: 0 0 18px rgba(51, 255, 102, 0.25);
+	font-size: 0.85em;
+	text-align: left;
+	white-space: normal;
+}
+
+.fairness-title {
+	color: var(--green);
+	letter-spacing: 0.14em;
+	text-shadow: 0 0 8px rgba(51, 255, 102, 0.5);
+}
+
+.fairness-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+.fairness-copy { line-height: 1.5; }
+
+/* header version tag for the checkpoint-banking release */
+.ver-tag {
+	color: var(--amber);
+	letter-spacing: 0.12em;
+	text-shadow: 0 0 8px rgba(255, 176, 0, 0.6);
 }

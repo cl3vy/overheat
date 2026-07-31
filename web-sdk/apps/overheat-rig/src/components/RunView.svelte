@@ -3,26 +3,20 @@
 	import { stateBet, stateBetDerived } from 'state-shared';
 	import { waitForTimeout } from 'utils-shared/wait';
 
-	import { BOOK_AMOUNT_SCALE, RIG_MAP, type WinTier } from '../game/constants';
+	import { BOOK_AMOUNT_SCALE, LADDERS, RIG_MAP, type WinTier } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { stateGame, resetRound } from '../game/stateGame.svelte';
-	import { WIN_MILESTONES } from '../game/pacing';
+	import { stateSession, sessionStats } from '../game/stateSession.svelte';
 	import { playMilestoneChirp, playCoinTick, playWinFanfare } from '../game/sound';
+	import { requestBoot } from '../game/utils';
 
 	const context = getContext();
 
 	const GAUGE_CELLS = 34;
-	const HEX = '0123456789abcdef';
 
-	let hashLines = $state([] as string[]);
-
-	const randomHash = () => {
-		let hash = '';
-		for (let i = 0; i < 40; i += 1) hash += HEX[Math.floor(Math.random() * 16)];
-		return hash;
-	};
-
-	// coin toasts: accepted hashes pop a small +MW that gets absorbed by the counter
+	// coin toasts: mined coins pop a small +MW that gets absorbed by the counter
+	// (the sha256 hash dump they used to ride on is gone -- R2 1.3: provably
+	// fair data lives behind [FAIRNESS], not on the play screen)
 	type CoinToast = { id: number; amount: number; offset: number };
 	let coinToasts = $state([] as CoinToast[]);
 	let toastId = 0;
@@ -44,25 +38,12 @@
 	$effect(() => {
 		if (stateGame.phase !== 'heating') return;
 		const interval = setInterval(() => {
-			const accepted = Math.random() < 0.16;
-			hashLines.push(`sha256: ${randomHash()} .. ${accepted ? 'ACCEPTED' : 'rejected'}`);
-			if (hashLines.length > 7) hashLines.splice(0, hashLines.length - 7);
-			if (accepted) spawnCoinToast();
+			if (Math.random() < 0.16) spawnCoinToast();
 		}, 380);
 		return () => {
 			clearInterval(interval);
 			coinToasts.length = 0;
 		};
-	});
-
-	// telemetry wobble tick (display only)
-	let wobble = $state(0.5);
-	$effect(() => {
-		if (stateGame.phase !== 'heating') return;
-		const interval = setInterval(() => {
-			wobble = Math.random();
-		}, 160);
-		return () => clearInterval(interval);
 	});
 
 	// bank moment: measure the vector from the yield box to the header balance
@@ -89,7 +70,7 @@
 		});
 	});
 
-	// peak temp this round, latched so milestone rungs don't flicker on jitter dips
+	// peak temp this round, latched so ladder rungs don't flicker on jitter dips
 	let peakTemp = $state(1);
 	$effect(() => {
 		const temp = stateGame.currentTemp;
@@ -100,18 +81,13 @@
 				return;
 			}
 			if (temp <= peakTemp) return;
-			// chirp for each milestone rung crossed by this tick (animated only)
+			// checkpoint ticks fire from the book handler; overdrive rungs above
+			// the target get the highest chirps here
 			if (phase === 'heating') {
-				WIN_MILESTONES.forEach((rung, index) => {
-					if (peakTemp < rung && temp >= rung && rung < stateGame.targetTemp) {
-						playMilestoneChirp(index);
-					}
-				});
-				// overdrive rungs above the target get the highest chirps
 				[1.5, 3, 10].forEach((mult, index) => {
 					const rung = stateGame.targetTemp * mult;
 					if (peakTemp < rung && temp >= rung) {
-						playMilestoneChirp(WIN_MILESTONES.length + index);
+						playMilestoneChirp(10 + index);
 					}
 				});
 			}
@@ -120,6 +96,7 @@
 	});
 
 	const rig = $derived(RIG_MAP[stateGame.rigTier]);
+	const rigLadder = $derived(LADDERS[stateGame.rigTier]);
 	const fillFraction = $derived(
 		Math.min(
 			Math.max((stateGame.currentTemp - 1) / Math.max(stateGame.targetTemp - 1, 0.0001), 0),
@@ -128,14 +105,13 @@
 	);
 	const filledCells = $derived(Math.round(fillFraction * GAUGE_CELLS));
 	const gaugeTone = $derived(
-		// banked reads as safe again -- the red danger tone is for the climb
-		stateGame.phase === 'banked'
-			? 'win'
-			: fillFraction < 0.6
+		// red is reserved for the meltdown moment itself (brief 7): the climb
+		// runs green into amber, and only an actual fry turns anything red
+		stateGame.phase === 'fried'
+			? 'fault'
+			: stateGame.phase === 'banked' || fillFraction < 0.6
 				? 'win'
-				: fillFraction < 0.85
-					? 'warn'
-					: 'fault',
+				: 'warn',
 	);
 	const gaugeBar = $derived(
 		'\u2588'.repeat(filledCells) + '\u2591'.repeat(GAUGE_CELLS - filledCells),
@@ -144,38 +120,33 @@
 	const formatMW = (value: number) =>
 		value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-	// display-only estimate: coins accumulate as the temperature climbs
-	const minedEstimate = $derived(stateBet.wageredBetAmount * stateGame.currentTemp);
+	const securedMW = $derived(stateGame.securedMult * stateBet.wageredBetAmount);
 	const winMW = $derived(
 		(stateBet.winBookEventAmount / BOOK_AMOUNT_SCALE) * stateBet.wageredBetAmount,
 	);
 
-	// reactive rig telemetry (display only)
-	const fanRpm = $derived(Math.round(2400 + fillFraction * 11200 + wobble * 340));
-	const voltRail = $derived((11.86 + fillFraction * 0.92 + wobble * 0.09).toFixed(2));
-	const coreClock = $derived(Math.round(1780 + fillFraction * 2650 + wobble * 70));
+	// the next checkpoint the climb is reaching for (null once all are crossed)
+	const nextRung = $derived(rigLadder.rungs[stateGame.rungsCrossed] ?? null);
+
+	// near-miss readout on a fry: how close was the next lock-in? this is the
+	// hero of the loss screen (brief 5), so the threshold is generous -- any
+	// death in the closer half of the gap gets the "so close" line
+	const nearMiss = $derived.by(() => {
+		if (stateGame.phase !== 'fried' || stateGame.crashTemp <= 1.005) return null;
+		const next = rigLadder.rungs.find((rung) => rung.temp > stateGame.crashTemp + 1e-9);
+		const nextTemp = next ? next.temp : stateGame.targetTemp;
+		const nextValue = next ? next.bank : stateGame.targetTemp;
+		const prevTemp =
+			stateGame.rungsCrossed > 0 ? rigLadder.rungs[stateGame.rungsCrossed - 1].temp : 1;
+		const gap = Math.max(nextTemp - prevTemp, 0.0001);
+		const shortBy = nextTemp - stateGame.crashTemp;
+		if (shortBy / gap >= 0.5) return null;
+		return { shortBy, nextTemp, nextValue };
+	});
+
 
 	// true while the limiter has slipped and the temp is past the bank target
 	const inOverdrive = $derived(stateGame.currentTemp > stateGame.targetTemp + 1e-9);
-
-	type Rung = { temp: number; kind: 'milestone' | 'bank' | 'od' | 'gold'; label: string };
-	// milestone ladder: multipliers below target, the BANK rung, then the
-	// overdrive zone above it (1.5x / 3x / 10x GOLDEN the target)
-	const ladder = $derived.by((): Rung[] => {
-		const target = stateGame.targetTemp;
-		const rungs: Rung[] = [
-			...WIN_MILESTONES.filter((m) => m < target * 0.995).map((m) => ({
-				temp: m,
-				kind: 'milestone' as const,
-				label: `${m.toFixed(1)}x`,
-			})),
-			{ temp: target, kind: 'bank', label: `BANK ${target.toFixed(2)}x` },
-			{ temp: target * 1.5, kind: 'od', label: `OD ${(target * 1.5).toFixed(2)}x` },
-			{ temp: target * 3, kind: 'od', label: `OD ${(target * 3).toFixed(2)}x` },
-			{ temp: target * 10, kind: 'gold', label: `GOLD ${(target * 10).toFixed(2)}x` },
-		];
-		return rungs.reverse();
-	});
 
 	const TIER_YIELD_LABELS = {
 		clean: 'BANKED YIELD',
@@ -185,7 +156,7 @@
 	} as const;
 	const winTier = $derived(stateGame.winTier ?? 'clean');
 
-	const salvageMW = $derived(stateGame.salvageMult * stateBet.wageredBetAmount);
+	const rigBest = $derived(sessionStats.bestFor(stateGame.rigTier));
 
 	// ------------------------------------------------ win celebration (in-place)
 	// the whole run screen becomes the congratulations: glyph rain behind the
@@ -298,8 +269,7 @@
 	const canRebet = $derived(stateBetDerived.isBetCostAvailable());
 
 	const bootAgain = () => {
-		if (!canRebet) return;
-		context.eventEmitter.broadcast({ type: 'bet' });
+		requestBoot(context);
 	};
 </script>
 
@@ -320,21 +290,20 @@
 
 	<div class="run-topline dim">
 		RIG: <span class="win">{rig?.name ?? stateGame.rigTier}</span>
-		| HASHRATE: {stateGame.hashrate} MH/s
 		| STAKE: {formatMW(stateBet.wageredBetAmount)} MW
+		{#if stateSession.heatStreak >= 2}
+			| <span class="warn">STREAK {stateSession.heatStreak} (BEST {stateSession.meta.bestStreak})</span>
+		{/if}
 	</div>
 
 	<div class="run-grid">
-		<div class="run-col run-left">
+		<div class="run-col run-left sys-log-ambient">
+			<!-- ambient boot flavor only (R2 1.3/1.4): banked progress lives in
+			     the SECURED YIELD box, fairness data behind [FAIRNESS] -->
 			<div class="col-title dim">// SYS LOG</div>
 			{#each stateGame.logs as line, index (index)}
-				<div class="log-line {line.tone === 'normal' ? '' : line.tone}">{line.text}</div>
+				<div class="log-line dim">{line.text}</div>
 			{/each}
-			{#if stateGame.phase === 'heating'}
-				{#each hashLines as hashLine, index (index)}
-					<div class="hash-line">{hashLine}</div>
-				{/each}
-			{/if}
 			<div class="log-line cursor"></div>
 		</div>
 
@@ -347,9 +316,13 @@
 				{#if inOverdrive && stateGame.phase === 'heating'}
 					<div class="temp-sub overdrive-tag">!! LIMITER SLIPPED -- OVERDRIVE !!</div>
 				{:else}
-					<div class="temp-sub dim">shutdown @ {stateGame.targetTemp.toFixed(2)}x</div>
+					<!-- the target line, in plain language, always visible (brief 4) -->
+					<div class="temp-sub dim">cash out @ {stateGame.targetTemp.toFixed(2)}x</div>
 				{/if}
-				<div class="gauge-big {gaugeTone}">[{gaugeBar}]</div>
+				<div class="gauge-big {gaugeTone}">
+					[{gaugeBar}]
+					<span class="gauge-target">{stateGame.targetTemp.toFixed(2)}x</span>
+				</div>
 			</div>
 
 			{#if stateGame.phase === 'heating' || (stateGame.phase === 'banked' && !celebration)}
@@ -360,10 +333,10 @@
 					style="--yglow: {(0.35 + fillFraction * 0.65).toFixed(3)}"
 				>
 					<div class="yield-label dim">
-						{stateGame.phase === 'banked' ? TIER_YIELD_LABELS[winTier] : 'UNBANKED YIELD'}
+						{stateGame.phase === 'banked' ? TIER_YIELD_LABELS[winTier] : 'SECURED YIELD'}
 					</div>
 					<div class="yield-amount">
-						{formatMW(stateGame.phase === 'banked' ? winMW : minedEstimate)} MW
+						{formatMW(stateGame.phase === 'banked' ? winMW : securedMW)} MW
 					</div>
 					{#if stateGame.phase === 'banked'}
 						<div class="locked-stamp">LOCKED</div>
@@ -373,7 +346,13 @@
 							</div>
 						{/if}
 					{:else}
-						<div class="yield-caption dim">banks only at shutdown</div>
+						<div class="yield-caption dim">
+							{#if nextRung}
+								next lock @ {nextRung.temp.toFixed(2)}x &rarr; {nextRung.bank.toFixed(2)}x
+							{:else}
+								all checkpoints locked -- push for the target
+							{/if}
+						</div>
 						{#each coinToasts as toast (toast.id)}
 							<div class="coin-toast" style="--tx: {toast.offset}px">
 								+{formatMW(toast.amount)} MW
@@ -384,14 +363,29 @@
 			{/if}
 
 			{#if stateGame.phase === 'fried'}
+				<!-- loss screen hero: the near miss and the target aimed for,
+				     pointed at BOOT AGAIN -- never a funeral (brief 5) -->
 				<div class="banner fried">
-					** MELTDOWN @ {stateGame.crashTemp.toFixed(2)}x -- STAKE LOST **
+					** MELTDOWN @ {stateGame.crashTemp.toFixed(2)}x **
 				</div>
-				{#if stateGame.salvageMult > 0}
-					<!-- consolation, not a win: salvage pays back less than the stake -->
-					<div class="salvage-line warn">
-						&gt;&gt; SCRAP SALVAGE: +{formatMW(salvageMW)} MW pulled from the slag
-						({stateGame.salvageMult.toFixed(2)}x stake)
+				{#if nearMiss}
+					<div class="near-miss-hero warn">
+						died {nearMiss.shortBy.toFixed(2)}x short of the
+						{nearMiss.nextTemp.toFixed(2)}x checkpoint
+					</div>
+				{/if}
+				<div class="aimed-line dim">
+					aimed for {stateGame.targetTemp.toFixed(2)}x
+					{#if rigBest.bestMult > 0}
+						&nbsp;|&nbsp; your {rig?.name ?? ''} best: <span class="warn">{rigBest.bestMult.toFixed(2)}x</span>
+					{/if}
+				</div>
+				{#if stateGame.securedMult > 0}
+					<!-- the checkpoints held: part of the climb survived the fry -->
+					<div class="secured-line warn">
+						&gt;&gt; CHECKPOINTS HELD: +{formatMW(securedMW)} MW secured
+						({stateGame.securedMult.toFixed(2)}x stake, {stateGame.rungsCrossed}
+						lock{stateGame.rungsCrossed === 1 ? '' : 's'})
 					</div>
 				{/if}
 			{/if}
@@ -401,23 +395,36 @@
 					<div class="win-tier">&gt;&gt;&gt; {celebration.label} &lt;&lt;&lt;</div>
 					<div class="win-amount">+{formatMW(displayedWin)} MW</div>
 					<div class="win-headline">{celebration.headline}</div>
+					{#if winTier !== 'clean'}
+						<!-- overdrive/golden taught the moment one lands (brief 2 / 8) -->
+						<div class="win-translate dim">
+							{winTier === 'golden' ? '10x' : winTier === 'critical' ? '3x' : '1.5x'}
+							bonus multiplier on your payout
+						</div>
+					{/if}
 					<div class="win-sub dim">
 						{stateGame.currentTemp.toFixed(2)}x survived
 						{#if stateGame.couldHaveReached > stateGame.currentTemp}
 							&nbsp;|&nbsp; silicon had {stateGame.couldHaveReached.toFixed(2)}x in it
 						{/if}
 					</div>
+					{#if stateSession.newBest?.rigTier === stateGame.rigTier}
+						<div class="new-best warn">&#9733; NEW PERSONAL BEST &#9733;</div>
+					{/if}
 				</div>
 			{/if}
 
 			{#if isSettled}
 				<div class="settled-actions">
+					{#if stateGame.phase === 'fried' && stateSession.newBest?.rigTier === stateGame.rigTier}
+						<div class="new-best warn">&#9733; NEW PERSONAL BEST RUN &#9733;</div>
+					{/if}
 					<button class="term-btn rebet-btn" onclick={bootAgain} disabled={!canRebet}>
 						&gt;&gt; BOOT AGAIN &lt;&lt; <span class="key-hint">[SPACE]</span>
 					</button>
 					<button class="term-btn" onclick={() => resetRound()}>RETURN TO RIG SELECT</button>
 					{#if !canRebet}
-						<span class="fault">insufficient power reserve</span>
+						<span class="warn">insufficient power reserve -- lower the stake</span>
 					{/if}
 				</div>
 			{:else if stateGame.phase === 'banked' || stateGame.phase === 'fried'}
@@ -425,38 +432,5 @@
 			{/if}
 		</div>
 
-		<div class="run-col run-right">
-			<div class="col-title dim">// TELEMETRY</div>
-			<div class="tele-row">
-				<span class="dim">FAN</span>
-				<span class={fillFraction > 0.85 ? 'fault' : fillFraction > 0.6 ? 'warn' : ''}>
-					{fanRpm.toLocaleString('en-US')} RPM
-				</span>
-			</div>
-			<div class="tele-row">
-				<span class="dim">12V RAIL</span>
-				<span>{voltRail} V</span>
-			</div>
-			<div class="tele-row">
-				<span class="dim">CORE CLK</span>
-				<span>{coreClock} MHz</span>
-			</div>
-
-			<div class="col-title dim ladder-title">// MILESTONES</div>
-			<div class="ladder">
-				{#each ladder as rung (rung.label)}
-					<div
-						class="rung"
-						class:lit={peakTemp >= rung.temp - 0.0001}
-						class:target={rung.kind === 'bank'}
-						class:od={rung.kind === 'od'}
-						class:gold={rung.kind === 'gold'}
-					>
-						<span class="rung-mark">{peakTemp >= rung.temp - 0.0001 ? '\u2588' : '\u2591'}</span>
-						{rung.label}
-					</div>
-				{/each}
-			</div>
-		</div>
 	</div>
 </div>

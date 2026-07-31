@@ -2,9 +2,7 @@
 	import './app.css';
 	import { onMount, untrack } from 'svelte';
 
-	import { stateBet, stateBetDerived, stateConfig, stateModal } from 'state-shared';
-
-	import { RIGS } from '../game/constants';
+	import { stateBet, stateConfig, stateModal } from 'state-shared';
 
 	import EnableGameActor from './EnableGameActor.svelte';
 	import RigSelect from './RigSelect.svelte';
@@ -13,6 +11,7 @@
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { refreshBalance } from '../game/rgs';
+	import { requestBoot } from '../game/utils';
 
 	const context = getContext();
 
@@ -66,10 +65,7 @@
 		if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 		// swallow native space behavior (button re-click, page scroll)
 		event.preventDefault();
-		if (!context.stateXstateDerived.isIdle()) return;
-		if (!stateBetDerived.isBetCostAvailable()) return;
-		if (!RIGS.some((rig) => rig.id === stateBet.activeBetModeKey)) return;
-		context.eventEmitter.broadcast({ type: 'bet' });
+		requestBoot(context);
 	};
 
 	onMount(() => {
@@ -107,7 +103,10 @@
 	class:bank={stateGame.phase === 'banked'}
 >
 	<div class="term-header">
-		<span>OVERHEAT // MINING RIG THERMAL CONSOLE v1.0</span>
+		<span>
+			OVERHEAT // MINING RIG THERMAL CONSOLE v2.0
+			<span class="ver-tag">[CHECKPOINT]</span>
+		</span>
 		<span>
 			PWR RESERVE:
 			<span class="win pwr-reserve" class:flash={balanceFlash}>

@@ -16,10 +16,22 @@ type BookEventHeat = {
 	crashTemp: number;
 };
 
+/** a checkpoint rung crossed: `amount` is the cumulative secured payout */
+type BookEventBank = {
+	index: number;
+	type: 'bank';
+	/** rung temperature (multiplier) */
+	temp: number;
+	/** book units: cumulative payout multiplier x 100 */
+	amount: number;
+};
+
 type BookEventMeltdown = {
 	index: number;
 	type: 'meltdown';
 	crashTemp: number;
+	/** book units: payout kept from the rungs banked before the fry */
+	amount: number;
 };
 
 type BookEventShutdown = {
@@ -28,16 +40,7 @@ type BookEventShutdown = {
 	/** payout multiplier: targetTemp for clean, up to 10x targetTemp on golden */
 	bankedAt: number;
 	couldHaveReached: number;
-	/** absent in pre-spicy books; treat as 'clean' */
-	tier?: WinTier;
-};
-
-/** partial scrap recovery on a bust: pays less than the stake */
-type BookEventSalvage = {
-	index: number;
-	type: 'salvage';
-	/** book units: payout multiplier x 100 */
-	amount: number;
+	tier: WinTier;
 };
 
 type BookEventSetTotalWin = {
@@ -55,9 +58,9 @@ type BookEventFinalWin = {
 export type BookEvent =
 	| BookEventBoot
 	| BookEventHeat
+	| BookEventBank
 	| BookEventMeltdown
 	| BookEventShutdown
-	| BookEventSalvage
 	| BookEventSetTotalWin
 	| BookEventFinalWin;
 

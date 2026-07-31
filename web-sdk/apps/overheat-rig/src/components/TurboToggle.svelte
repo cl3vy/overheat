@@ -17,7 +17,13 @@
 	};
 </script>
 
-<button class="turbo-btn" class:on={checked} onclick={flip} aria-pressed={checked}>
+<button
+	class="turbo-btn"
+	class:on={checked}
+	onclick={flip}
+	aria-pressed={checked}
+	title="turbo: faster reveal, same odds"
+>
 	{#if checked}
 		<span class="turbo-flames" aria-hidden="true">
 			{#each FLAME_CHARS as char, index (index)}

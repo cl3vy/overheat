@@ -2,10 +2,11 @@
  * Outcome-scaled pacing (brief 5.5). The timeline is derived from crashTemp
  * vs targetTemp read out of the book events; it never affects the payout.
  *
- * Win climbs are built for suspense: fast early heat that decelerates on
- * approach (the last stretch takes disproportionately long), micro-stalls at
- * round multipliers, and a total duration that scales with the target
- * (~4s for 1.5x up to ~13s for 100x). Display-only.
+ * Decorrelation principle: every round follows the SAME time-at-temperature
+ * law, with a hesitation stall at each checkpoint rung. A bust is the win
+ * path truncated at the fry point, so the first N seconds of a dud are
+ * indistinguishable from the first N seconds of a jackpot -- the reveal
+ * cannot telegraph the outcome class early.
  */
 
 export type Ease = 'linear' | 'out';
@@ -14,69 +15,107 @@ export type ClimbSegment = {
 	toTemp: number;
 	durationMs: number;
 	ease: Ease;
-	/** hold at toTemp with a nervous temp wobble (milestone hesitation) */
+	/** hold at toTemp with a nervous temp wobble (rung hesitation) */
 	jitter?: boolean;
-	/** the round multiplier this stall sits on (used for chirps/ladder) */
+	/** the checkpoint temp this stall sits on (used for chirps/ladder) */
 	milestone?: number;
 };
 
 const log2 = (x: number) => Math.log2(Math.max(x, 1));
-
-/** Round multipliers where the climb hesitates for a beat. */
-export const WIN_MILESTONES = [1.5, 2, 3, 5, 10, 20, 50];
+const clamp = (x: number, lo: number, hi: number) => Math.min(Math.max(x, lo), hi);
 
 /**
  * Cumulative time to reach climb progress p in [0,1].
  * t(p) = p^EXP means early heat is cheap and the final 10% of the climb
- * costs ~25% of the round — classic "almost there" tension.
+ * costs ~25% of the round -- classic "almost there" tension.
  */
 const CLIMB_EXP = 2.6;
 
-/** Win: climb all the way to the shutdown temperature. */
-export const buildWinClimb = (targetTemp: number): ClimbSegment[] => {
-	// ~4s at 1.5x, ~7s at 5x, ~10s at 20x, ~13s at 100x
-	const totalMs = 3000 + 1500 * log2(targetTemp);
-	const progressOf = (temp: number) => (temp - 1) / Math.max(targetTemp - 1, 0.0001);
-	const timeAt = (p: number) => Math.pow(Math.min(Math.max(p, 0), 1), CLIMB_EXP) * totalMs;
+/** total duration of a full climb to the target: ~4s at 1.5x, ~13s at 100x */
+const fullClimbMs = (targetTemp: number) => 3000 + 1500 * log2(targetTemp);
 
-	// hold just short of the target before the final push
-	const nearTemp = 1 + (targetTemp - 1) * 0.955;
-	const milestones = WIN_MILESTONES.filter((m) => m > 1 && m < nearTemp);
+export const buildClimbPath = (options: {
+	targetTemp: number;
+	/** where the visible climb stops: the fry temp on busts, the target on wins */
+	endTemp: number;
+	/** checkpoint rung temperatures for the active rig (all below target) */
+	rungTemps: number[];
+	isWin: boolean;
+	minimumRoundDurationMs?: number;
+}): ClimbSegment[] => {
+	const { targetTemp, endTemp, rungTemps, isWin, minimumRoundDurationMs = 0 } = options;
+
+	if (!isWin && endTemp <= 1.005) {
+		// fried on boot: the one honestly-instant outcome
+		return [{ toTemp: endTemp, durationMs: 200, ease: 'linear' }];
+	}
+
+	const totalMs = fullClimbMs(targetTemp);
+	const progressOf = (temp: number) => (temp - 1) / Math.max(targetTemp - 1, 0.0001);
+	const timeAt = (p: number) => Math.pow(clamp(p, 0, 1), CLIMB_EXP) * totalMs;
+	// dense ladders stall briefly, sparse ladders linger
+	const stallMs = clamp(520 - rungTemps.length * 22, 170, 420);
 
 	const segments: ClimbSegment[] = [];
 	let prevTime = 0;
-	for (const milestone of milestones) {
-		const t = timeAt(progressOf(milestone));
+	let lastTemp = 1;
+
+	// shared prefix -- identical for wins and busts up to the fry point
+	for (const rung of rungTemps) {
+		if (rung >= endTemp - 1e-9) break;
+		const t = timeAt(progressOf(rung));
+		segments.push({ toTemp: rung, durationMs: Math.max(t - prevTime, 140), ease: 'linear' });
 		segments.push({
-			toTemp: milestone,
-			durationMs: Math.max(t - prevTime, 150),
-			ease: 'linear',
-		});
-		// micro-stall: deterministic 300-500ms hesitation with temp jitter
-		segments.push({
-			toTemp: milestone,
-			durationMs: 300 + (Math.round(milestone * 100) % 201),
+			toTemp: rung,
+			durationMs: stallMs + (Math.round(rung * 100) % 90),
 			ease: 'linear',
 			jitter: true,
-			milestone,
+			milestone: rung,
 		});
 		prevTime = t;
+		lastTemp = rung;
 	}
 
-	// approach crawl into the hold point, then the tense pre-bank pause
-	segments.push({
-		toTemp: nearTemp,
-		durationMs: Math.max(timeAt(progressOf(nearTemp)) - prevTime, 400),
-		ease: 'out',
-	});
-	segments.push({
-		toTemp: nearTemp,
-		durationMs: 350 + 130 * log2(targetTemp),
-		ease: 'linear',
-		jitter: true,
-	});
-	// the bank push
-	segments.push({ toTemp: targetTemp, durationMs: 500, ease: 'linear' });
+	if (isWin) {
+		// approach crawl into the hold point, then the tense pre-bank pause
+		const nearTemp = Math.max(1 + (targetTemp - 1) * 0.955, lastTemp);
+		segments.push({
+			toTemp: nearTemp,
+			durationMs: Math.max(timeAt(progressOf(nearTemp)) - prevTime, 400),
+			ease: 'out',
+		});
+		segments.push({
+			toTemp: nearTemp,
+			durationMs: 350 + 130 * log2(targetTemp),
+			ease: 'linear',
+			jitter: true,
+		});
+		// the bank push
+		segments.push({ toTemp: targetTemp, durationMs: 500, ease: 'linear' });
+	} else if (progressOf(endTemp) >= 0.85) {
+		// died within sight of the target: crawl agonisingly close, hold, fry
+		const crawlStart = Math.max(1 + (endTemp - 1) * 0.92, lastTemp);
+		segments.push({
+			toTemp: crawlStart,
+			durationMs: Math.max(timeAt(progressOf(crawlStart)) - prevTime, 700),
+			ease: 'out',
+		});
+		segments.push({ toTemp: endTemp, durationMs: 1500, ease: 'out' });
+		segments.push({ toTemp: endTemp, durationMs: 850, ease: 'linear', jitter: true });
+	} else {
+		// fry mid-stride on the shared law -- no deceleration tell
+		segments.push({
+			toTemp: endTemp,
+			durationMs: Math.max(timeAt(progressOf(endTemp)) - prevTime, 260),
+			ease: 'linear',
+		});
+	}
+
+	const total = segments.reduce((sum, segment) => sum + segment.durationMs, 0);
+	if (minimumRoundDurationMs > total && total > 0) {
+		const scale = minimumRoundDurationMs / total;
+		return segments.map((segment) => ({ ...segment, durationMs: segment.durationMs * scale }));
+	}
 	return segments;
 };
 
@@ -98,56 +137,6 @@ export const buildOverdriveSegments = (targetTemp: number, bankedAt: number): Cl
 		if (i < steps) {
 			segments.push({ toTemp, durationMs: 260, ease: 'linear', jitter: true });
 		}
-	}
-	return segments;
-};
-
-/** Bust: fry fast when far below target, milk the near miss. */
-export const buildBustClimb = (targetTemp: number, crashTemp: number): ClimbSegment[] => {
-	if (crashTemp <= 1.005) {
-		// fried on boot
-		return [{ toTemp: crashTemp, durationMs: 200, ease: 'linear' }];
-	}
-
-	const progress = Math.min((crashTemp - 1) / (targetTemp - 1), 1);
-
-	if (progress < 0.5) {
-		return [{ toTemp: crashTemp, durationMs: 500 + 900 * progress, ease: 'linear' }];
-	}
-
-	if (progress < 0.85) {
-		const durationMs = 1300 + 1300 * ((progress - 0.5) / 0.35);
-		return [{ toTemp: crashTemp, durationMs, ease: 'out' }];
-	}
-
-	// near miss: climb, crawl agonisingly close to the target, hold, fry
-	const crawlStart = 1 + (crashTemp - 1) * 0.92;
-	return [
-		{ toTemp: crawlStart, durationMs: 2000, ease: 'out' },
-		{ toTemp: crashTemp, durationMs: 1700, ease: 'out' },
-		{ toTemp: crashTemp, durationMs: 900, ease: 'linear', jitter: true },
-	];
-};
-
-export const buildClimb = (options: {
-	targetTemp: number;
-	/** bust: where it fried; win: the bank point (above target on overdrive) */
-	crashTemp: number;
-	isWin: boolean;
-	minimumRoundDurationMs?: number;
-}): ClimbSegment[] => {
-	const { targetTemp, crashTemp, isWin, minimumRoundDurationMs = 0 } = options;
-	// overdrive surges past the target are animated separately by the heat
-	// handler (buildOverdriveSegments) so the surge sting can play between them
-	const segments = isWin ? buildWinClimb(targetTemp) : buildBustClimb(targetTemp, crashTemp);
-
-	const totalMs = segments.reduce((sum, segment) => sum + segment.durationMs, 0);
-	if (minimumRoundDurationMs > totalMs && totalMs > 0) {
-		const scale = minimumRoundDurationMs / totalMs;
-		return segments.map((segment) => ({
-			...segment,
-			durationMs: segment.durationMs * scale,
-		}));
 	}
 	return segments;
 };

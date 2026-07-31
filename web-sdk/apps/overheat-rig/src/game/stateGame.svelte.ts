@@ -14,8 +14,10 @@ export const stateGame = $state({
 	couldHaveReached: 0,
 	/** win tier when banked ('clean' | 'overdrive' | 'critical' | 'golden') */
 	winTier: null as WinTier | null,
-	/** salvage payout multiplier on a bust (0 when nothing was recovered) */
-	salvageMult: 0,
+	/** cumulative payout secured by crossed checkpoint rungs (x stake) */
+	securedMult: 0,
+	/** number of checkpoint rungs crossed so far this round */
+	rungsCrossed: 0,
 	logs: [] as LogLine[],
 	/** resume fast-forward: book events with index < skipUntilIndex apply instantly */
 	skipUntilIndex: 0,
@@ -34,7 +36,8 @@ export const resetRound = () => {
 	stateGame.crashTemp = 0;
 	stateGame.couldHaveReached = 0;
 	stateGame.winTier = null;
-	stateGame.salvageMult = 0;
+	stateGame.securedMult = 0;
+	stateGame.rungsCrossed = 0;
 	stateGame.logs = [];
 	stateGame.skipUntilIndex = 0;
 	stateGame.hashrate = 0;

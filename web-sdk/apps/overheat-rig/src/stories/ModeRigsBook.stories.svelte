@@ -22,8 +22,10 @@
 		drawRealisticBook,
 		bustInstant,
 		bustFar,
+		bankEarly,
+		bankDeep,
+		bankNearRung,
 		bustNearMiss,
-		bustSalvage,
 		winEco,
 		winOverclock,
 		winPlasma,
@@ -71,9 +73,9 @@
 		skipLoadingScreen: true,
 		data: {},
 		action: async () => {
-			// draw from the true 96.5%-RTP spicy distribution for the dialed rig
+			// draw from the true 96.5%-RTP checkpoint distribution for the dialed rig
 			const rig = RIG_MAP[stateBet.activeBetModeKey as RigId] ?? RIG_MAP.standard;
-			await runBook(drawRealisticBook(rig.id, rig.targetTemp));
+			await runBook(drawRealisticBook(rig.id));
 		},
 	})}
 	{template}
@@ -110,6 +112,36 @@
 />
 
 <Story
+	name="early checkpoints held (furnace, below stake)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => runBook(bankEarly),
+	})}
+	{template}
+/>
+
+<Story
+	name="deep ladder fry (plasma, big partial)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => runBook(bankDeep),
+	})}
+	{template}
+/>
+
+<Story
+	name="rung near miss (died a notch short of the next lock)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => runBook(bankNearRung),
+	})}
+	{template}
+/>
+
+<Story
 	name="win eco 1.5x"
 	args={templateArgs({
 		skipLoadingScreen: true,
@@ -135,16 +167,6 @@
 		skipLoadingScreen: true,
 		data: {},
 		action: async () => runBook(winPlasma),
-	})}
-	{template}
-/>
-
-<Story
-	name="bust with scrap salvage (0.4x back)"
-	args={templateArgs({
-		skipLoadingScreen: true,
-		data: {},
-		action: async () => runBook(bustSalvage),
 	})}
 	{template}
 />
