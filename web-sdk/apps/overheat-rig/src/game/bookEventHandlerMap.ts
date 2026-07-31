@@ -5,8 +5,8 @@ import { waitForTimeout } from 'utils-shared/wait';
 import { RIG_MAP } from './constants';
 import { stateGame, pushLog } from './stateGame.svelte';
 import { recordRound } from './stateSession.svelte';
-import { buildClimb, applyEase, type ClimbSegment } from './pacing';
-import { playBoot, startHum, setHumLevel, stopHum, playMeltdown } from './sound';
+import { buildClimb, applyEase, jitterOffset, type ClimbSegment } from './pacing';
+import { playBoot, startHum, setHumLevel, stopHum, playMeltdown, playBankLock } from './sound';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 
 const TICK_MS = 33;
@@ -24,7 +24,10 @@ const animateSegments = async (segments: ClimbSegment[]) => {
 			await waitForTimeout(TICK_MS);
 			elapsed = performance.now() - startedAt;
 			const t = Math.min(elapsed / segment.durationMs, 1);
-			stateGame.currentTemp = fromTemp + (segment.toTemp - fromTemp) * applyEase(t, segment.ease);
+			const base = fromTemp + (segment.toTemp - fromTemp) * applyEase(t, segment.ease);
+			stateGame.currentTemp = segment.jitter
+				? Math.max(base + jitterOffset(elapsed, stateGame.targetTemp), 1)
+				: base;
 			setHumLevel((stateGame.currentTemp - 1) / Math.max(stateGame.targetTemp - 1, 0.0001));
 		}
 		stateGame.currentTemp = segment.toTemp;
@@ -135,6 +138,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateBet.winBookEventAmount = Math.round(bookEvent.bankedAt * 100);
 		stateGame.phase = 'banked';
 		stopHum();
+		if (!instant) playBankLock();
 		// win fanfare is played by the WinCelebration overlay
 
 		pushLog(`>> TARGET TEMP ${bookEvent.bankedAt.toFixed(2)}x REACHED`, 'win');

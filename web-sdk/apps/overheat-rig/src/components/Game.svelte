@@ -1,6 +1,6 @@
 <script lang="ts">
 	import './app.css';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 
 	import { stateBet, stateBetDerived, stateConfig, stateModal } from 'state-shared';
 
@@ -22,6 +22,41 @@
 
 	const formatMW = (value: number) =>
 		value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+	// header balance: decreases (stake taken) snap instantly, increases roll
+	// up like an odometer with a green flash so the player watches it grow
+	let displayedBalance = $state(0);
+	let balanceFlash = $state(false);
+	let balanceAnimId = 0;
+	$effect(() => {
+		const target = stateBet.balanceAmount;
+		untrack(() => {
+			if (target === displayedBalance) return;
+			const id = ++balanceAnimId;
+			if (target < displayedBalance || displayedBalance === 0) {
+				displayedBalance = target;
+				return;
+			}
+			const from = displayedBalance;
+			balanceFlash = true;
+			const startedAt = performance.now();
+			const durationMs = 900;
+			const step = () => {
+				if (id !== balanceAnimId) return;
+				const t = Math.min((performance.now() - startedAt) / durationMs, 1);
+				displayedBalance = from + (target - from) * (1 - (1 - t) * (1 - t));
+				if (t < 1) {
+					requestAnimationFrame(step);
+				} else {
+					displayedBalance = target;
+					setTimeout(() => {
+						if (id === balanceAnimId) balanceFlash = false;
+					}, 350);
+				}
+			};
+			requestAnimationFrame(step);
+		});
+	});
 
 	// spacebar = bet, from the rig select screen or straight off a settled round
 	const onKeydown = (event: KeyboardEvent) => {
@@ -75,7 +110,10 @@
 	<div class="term-header">
 		<span>OVERHEAT // MINING RIG THERMAL CONSOLE v1.0</span>
 		<span>
-			PWR RESERVE: <span class="win">{formatMW(stateBet.balanceAmount)} MW</span>
+			PWR RESERVE:
+			<span class="win pwr-reserve" class:flash={balanceFlash}>
+				{formatMW(displayedBalance)} MW
+			</span>
 			{#if stateBet.isTurbo}<span class="warn"> [TURBO]</span>{/if}
 		</span>
 	</div>

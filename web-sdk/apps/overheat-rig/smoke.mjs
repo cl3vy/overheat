@@ -2,8 +2,9 @@
 // Usage: node smoke.mjs [storyId] [timeoutMs]
 import { chromium } from 'playwright-core';
 
-const storyId = process.argv[2] ?? 'mode-rigs-book--win-eco-1-5x';
+const storyId = process.argv[2] ?? 'mode-rigs-book--win-eco-15-x';
 const timeoutMs = Number(process.argv[3] ?? 60000);
+const useTurbo = process.argv.includes('turbo');
 const url = `http://localhost:6001/iframe.html?id=${storyId}&viewMode=story`;
 
 const browser = await chromium.launch({
@@ -29,8 +30,27 @@ try {
 	);
 	console.log('story ready');
 
+	if (useTurbo) {
+		await page.click('.turbo-btn');
+		console.log('turbo enabled');
+	}
+
 	await page.click('button.action');
 	console.log('action clicked, waiting for round to settle...');
+
+	// mid-climb capture for visual review
+	await page.waitForTimeout(3500);
+	await page.screenshot({ path: '/tmp/overheat-midrun.png' });
+
+	// bank-moment capture (wins only; times out silently on busts)
+	try {
+		await page.waitForFunction(() => document.body.innerText.includes('LOCKED'), {
+			timeout: timeoutMs,
+		});
+		await page.waitForTimeout(600);
+		await page.screenshot({ path: '/tmp/overheat-bank.png' });
+		console.log('bank moment captured: /tmp/overheat-bank.png');
+	} catch {}
 
 	// wait for the settled screen (BOOT AGAIN / RETURN buttons) or win overlay
 	await page.waitForFunction(

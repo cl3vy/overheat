@@ -334,6 +334,273 @@ button.term-btn.danger {
 	box-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
 }
 
+/* ---- run dashboard: full-screen money printer ---- */
+.run-dash {
+	min-height: 100%;
+	display: flex;
+	flex-direction: column;
+	box-sizing: border-box;
+}
+
+.run-topline {
+	letter-spacing: 0.06em;
+	margin-bottom: 8px;
+}
+
+.run-grid {
+	flex: 1;
+	min-height: 0;
+	display: grid;
+	grid-template-columns: minmax(190px, 1.05fr) minmax(0, 1.9fr) minmax(160px, 0.85fr);
+	gap: clamp(10px, 2.2vw, 30px);
+}
+
+.run-col {
+	min-width: 0;
+	overflow: hidden;
+	font-size: 0.82em;
+	display: flex;
+	flex-direction: column;
+}
+
+.run-left { justify-content: flex-end; }
+
+.col-title {
+	letter-spacing: 0.2em;
+	margin-bottom: 6px;
+	opacity: 0.8;
+}
+
+.ladder-title { margin-top: 16px; }
+
+.run-center {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	text-align: center;
+	gap: 10px;
+	min-width: 0;
+}
+
+.temp-block { width: 100%; }
+
+.temp-label {
+	letter-spacing: 0.35em;
+	font-size: 0.85em;
+}
+
+.temp-giant {
+	font-size: clamp(3em, 11vh, 5.6em);
+	font-weight: bold;
+	letter-spacing: 0.04em;
+	line-height: 1.05;
+	font-variant-numeric: tabular-nums;
+}
+
+.temp-giant.win { text-shadow: 0 0 22px rgba(0, 255, 65, 0.7); }
+.temp-giant.warn { text-shadow: 0 0 22px rgba(255, 176, 0, 0.7); }
+.temp-giant.fault { text-shadow: 0 0 22px rgba(255, 43, 43, 0.7); }
+
+.temp-sub { letter-spacing: 0.12em; }
+
+.gauge-big {
+	margin-top: 8px;
+	white-space: pre;
+	font-size: clamp(0.9em, 2.2vh, 1.3em);
+	letter-spacing: 0.02em;
+}
+
+.yield-box {
+	--yglow: 0.5;
+	position: relative;
+	margin-top: 4px;
+	padding: 10px 26px;
+	border: 1px solid var(--green-dim);
+	background: rgba(0, 255, 65, 0.03);
+	box-shadow: 0 0 calc(var(--yglow) * 26px) rgba(0, 255, 65, 0.22);
+}
+
+.yield-label {
+	letter-spacing: 0.3em;
+	font-size: 0.8em;
+}
+
+.yield-amount {
+	font-size: clamp(1.6em, 4.6vh, 2.6em);
+	font-weight: bold;
+	font-variant-numeric: tabular-nums;
+	color: var(--green);
+	/* glow scales with climb progress; the pulse keeps it alive */
+	text-shadow:
+		0 0 calc(6px + var(--yglow) * 20px) rgba(0, 255, 65, 0.9),
+		0 0 calc(var(--yglow) * 52px) rgba(0, 255, 65, 0.45);
+	animation: yield-pulse 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes yield-pulse {
+	0% { transform: scale(1); }
+	100% { transform: scale(1.02); }
+}
+
+/* bank moment: counter freezes, LOCKED stamp slams in, amount flies to the header */
+.yield-box.locked {
+	border-color: var(--amber);
+	box-shadow: 0 0 22px rgba(255, 176, 0, 0.28);
+}
+
+.yield-box.locked .yield-amount {
+	animation: none;
+	color: var(--amber);
+	text-shadow: 0 0 18px rgba(255, 176, 0, 0.8);
+}
+
+.locked-stamp {
+	position: absolute;
+	top: -0.7em;
+	right: -1.2em;
+	padding: 2px 10px;
+	border: 2px solid var(--amber);
+	color: var(--amber);
+	font-weight: bold;
+	letter-spacing: 0.3em;
+	font-size: 0.9em;
+	background: var(--bg);
+	transform: rotate(8deg);
+	text-shadow: 0 0 10px rgba(255, 176, 0, 0.8);
+	animation: stamp-slam 0.3s cubic-bezier(0.2, 1.8, 0.4, 1);
+}
+
+@keyframes stamp-slam {
+	0% { transform: rotate(8deg) scale(2.6); opacity: 0; }
+	60% { opacity: 1; }
+	100% { transform: rotate(8deg) scale(1); opacity: 1; }
+}
+
+.fly-amount {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	font-weight: bold;
+	font-size: 1.4em;
+	color: var(--green);
+	pointer-events: none;
+	white-space: nowrap;
+	text-shadow: 0 0 12px rgba(0, 255, 65, 0.9);
+	animation: fly-to-balance 0.9s cubic-bezier(0.4, 0, 0.7, 0.4) 0.35s forwards;
+	z-index: 30;
+}
+
+@keyframes fly-to-balance {
+	0% { transform: translate(-50%, 0) scale(1); opacity: 1; }
+	80% { opacity: 1; }
+	100% {
+		transform: translate(calc(-50% + var(--fdx)), var(--fdy)) scale(0.35);
+		opacity: 0;
+	}
+}
+
+/* header balance flashes green while it rolls up */
+.pwr-reserve { transition: text-shadow 0.2s; }
+
+.pwr-reserve.flash {
+	animation: balance-flash 0.45s ease-in-out infinite alternate;
+}
+
+@keyframes balance-flash {
+	0% { text-shadow: 0 0 6px rgba(0, 255, 65, 0.5); }
+	100% {
+		color: #d6ffd6;
+		text-shadow: 0 0 16px rgba(0, 255, 65, 1), 0 0 34px rgba(0, 255, 65, 0.6);
+	}
+}
+
+.coin-toast {
+	position: absolute;
+	left: 50%;
+	top: -0.6em;
+	font-weight: bold;
+	font-size: 0.95em;
+	color: var(--green);
+	pointer-events: none;
+	white-space: nowrap;
+	text-shadow: 0 0 10px rgba(0, 255, 65, 0.9);
+	animation: coin-absorb 1s ease-in forwards;
+}
+
+@keyframes coin-absorb {
+	0% {
+		transform: translate(calc(-50% + var(--tx)), -1.6em) scale(1);
+		opacity: 0;
+	}
+	18% { opacity: 1; }
+	70% { opacity: 1; }
+	100% {
+		/* sucked into the counter */
+		transform: translate(-50%, 1.1em) scale(0.45);
+		opacity: 0;
+	}
+}
+
+.yield-caption {
+	font-size: 0.75em;
+	letter-spacing: 0.08em;
+}
+
+.tele-row {
+	display: flex;
+	justify-content: space-between;
+	gap: 8px;
+	font-variant-numeric: tabular-nums;
+	padding: 1px 0;
+}
+
+.ladder {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+
+.rung {
+	color: var(--green-dim);
+	letter-spacing: 0.08em;
+	transition: color 0.15s;
+	font-variant-numeric: tabular-nums;
+}
+
+.rung.lit {
+	color: var(--green);
+	text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+	animation: rung-flash 0.5s;
+}
+
+@keyframes rung-flash {
+	0% {
+		color: #eaffea;
+		text-shadow: 0 0 18px rgba(0, 255, 65, 1);
+	}
+	100% {
+		color: var(--green);
+		text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+	}
+}
+
+.rung.target { letter-spacing: 0.12em; }
+.rung.target.lit {
+	color: var(--amber);
+	text-shadow: 0 0 10px rgba(255, 176, 0, 0.7);
+}
+
+.rung-mark { margin-right: 6px; }
+
+.settling { margin-top: 6px; }
+
+/* narrow screens: keep the money center-stage, drop side columns */
+@media (max-width: 720px) {
+	.run-grid { grid-template-columns: 1fr; }
+	.run-left, .run-right { display: none; }
+}
+
 .gauge-row {
 	margin: 12px 0;
 	white-space: pre;

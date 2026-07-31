@@ -124,6 +124,36 @@ export const playSwitchClick = (on: boolean) => {
 	} catch {}
 };
 
+/** Rising two-note chirp when the climb crosses a milestone rung. */
+export const playMilestoneChirp = (rungIndex: number) => {
+	if (!enabled()) return;
+	try {
+		const base = 620 + Math.min(rungIndex, 8) * 90;
+		beep(base, 55, { type: 'square', volume: 0.04 });
+		beep(base * 1.5, 75, { type: 'square', volume: 0.045, delayMs: 60 });
+	} catch {}
+};
+
+/** Tiny coin blip for yield toasts. Quiet: it fires often mid-climb. */
+export const playCoinTick = () => {
+	if (!enabled()) return;
+	try {
+		beep(1560, 30, { type: 'triangle', volume: 0.03 });
+		beep(2080, 45, { type: 'triangle', volume: 0.025, delayMs: 30 });
+	} catch {}
+};
+
+/** "Ka-chunk" vault lock when the win banks. */
+export const playBankLock = () => {
+	if (!enabled()) return;
+	try {
+		beep(95, 90, { type: 'square', volume: 0.09 });
+		beep(70, 130, { type: 'square', volume: 0.08, delayMs: 100 });
+		beep(2400, 25, { type: 'square', volume: 0.03, delayMs: 110 });
+		beep(1200, 220, { type: 'sine', volume: 0.05, delayMs: 240 });
+	} catch {}
+};
+
 /** Escalating victory arpeggio; higher tier = longer and brighter. */
 export const playWinFanfare = (level: number) => {
 	if (!enabled()) return;

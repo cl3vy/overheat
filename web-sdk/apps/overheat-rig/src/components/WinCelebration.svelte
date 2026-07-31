@@ -61,6 +61,10 @@
 
 	const celebrate = async () => {
 		const id = ++runId;
+		// let the bank moment land first: LOCKED stamp, fly-to-balance,
+		// header count-up -- then take over the screen
+		await waitForTimeout(stateBet.isTurbo ? 250 : 1400);
+		if (runId !== id || stateGame.phase !== 'banked') return;
 		tier = tierFor(stateGame.targetTemp);
 		const durationMs = stateBet.isTurbo ? 1300 : tier.durationMs;
 

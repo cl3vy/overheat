@@ -1,6 +1,11 @@
 /**
  * Outcome-scaled pacing (brief 5.5). The timeline is derived from crashTemp
  * vs targetTemp read out of the book events; it never affects the payout.
+ *
+ * Win climbs are built for suspense: fast early heat that decelerates on
+ * approach (the last stretch takes disproportionately long), micro-stalls at
+ * round multipliers, and a total duration that scales with the target
+ * (~4s for 1.5x up to ~13s for 100x). Display-only.
  */
 
 export type Ease = 'linear' | 'out';
@@ -9,23 +14,70 @@ export type ClimbSegment = {
 	toTemp: number;
 	durationMs: number;
 	ease: Ease;
+	/** hold at toTemp with a nervous temp wobble (milestone hesitation) */
+	jitter?: boolean;
+	/** the round multiplier this stall sits on (used for chirps/ladder) */
+	milestone?: number;
 };
 
 const log2 = (x: number) => Math.log2(Math.max(x, 1));
 
+/** Round multipliers where the climb hesitates for a beat. */
+export const WIN_MILESTONES = [1.5, 2, 3, 5, 10, 20, 50];
+
+/**
+ * Cumulative time to reach climb progress p in [0,1].
+ * t(p) = p^EXP means early heat is cheap and the final 10% of the climb
+ * costs ~25% of the round — classic "almost there" tension.
+ */
+const CLIMB_EXP = 2.6;
+
 /** Win: climb all the way to the shutdown temperature. */
 export const buildWinClimb = (targetTemp: number): ClimbSegment[] => {
-	const totalMs = 1100 + 850 * log2(targetTemp);
-	if (targetTemp < 5) {
-		return [{ toTemp: targetTemp, durationMs: totalMs, ease: 'linear' }];
-	}
-	// hotter rigs earn a longer, tenser crawl with a hold before the bank
+	// ~4s at 1.5x, ~7s at 5x, ~10s at 20x, ~13s at 100x
+	const totalMs = 3000 + 1500 * log2(targetTemp);
+	const progressOf = (temp: number) => (temp - 1) / Math.max(targetTemp - 1, 0.0001);
+	const timeAt = (p: number) => Math.pow(Math.min(Math.max(p, 0), 1), CLIMB_EXP) * totalMs;
+
+	// hold just short of the target before the final push
 	const nearTemp = 1 + (targetTemp - 1) * 0.955;
-	return [
-		{ toTemp: nearTemp, durationMs: totalMs, ease: 'out' },
-		{ toTemp: nearTemp, durationMs: 350 + 130 * log2(targetTemp), ease: 'linear' },
-		{ toTemp: targetTemp, durationMs: 500, ease: 'linear' },
-	];
+	const milestones = WIN_MILESTONES.filter((m) => m > 1 && m < nearTemp);
+
+	const segments: ClimbSegment[] = [];
+	let prevTime = 0;
+	for (const milestone of milestones) {
+		const t = timeAt(progressOf(milestone));
+		segments.push({
+			toTemp: milestone,
+			durationMs: Math.max(t - prevTime, 150),
+			ease: 'linear',
+		});
+		// micro-stall: deterministic 300-500ms hesitation with temp jitter
+		segments.push({
+			toTemp: milestone,
+			durationMs: 300 + (Math.round(milestone * 100) % 201),
+			ease: 'linear',
+			jitter: true,
+			milestone,
+		});
+		prevTime = t;
+	}
+
+	// approach crawl into the hold point, then the tense pre-bank pause
+	segments.push({
+		toTemp: nearTemp,
+		durationMs: Math.max(timeAt(progressOf(nearTemp)) - prevTime, 400),
+		ease: 'out',
+	});
+	segments.push({
+		toTemp: nearTemp,
+		durationMs: 350 + 130 * log2(targetTemp),
+		ease: 'linear',
+		jitter: true,
+	});
+	// the bank push
+	segments.push({ toTemp: targetTemp, durationMs: 500, ease: 'linear' });
+	return segments;
 };
 
 /** Bust: fry fast when far below target, milk the near miss. */
@@ -51,7 +103,7 @@ export const buildBustClimb = (targetTemp: number, crashTemp: number): ClimbSegm
 	return [
 		{ toTemp: crawlStart, durationMs: 2000, ease: 'out' },
 		{ toTemp: crashTemp, durationMs: 1700, ease: 'out' },
-		{ toTemp: crashTemp, durationMs: 900, ease: 'linear' },
+		{ toTemp: crashTemp, durationMs: 900, ease: 'linear', jitter: true },
 	];
 };
 
@@ -78,4 +130,13 @@ export const buildClimb = (options: {
 export const applyEase = (t: number, ease: Ease) => {
 	if (ease === 'out') return 1 - (1 - t) * (1 - t);
 	return t;
+};
+
+/**
+ * Wobble offset for jitter holds: a nervous flutter that dips slightly
+ * below the held temp, scaled to the climb so it reads at any target.
+ */
+export const jitterOffset = (elapsedMs: number, targetTemp: number) => {
+	const amplitude = Math.max(targetTemp - 1, 0.5) * 0.006;
+	return -Math.abs(Math.sin(elapsedMs / 53) + 0.4 * Math.sin(elapsedMs / 17)) * amplitude;
 };
