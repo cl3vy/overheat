@@ -1,0 +1,143 @@
+/**
+ * Synthesized terminal audio via Web Audio -- no asset files. Everything is
+ * guarded by the session sound toggle and wrapped so audio failures can never
+ * break the game.
+ */
+
+import { stateSession } from './stateSession.svelte';
+
+let audioContext: AudioContext | null = null;
+let humOscillator: OscillatorNode | null = null;
+let humGain: GainNode | null = null;
+
+const getContext = () => {
+	if (!audioContext) audioContext = new AudioContext();
+	if (audioContext.state === 'suspended') audioContext.resume();
+	return audioContext;
+};
+
+const enabled = () => stateSession.soundEnabled && typeof AudioContext !== 'undefined';
+
+const beep = (
+	frequency: number,
+	durationMs: number,
+	options: { type?: OscillatorType; volume?: number; delayMs?: number } = {},
+) => {
+	const { type = 'square', volume = 0.05, delayMs = 0 } = options;
+	const ctx = getContext();
+	const startAt = ctx.currentTime + delayMs / 1000;
+	const oscillator = ctx.createOscillator();
+	const gain = ctx.createGain();
+	oscillator.type = type;
+	oscillator.frequency.value = frequency;
+	gain.gain.setValueAtTime(volume, startAt);
+	gain.gain.exponentialRampToValueAtTime(0.001, startAt + durationMs / 1000);
+	oscillator.connect(gain).connect(ctx.destination);
+	oscillator.start(startAt);
+	oscillator.stop(startAt + durationMs / 1000);
+};
+
+export const playBoot = () => {
+	if (!enabled()) return;
+	try {
+		beep(440, 60);
+		beep(660, 60, { delayMs: 90 });
+		beep(880, 90, { delayMs: 180 });
+	} catch {}
+};
+
+/** Low rig hum that rises in pitch with the temperature. */
+export const startHum = () => {
+	if (!enabled()) return;
+	try {
+		const ctx = getContext();
+		stopHum();
+		humOscillator = ctx.createOscillator();
+		humGain = ctx.createGain();
+		humOscillator.type = 'sawtooth';
+		humOscillator.frequency.value = 55;
+		humGain.gain.value = 0.025;
+		humOscillator.connect(humGain).connect(ctx.destination);
+		humOscillator.start();
+	} catch {}
+};
+
+/** fillFraction 0..1 = progress toward the shutdown temperature. */
+export const setHumLevel = (fillFraction: number) => {
+	if (!humOscillator || !humGain || !audioContext) return;
+	try {
+		const clamped = Math.min(Math.max(fillFraction, 0), 1);
+		humOscillator.frequency.setTargetAtTime(55 + clamped * 260, audioContext.currentTime, 0.05);
+		humGain.gain.setTargetAtTime(0.02 + clamped * 0.04, audioContext.currentTime, 0.05);
+	} catch {}
+};
+
+export const stopHum = () => {
+	try {
+		if (humGain && audioContext) {
+			humGain.gain.setTargetAtTime(0.0001, audioContext.currentTime, 0.03);
+		}
+		if (humOscillator) {
+			humOscillator.stop(audioContext ? audioContext.currentTime + 0.15 : undefined);
+		}
+	} catch {}
+	humOscillator = null;
+	humGain = null;
+};
+
+export const playMeltdown = () => {
+	if (!enabled()) return;
+	try {
+		const ctx = getContext();
+		// descending buzz
+		const oscillator = ctx.createOscillator();
+		const gain = ctx.createGain();
+		oscillator.type = 'sawtooth';
+		oscillator.frequency.setValueAtTime(320, ctx.currentTime);
+		oscillator.frequency.exponentialRampToValueAtTime(35, ctx.currentTime + 0.7);
+		gain.gain.setValueAtTime(0.09, ctx.currentTime);
+		gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+		oscillator.connect(gain).connect(ctx.destination);
+		oscillator.start();
+		oscillator.stop(ctx.currentTime + 0.8);
+		// crackle: short burst of filtered noise
+		const noiseBuffer = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate);
+		const channel = noiseBuffer.getChannelData(0);
+		for (let i = 0; i < channel.length; i += 1) {
+			channel[i] = (Math.random() * 2 - 1) * (1 - i / channel.length);
+		}
+		const noise = ctx.createBufferSource();
+		noise.buffer = noiseBuffer;
+		const noiseGain = ctx.createGain();
+		noiseGain.gain.value = 0.06;
+		noise.connect(noiseGain).connect(ctx.destination);
+		noise.start();
+	} catch {}
+};
+
+/** Mechanical toggle-switch clack: low thock + brief metallic tick. */
+export const playSwitchClick = (on: boolean) => {
+	if (!enabled()) return;
+	try {
+		beep(on ? 180 : 130, 45, { type: 'square', volume: 0.06 });
+		beep(on ? 2400 : 1800, 18, { type: 'square', volume: 0.03 });
+	} catch {}
+};
+
+/** Escalating victory arpeggio; higher tier = longer and brighter. */
+export const playWinFanfare = (level: number) => {
+	if (!enabled()) return;
+	try {
+		const scale = [523, 659, 784, 1047, 1319, 1568, 2093]; // C major run
+		const notes = Math.min(3 + level, scale.length);
+		for (let i = 0; i < notes; i += 1) {
+			beep(scale[i], 140, { type: 'sine', volume: 0.07, delayMs: i * 110 });
+			beep(scale[i] / 2, 140, { type: 'triangle', volume: 0.04, delayMs: i * 110 });
+		}
+		// closing chord
+		const chordAt = notes * 110 + 80;
+		beep(scale[notes - 1], 500, { type: 'sine', volume: 0.08, delayMs: chordAt });
+		beep(scale[Math.max(notes - 3, 0)], 500, { type: 'sine', volume: 0.06, delayMs: chordAt });
+		if (level >= 4) beep(scale[notes - 1] * 2, 500, { type: 'sine', volume: 0.04, delayMs: chordAt });
+	} catch {}
+};

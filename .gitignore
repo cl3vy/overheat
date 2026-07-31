@@ -1,3 +1,17 @@
 env/
 __pycache__/
 *.pyc
+
+# SDK clones: only the unique game work inside web-sdk is tracked.
+math-sdk/
+web-sdk/.git-upstream/
+web-sdk/apps/*
+!web-sdk/apps/overheat-rig
+
+# build artifacts / dependencies (anywhere)
+node_modules/
+.svelte-kit/
+storybook-static/
+.turbo/
+web-sdk/apps/overheat-rig/build/
+web-sdk/apps/overheat-rig/dist/
