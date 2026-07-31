@@ -10,7 +10,6 @@
 	import RigSelect from './RigSelect.svelte';
 	import RunView from './RunView.svelte';
 	import ErrorPanel from './ErrorPanel.svelte';
-	import WinCelebration from './WinCelebration.svelte';
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
 	import { refreshBalance } from '../game/rgs';
@@ -126,7 +125,6 @@
 		{/if}
 	</div>
 
-	<WinCelebration />
 	<ErrorPanel />
 	<div class="crt-glass" aria-hidden="true"></div>
 </div>

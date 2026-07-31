@@ -37,6 +37,32 @@ export const RIG_MAP: Record<RigId, RigInfo> = Object.fromEntries(
 	RIGS.map((rig) => [rig.id, rig]),
 ) as Record<RigId, RigInfo>;
 
+// must match tools/gen_overheat_math.py (spicy distribution)
+export const RTP = 0.965;
+
+export type WinTier = 'clean' | 'overdrive' | 'critical' | 'golden';
+
+/** win tiers: payout = target x mult, probability = rtpShare x RTP / payout */
+export const WIN_TIERS: { tier: WinTier; mult: number; rtpShare: number }[] = [
+	{ tier: 'clean', mult: 1, rtpShare: 0.84 },
+	{ tier: 'overdrive', mult: 1.5, rtpShare: 0.06 },
+	{ tier: 'critical', mult: 3, rtpShare: 0.04 },
+	{ tier: 'golden', mult: 10, rtpShare: 0.02 },
+];
+
+/** partial refund on some busts; pays less than the stake */
+export const SALVAGE_PAYOUT = 0.4;
+export const SALVAGE_RTP_SHARE = 0.04;
+/** probability a spin ends in salvage (same for every rig) */
+export const SALVAGE_PROB = (SALVAGE_RTP_SHARE * RTP) / SALVAGE_PAYOUT;
+
+/** max win per rig = golden tier = 10x the shutdown target */
+export const MAX_WIN_MULT = 10;
+
+/** probability the rig reaches shutdown (any win tier) for a given target */
+export const winProbability = (targetTemp: number) =>
+	WIN_TIERS.reduce((sum, t) => sum + (t.rtpShare * RTP) / (t.mult * targetTemp), 0);
+
 // terminal palette (brief 5.3)
 export const COLORS = {
 	bg: '#0a0e0a',

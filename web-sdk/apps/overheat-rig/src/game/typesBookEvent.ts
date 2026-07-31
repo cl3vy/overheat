@@ -1,6 +1,6 @@
 import type { BetType } from 'rgs-requests';
 
-import type { RigId } from './constants';
+import type { RigId, WinTier } from './constants';
 
 type BookEventBoot = {
 	index: number;
@@ -25,8 +25,19 @@ type BookEventMeltdown = {
 type BookEventShutdown = {
 	index: number;
 	type: 'shutdown';
+	/** payout multiplier: targetTemp for clean, up to 10x targetTemp on golden */
 	bankedAt: number;
 	couldHaveReached: number;
+	/** absent in pre-spicy books; treat as 'clean' */
+	tier?: WinTier;
+};
+
+/** partial scrap recovery on a bust: pays less than the stake */
+type BookEventSalvage = {
+	index: number;
+	type: 'salvage';
+	/** book units: payout multiplier x 100 */
+	amount: number;
 };
 
 type BookEventSetTotalWin = {
@@ -46,6 +57,7 @@ export type BookEvent =
 	| BookEventHeat
 	| BookEventMeltdown
 	| BookEventShutdown
+	| BookEventSalvage
 	| BookEventSetTotalWin
 	| BookEventFinalWin;
 

@@ -2,11 +2,26 @@ import { recordBookEvent, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateConfig } from 'state-shared';
 import { waitForTimeout } from 'utils-shared/wait';
 
-import { RIG_MAP } from './constants';
+import { BOOK_AMOUNT_SCALE, RIG_MAP } from './constants';
 import { stateGame, pushLog } from './stateGame.svelte';
 import { recordRound } from './stateSession.svelte';
-import { buildClimb, applyEase, jitterOffset, type ClimbSegment } from './pacing';
-import { playBoot, startHum, setHumLevel, stopHum, playMeltdown, playBankLock } from './sound';
+import {
+	buildClimb,
+	buildOverdriveSegments,
+	applyEase,
+	jitterOffset,
+	type ClimbSegment,
+} from './pacing';
+import {
+	playBoot,
+	startHum,
+	setHumLevel,
+	stopHum,
+	playMeltdown,
+	playBankLock,
+	playOverdriveSurge,
+	playSalvage,
+} from './sound';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 
 const TICK_MS = 33;
@@ -59,6 +74,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.currentTemp = 1;
 		stateGame.crashTemp = 0;
 		stateGame.couldHaveReached = 0;
+		stateGame.winTier = null;
+		stateGame.salvageMult = 0;
 		stateGame.logs = [];
 
 		if (!instant) playBoot();
@@ -88,13 +105,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		startHum();
+		// on overdrive wins crashTemp is the boosted bank point above the target:
+		// run the normal suspense climb to the target first, then surge past it
+		const overdrive = isWin && bookEvent.crashTemp > stateGame.targetTemp + 1e-9;
 		const segments = buildClimb({
 			targetTemp: stateGame.targetTemp,
-			crashTemp: bookEvent.crashTemp,
+			crashTemp: overdrive ? stateGame.targetTemp : bookEvent.crashTemp,
 			isWin,
 			minimumRoundDurationMs: stateConfig.jurisdiction.minimumRoundDuration,
 		});
 		await animateSegments(segments);
+		if (overdrive) {
+			const multiple = bookEvent.crashTemp / stateGame.targetTemp;
+			pushLog('!! SHUTDOWN COMMAND REJECTED -- THERMAL LIMITER SLIPPED', 'warn');
+			playOverdriveSurge(multiple);
+			await animateSegments(buildOverdriveSegments(stateGame.targetTemp, bookEvent.crashTemp));
+		}
 	},
 
 	meltdown: async (bookEvent: BookEventOfType<'meltdown'>) => {
@@ -130,20 +156,36 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	shutdown: async (bookEvent: BookEventOfType<'shutdown'>) => {
 		recordBookEvent({ bookEvent });
 		const instant = isInstant(bookEvent);
+		const tier = bookEvent.tier ?? 'clean';
 
 		stateGame.currentTemp = bookEvent.bankedAt;
 		stateGame.couldHaveReached = bookEvent.couldHaveReached;
+		stateGame.winTier = tier;
 		// seed the win display; the setTotalWin money event that follows
 		// carries the same value (payout is bankedAt by construction)
 		stateBet.winBookEventAmount = Math.round(bookEvent.bankedAt * 100);
 		stateGame.phase = 'banked';
 		stopHum();
 		if (!instant) playBankLock();
-		// win fanfare is played by the WinCelebration overlay
+		// win fanfare is played by the RunView in-place celebration
 
-		pushLog(`>> TARGET TEMP ${bookEvent.bankedAt.toFixed(2)}x REACHED`, 'win');
-		if (!instant) await waitForTimeout(250);
-		pushLog('>> SAFE SHUTDOWN -- COINS BANKED', 'win');
+		if (tier === 'clean') {
+			pushLog(`>> TARGET TEMP ${bookEvent.bankedAt.toFixed(2)}x REACHED`, 'win');
+			if (!instant) await waitForTimeout(250);
+			pushLog('>> SAFE SHUTDOWN -- COINS BANKED', 'win');
+		} else if (tier === 'overdrive') {
+			pushLog(`>> OVERDRIVE HOLD @ ${bookEvent.bankedAt.toFixed(2)}x -- 1.5x TARGET`, 'win');
+			if (!instant) await waitForTimeout(250);
+			pushLog('>> EMERGENCY SHUTDOWN CAUGHT IT -- BONUS COINS BANKED', 'win');
+		} else if (tier === 'critical') {
+			pushLog(`>> CRITICAL OVERDRIVE @ ${bookEvent.bankedAt.toFixed(2)}x -- 3x TARGET`, 'win');
+			if (!instant) await waitForTimeout(250);
+			pushLog('>> BREAKER SLAMMED -- TRIPLE YIELD BANKED', 'win');
+		} else {
+			pushLog(`>> GOLDEN SHUTDOWN @ ${bookEvent.bankedAt.toFixed(2)}x -- 10x TARGET`, 'win');
+			if (!instant) await waitForTimeout(250);
+			pushLog('>> THE SILICON ASCENDED. 10x YIELD BANKED.', 'win');
+		}
 		if (!instant) await waitForTimeout(400);
 		if (bookEvent.couldHaveReached > bookEvent.bankedAt) {
 			pushLog(
@@ -151,6 +193,24 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				'dim',
 			);
 		}
+	},
+
+	salvage: async (bookEvent: BookEventOfType<'salvage'>) => {
+		recordBookEvent({ bookEvent });
+		const instant = isInstant(bookEvent);
+
+		stateGame.salvageMult = bookEvent.amount / BOOK_AMOUNT_SCALE;
+		stateBet.winBookEventAmount = bookEvent.amount;
+		if (!instant) {
+			await waitForTimeout(500);
+			playSalvage();
+		}
+		pushLog('>> scavenging the wreck...', 'dim');
+		if (!instant) await waitForTimeout(350);
+		pushLog(
+			`>> SCRAP SALVAGE: ${stateGame.salvageMult.toFixed(2)}x stake recovered from the slag`,
+			'warn',
+		);
 	},
 
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
@@ -168,7 +228,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const shutdownEvent = bookEvents.find(
 			(event): event is BookEventOfType<'shutdown'> => event.type === 'shutdown',
 		);
-		const win = bookEvent.amount > 0;
+		const salvageEvent = bookEvents.find(
+			(event): event is BookEventOfType<'salvage'> => event.type === 'salvage',
+		);
+		// a salvage is still a bust: only a real shutdown counts as a win
+		const win = shutdownEvent !== undefined;
 		recordRound({
 			rigTier: stateGame.rigTier,
 			targetTemp: stateGame.targetTemp,
@@ -176,7 +240,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				? (shutdownEvent?.couldHaveReached ?? stateGame.targetTemp)
 				: (meltdownEvent?.crashTemp ?? stateGame.crashTemp),
 			win,
-			payoutMW: (bookEvent.amount / 100) * stateBet.wageredBetAmount,
+			payoutMW: (bookEvent.amount / BOOK_AMOUNT_SCALE) * stateBet.wageredBetAmount,
+			tier: shutdownEvent ? (shutdownEvent.tier ?? 'clean') : salvageEvent ? 'salvage' : undefined,
 		});
 	},
 };

@@ -1,4 +1,4 @@
-import type { RigId } from './constants';
+import type { RigId, WinTier } from './constants';
 
 export type RoundRecord = {
 	rigTier: RigId;
@@ -7,6 +7,8 @@ export type RoundRecord = {
 	crashTemp: number;
 	win: boolean;
 	payoutMW: number;
+	/** win tier on wins, 'salvage' for partial scrap recovery on busts */
+	tier?: WinTier | 'salvage';
 };
 
 const MAX_ROUNDS = 40;

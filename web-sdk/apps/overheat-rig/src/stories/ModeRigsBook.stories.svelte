@@ -23,9 +23,13 @@
 		bustInstant,
 		bustFar,
 		bustNearMiss,
+		bustSalvage,
 		winEco,
 		winOverclock,
 		winPlasma,
+		winOverdrive,
+		winCritical,
+		winGolden,
 		type FixtureBook,
 	} from './data/books';
 
@@ -67,7 +71,7 @@
 		skipLoadingScreen: true,
 		data: {},
 		action: async () => {
-			// draw from the true 97%-RTP crash distribution for the dialed rig
+			// draw from the true 96.5%-RTP spicy distribution for the dialed rig
 			const rig = RIG_MAP[stateBet.activeBetModeKey as RigId] ?? RIG_MAP.standard;
 			await runBook(drawRealisticBook(rig.id, rig.targetTemp));
 		},
@@ -131,6 +135,46 @@
 		skipLoadingScreen: true,
 		data: {},
 		action: async () => runBook(winPlasma),
+	})}
+	{template}
+/>
+
+<Story
+	name="bust with scrap salvage (0.4x back)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => runBook(bustSalvage),
+	})}
+	{template}
+/>
+
+<Story
+	name="overdrive 1.5x target (overclock 7.5x)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => runBook(winOverdrive),
+	})}
+	{template}
+/>
+
+<Story
+	name="critical overdrive 3x target (boost 9x)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => runBook(winCritical),
+	})}
+	{template}
+/>
+
+<Story
+	name="golden shutdown 10x target (furnace 100x)"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => runBook(winGolden),
 	})}
 	{template}
 />

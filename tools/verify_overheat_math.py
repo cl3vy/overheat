@@ -1,30 +1,47 @@
 #!/usr/bin/env python3
-"""Verify generated OVERHEAT math files (brief sections 3.4, 4.3, 7).
+"""Verify generated OVERHEAT math files (spicy distribution).
 
-Checks, per mode:
+Structural checks, per mode:
   - every book has id, events, payoutMultiplier
-  - payoutMultiplier is exactly 0 or T*100
-  - event sequence is boot -> heat -> (shutdown|meltdown) -> setTotalWin -> finalWin
-  - setTotalWin/finalWin amounts equal payoutMultiplier
-  - bust books show crashTemp < T; win books show couldHaveReached >= T
-  - lookup CSV third column matches books payoutMultiplier row-for-row (RGS hash check)
-  - weighted RTP from the lookup table equals the target RTP
-  - empirical (unweighted) hit rate is close to R/T
+  - payoutMultiplier is one of {0, 0.4x, T, 1.5T, 3T, 10T} in book cents
+  - win books: boot -> heat -> shutdown(tier) -> setTotalWin -> finalWin,
+    bankedAt matches the tier payout, couldHaveReached >= bankedAt
+  - salvage books: boot -> heat -> meltdown -> salvage -> money events (0.4x)
+  - bust books: boot -> heat -> meltdown -> money events (0), crashTemp < T
+  - lookup CSV matches books row-for-row (RGS hash check), valid uint64
+
+ACP compliance gates, per mode (the checks that failed on Version 1):
+  - weighted RTP exactly RTP_FRACTION, inside Stake's 90.0-96.70% window
+  - weighted non-zero win probability >= 5% (1-in-20 rule)
+  - payout standard deviation >= 0.6 (base volatility floor)
+  - max win == 10*T and nothing at or above the 5,000x tail threshold
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
-import io
 import json
+import math
 import sys
 from fractions import Fraction
 from pathlib import Path
 
 import zstandard
 
-from gen_overheat_math import RIGS, RTP_FRACTION, PAYOUT_SCALE
+from gen_overheat_math import (
+    MAX_WIN_MULT,
+    PAYOUT_SCALE,
+    RIGS,
+    RTP_FRACTION,
+    SALVAGE_PAYOUT,
+    WIN_TIERS,
+)
+
+RTP_WINDOW = (Fraction(90, 100), Fraction(967, 1000))
+MIN_NONZERO_PROB = Fraction(1, 20)
+MIN_STD = 0.6
+TAIL_THRESHOLD_MULT = 5000
 
 
 def load_books(publish: Path, rig_id: str) -> list[dict]:
@@ -43,7 +60,11 @@ def load_books(publish: Path, rig_id: str) -> list[dict]:
 
 def verify_mode(publish: Path, rig_id: str) -> bool:
     target = RIGS[rig_id]
-    expected_payout = int(target * PAYOUT_SCALE)
+    tier_payout_cents = {
+        tier: int(mult * target * PAYOUT_SCALE) for tier, mult, _ in WIN_TIERS
+    }
+    salvage_cents = int(SALVAGE_PAYOUT * PAYOUT_SCALE)
+    valid_payouts = {0, salvage_cents, *tier_payout_cents.values()}
     books = load_books(publish, rig_id)
     ok = True
 
@@ -57,58 +78,99 @@ def verify_mode(publish: Path, rig_id: str) -> bool:
             if key not in book:
                 fail(f"book {book.get('id')} missing key {key}")
         pm = book["payoutMultiplier"]
-        if pm not in (0, expected_payout):
-            fail(f"book {book['id']} payoutMultiplier {pm} not in (0, {expected_payout})")
-
-        types = [e["type"] for e in book["events"]]
-        terminal = "shutdown" if pm > 0 else "meltdown"
-        if types != ["boot", "heat", terminal, "setTotalWin", "finalWin"]:
-            fail(f"book {book['id']} unexpected event sequence {types}")
+        if pm not in valid_payouts:
+            fail(f"book {book['id']} payoutMultiplier {pm} not in {sorted(valid_payouts)}")
             continue
-        boot, heat, term, set_total, final = book["events"]
-        if [e["index"] for e in book["events"]] != [0, 1, 2, 3, 4]:
+
+        events = book["events"]
+        types = [e["type"] for e in events]
+        if [e["index"] for e in events] != list(range(len(events))):
             fail(f"book {book['id']} bad event indices")
+        boot = events[0]
         if boot["rigTier"] != rig_id or abs(boot["targetTemp"] - float(target)) > 1e-9:
             fail(f"book {book['id']} bad boot event {boot}")
-        if set_total["amount"] != pm or final["amount"] != pm:
+        money = [e for e in events if e["type"] in ("setTotalWin", "finalWin")]
+        if len(money) != 2 or any(e["amount"] != pm for e in money):
             fail(f"book {book['id']} money events do not match payoutMultiplier")
-        if pm > 0:
-            if term["bankedAt"] != round(float(target), 2):
-                fail(f"book {book['id']} shutdown bankedAt {term['bankedAt']}")
-            if term["couldHaveReached"] < float(target):
-                fail(f"book {book['id']} couldHaveReached below target")
+
+        if pm in tier_payout_cents.values():
+            if types != ["boot", "heat", "shutdown", "setTotalWin", "finalWin"]:
+                fail(f"book {book['id']} unexpected win sequence {types}")
+                continue
+            shutdown = events[2]
+            expected_banked = round(pm / PAYOUT_SCALE, 2)
+            if shutdown.get("bankedAt") != expected_banked:
+                fail(f"book {book['id']} shutdown bankedAt {shutdown.get('bankedAt')}")
+            if tier_payout_cents.get(shutdown.get("tier")) != pm:
+                fail(f"book {book['id']} tier {shutdown.get('tier')} mismatches payout {pm}")
+            if shutdown.get("couldHaveReached", 0) < expected_banked:
+                fail(f"book {book['id']} couldHaveReached below bankedAt")
+            if events[1].get("crashTemp") != expected_banked:
+                fail(f"book {book['id']} heat crashTemp != bankedAt")
+        elif pm == salvage_cents:
+            if types != ["boot", "heat", "meltdown", "salvage", "setTotalWin", "finalWin"]:
+                fail(f"book {book['id']} unexpected salvage sequence {types}")
+                continue
+            if events[3]["amount"] != salvage_cents:
+                fail(f"book {book['id']} salvage amount {events[3]['amount']}")
+            if not (1.0 <= events[2]["crashTemp"] < float(target)):
+                fail(f"book {book['id']} salvage crashTemp outside [1, T)")
         else:
-            if not (1.0 <= term["crashTemp"] < float(target)):
-                fail(f"book {book['id']} bust crashTemp {term['crashTemp']} outside [1, T)")
+            if types != ["boot", "heat", "meltdown", "setTotalWin", "finalWin"]:
+                fail(f"book {book['id']} unexpected bust sequence {types}")
+                continue
+            if not (1.0 <= events[2]["crashTemp"] < float(target)):
+                fail(f"book {book['id']} bust crashTemp outside [1, T)")
 
     lut = publish / f"lookUpTable_{rig_id}_0.csv"
     rows = list(csv.reader(lut.open()))
     if len(rows) != len(books):
         fail(f"lookup table has {len(rows)} rows, books {len(books)}")
     dot = Fraction(0)
+    second_moment = Fraction(0)
+    nonzero_weight = 0
     total_weight = 0
+    max_payout = 0
     for row, book in zip(rows, books):
         sim_id, weight, payout = int(row[0]), int(row[1]), int(row[2])
         if sim_id != book["id"] or payout != book["payoutMultiplier"]:
             fail(f"lookup row {row} does not match book {book['id']}")
         if weight <= 0 or weight >= 2**64 or payout < 0 or payout >= 2**64:
             fail(f"lookup row {row} not valid uint64")
-        dot += weight * Fraction(payout, PAYOUT_SCALE)
+        mult = Fraction(payout, PAYOUT_SCALE)
+        dot += weight * mult
+        second_moment += weight * mult * mult
         total_weight += weight
+        if payout > 0:
+            nonzero_weight += weight
+        max_payout = max(max_payout, payout)
 
     weighted_rtp = dot / total_weight
-    n_win = sum(1 for b in books if b["payoutMultiplier"] > 0)
-    hit_rate = n_win / len(books)
-    theoretical = float(RTP_FRACTION / target)
+    nonzero_prob = Fraction(nonzero_weight, total_weight)
+    variance = second_moment / total_weight - weighted_rtp * weighted_rtp
+    std = math.sqrt(float(variance))
+    expected_max = int(MAX_WIN_MULT * target * PAYOUT_SCALE)
+
     print(
-        f"  {rig_id:>9}: {len(books)} books | weighted RTP {float(weighted_rtp):.6f} "
+        f"  {rig_id:>9}: {len(books)} books | RTP {float(weighted_rtp):.6f} "
         f"({'exact' if weighted_rtp == RTP_FRACTION else 'OFF TARGET'}) | "
-        f"empirical hit rate {hit_rate:.4f} vs R/T {theoretical:.4f}"
+        f"non-zero {float(nonzero_prob):.4f} | std {std:.3f} | "
+        f"max {max_payout / PAYOUT_SCALE:.0f}x"
     )
+
+    # --- ACP compliance gates ---
     if weighted_rtp != RTP_FRACTION:
         fail(f"weighted RTP {float(weighted_rtp)} != {float(RTP_FRACTION)}")
-    if len(books) >= 10_000 and abs(hit_rate - theoretical) > 5 * (theoretical**0.5) / (len(books) ** 0.5):
-        fail(f"empirical hit rate {hit_rate} implausibly far from {theoretical}")
+    if not (RTP_WINDOW[0] <= weighted_rtp <= RTP_WINDOW[1]):
+        fail(f"RTP {float(weighted_rtp)} outside Stake window {RTP_WINDOW}")
+    if nonzero_prob < MIN_NONZERO_PROB:
+        fail(f"non-zero win probability {float(nonzero_prob):.4f} below 1-in-20 floor")
+    if std < MIN_STD:
+        fail(f"std {std:.4f} below base volatility floor {MIN_STD}")
+    if max_payout != expected_max:
+        fail(f"max payout {max_payout} != expected {expected_max}")
+    if max_payout >= TAIL_THRESHOLD_MULT * PAYOUT_SCALE:
+        fail(f"payout at or above the {TAIL_THRESHOLD_MULT}x tail threshold")
     return ok
 
 

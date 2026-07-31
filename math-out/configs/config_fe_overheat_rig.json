@@ -2,7 +2,7 @@
     "providerName": "overheat",
     "gameName": "OVERHEAT",
     "gameID": "overheat_rig",
-    "rtp": 0.97,
+    "rtp": 0.965,
     "numReels": 0,
     "numRows": [],
     "betModes": {
@@ -10,78 +10,78 @@
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 1.2
+            "rtp": 0.965,
+            "max_win": 12.0
         },
         "eco": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 1.5
+            "rtp": 0.965,
+            "max_win": 15.0
         },
         "standard": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 2.0
+            "rtp": 0.965,
+            "max_win": 20.0
         },
         "boost": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 3.0
+            "rtp": 0.965,
+            "max_win": 30.0
         },
         "overclock": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 5.0
+            "rtp": 0.965,
+            "max_win": 50.0
         },
         "nitro": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 7.0
+            "rtp": 0.965,
+            "max_win": 70.0
         },
         "furnace": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 10.0
+            "rtp": 0.965,
+            "max_win": 100.0
         },
         "inferno": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 15.0
+            "rtp": 0.965,
+            "max_win": 150.0
         },
         "meltdown": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 25.0
+            "rtp": 0.965,
+            "max_win": 250.0
         },
         "reactor": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 50.0
+            "rtp": 0.965,
+            "max_win": 500.0
         },
         "plasma": {
             "cost": 1.0,
             "feature": true,
             "buyBonus": false,
-            "rtp": 0.97,
-            "max_win": 100.0
+            "rtp": 0.965,
+            "max_win": 1000.0
         }
     },
     "symbols": [],

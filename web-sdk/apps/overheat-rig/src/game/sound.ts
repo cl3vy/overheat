@@ -143,6 +143,42 @@ export const playCoinTick = () => {
 	} catch {}
 };
 
+/** Rising alarm sweep when the limiter slips and the temp punches past the
+ * target. Bigger multiple = longer, angrier sweep. */
+export const playOverdriveSurge = (multiple: number) => {
+	if (!enabled()) return;
+	try {
+		const ctx = getContext();
+		const durationS = multiple >= 6 ? 1.1 : multiple >= 2.5 ? 0.8 : 0.55;
+		const oscillator = ctx.createOscillator();
+		const gain = ctx.createGain();
+		oscillator.type = 'sawtooth';
+		oscillator.frequency.setValueAtTime(220, ctx.currentTime);
+		oscillator.frequency.exponentialRampToValueAtTime(220 * 6, ctx.currentTime + durationS);
+		gain.gain.setValueAtTime(0.05, ctx.currentTime);
+		gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + durationS + 0.15);
+		oscillator.connect(gain).connect(ctx.destination);
+		oscillator.start();
+		oscillator.stop(ctx.currentTime + durationS + 0.15);
+		// warning blips over the sweep
+		const blips = multiple >= 6 ? 5 : 3;
+		for (let i = 0; i < blips; i += 1) {
+			beep(1200 + i * 200, 60, { type: 'square', volume: 0.04, delayMs: 120 + i * 170 });
+		}
+	} catch {}
+};
+
+/** Scrap clatter + small register ding: partial salvage on a bust. */
+export const playSalvage = () => {
+	if (!enabled()) return;
+	try {
+		beep(140, 60, { type: 'square', volume: 0.05, delayMs: 0 });
+		beep(110, 80, { type: 'square', volume: 0.04, delayMs: 90 });
+		beep(1320, 90, { type: 'triangle', volume: 0.045, delayMs: 220 });
+		beep(1760, 140, { type: 'triangle', volume: 0.04, delayMs: 320 });
+	} catch {}
+};
+
 /** "Ka-chunk" vault lock when the win banks. */
 export const playBankLock = () => {
 	if (!enabled()) return;

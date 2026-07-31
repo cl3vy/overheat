@@ -80,6 +80,28 @@ export const buildWinClimb = (targetTemp: number): ClimbSegment[] => {
 	return segments;
 };
 
+/**
+ * Overdrive: the limiter slips at the target and the temp punches past it to
+ * the boosted bank point (1.5x / 3x / 10x the target). Excitement, not
+ * suspense: fast surges with brief stunned holds between them.
+ */
+export const buildOverdriveSegments = (targetTemp: number, bankedAt: number): ClimbSegment[] => {
+	const segments: ClimbSegment[] = [
+		// the "shutdown... failed?" beat right at the target
+		{ toTemp: targetTemp, durationMs: 450, ease: 'linear', jitter: true },
+	];
+	const ratio = bankedAt / targetTemp;
+	const steps = ratio >= 6 ? 3 : ratio >= 2.5 ? 2 : 1;
+	for (let i = 1; i <= steps; i += 1) {
+		const toTemp = i === steps ? bankedAt : targetTemp * Math.pow(ratio, i / steps);
+		segments.push({ toTemp, durationMs: 550 + i * 150, ease: 'out' });
+		if (i < steps) {
+			segments.push({ toTemp, durationMs: 260, ease: 'linear', jitter: true });
+		}
+	}
+	return segments;
+};
+
 /** Bust: fry fast when far below target, milk the near miss. */
 export const buildBustClimb = (targetTemp: number, crashTemp: number): ClimbSegment[] => {
 	if (crashTemp <= 1.005) {
@@ -109,11 +131,14 @@ export const buildBustClimb = (targetTemp: number, crashTemp: number): ClimbSegm
 
 export const buildClimb = (options: {
 	targetTemp: number;
+	/** bust: where it fried; win: the bank point (above target on overdrive) */
 	crashTemp: number;
 	isWin: boolean;
 	minimumRoundDurationMs?: number;
 }): ClimbSegment[] => {
 	const { targetTemp, crashTemp, isWin, minimumRoundDurationMs = 0 } = options;
+	// overdrive surges past the target are animated separately by the heat
+	// handler (buildOverdriveSegments) so the surge sting can play between them
 	const segments = isWin ? buildWinClimb(targetTemp) : buildBustClimb(targetTemp, crashTemp);
 
 	const totalMs = segments.reduce((sum, segment) => sum + segment.durationMs, 0);

@@ -1,3 +1,7 @@
+# OS junk
+.DS_Store
+
+# python
 env/
 __pycache__/
 *.pyc
@@ -15,3 +19,6 @@ storybook-static/
 .turbo/
 web-sdk/apps/overheat-rig/build/
 web-sdk/apps/overheat-rig/dist/
+
+# assembled ACP upload staging: regenerate with tools/package_acp.sh
+acp-upload/

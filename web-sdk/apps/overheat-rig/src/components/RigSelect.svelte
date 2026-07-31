@@ -3,7 +3,7 @@
 
 	import { stateBet, stateBetDerived, stateConfig } from 'state-shared';
 
-	import { RIGS } from '../game/constants';
+	import { MAX_WIN_MULT, RIGS, SALVAGE_PAYOUT, SALVAGE_PROB, winProbability } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { stateSession, sessionStats } from '../game/stateSession.svelte';
 	import TurboToggle from './TurboToggle.svelte';
@@ -13,8 +13,6 @@
 	let { scanlines = $bindable(), flicker = $bindable() }: Props = $props();
 
 	const context = getContext();
-
-	const RTP = 0.97;
 
 	let settingsOpen = $state(false);
 
@@ -51,10 +49,12 @@
 		),
 	);
 	const rig = $derived(RIGS[rigIndex]);
-	const survival = $derived((RTP / rig.targetTemp) * 100);
+	// any shutdown tier counts as survival (clean / overdrive / critical / golden)
+	const survival = $derived(winProbability(rig.targetTemp) * 100);
 	// two decimals below 10% so 0.97% never rounds up to a flattering 1.0%
 	const survivalLabel = $derived(survival < 10 ? survival.toFixed(2) : survival.toFixed(1));
 	const winPays = $derived(stateBet.betAmount * rig.targetTemp);
+	const maxPays = $derived(stateBet.betAmount * rig.targetTemp * MAX_WIN_MULT);
 	// 0..1 along the ladder, drives the heat colors
 	const heat = $derived(rigIndex / (RIGS.length - 1));
 	const heatClass = $derived(heat < 0.35 ? 'heat-low' : heat < 0.7 ? 'heat-mid' : 'heat-high');
@@ -118,7 +118,15 @@
 	<div class="history-strip">
 		<span class="dim">RECENT:</span>
 		{#each stateSession.rounds.slice(-14) as round, index (index)}
-			<span class="history-chip {round.win ? 'chip-win' : 'chip-bust'}">
+			<span
+				class="history-chip {round.tier === 'golden'
+					? 'chip-golden'
+					: round.tier === 'salvage'
+						? 'chip-salvage'
+						: round.win
+							? 'chip-win'
+							: 'chip-bust'}"
+			>
 				{round.crashTemp.toFixed(2)}x
 			</span>
 		{/each}
@@ -199,6 +207,16 @@
 		<span>
 			win pays: <span class="win">{formatMW(winPays)} MW</span>
 		</span>
+	</div>
+
+	<div class="dial-spice dim">
+		shutdowns can slip into <span class="warn">OVERDRIVE</span>: 1.5x / 3x /
+		<span class="gold-text">10x GOLDEN</span> the payout -- max win
+		<span class="win">{formatMW(maxPays)} MW</span>
+	</div>
+	<div class="dial-spice dim">
+		melted rigs salvage <span class="warn">{SALVAGE_PAYOUT.toFixed(2)}x scrap</span> about
+		{(SALVAGE_PROB * 100).toFixed(1)}% of runs
 	</div>
 
 	<div class="boot-row">
