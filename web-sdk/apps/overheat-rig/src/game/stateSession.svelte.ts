@@ -37,7 +37,22 @@ export type MetaState = {
 	bestStreak: number;
 };
 
-const META_KEY = 'overheat.meta.v1';
+// QA 5.4 first-run hygiene: display stats are namespaced per player session
+// and per currency (key parts from the launch URL), and live in
+// sessionStorage so a fresh player always starts from a clean slate.
+// Everything here is display-only and can never alter gameplay or payouts.
+const metaKey = () => {
+	let sessionPart = 'local';
+	let currencyPart = 'XXX';
+	try {
+		const params = new URLSearchParams(globalThis.location?.search ?? '');
+		sessionPart = params.get('sessionID') ?? 'local';
+		currencyPart = params.get('currency') ?? 'XXX';
+	} catch {
+		// no location (SSR/test): keep the defaults
+	}
+	return `overheat.meta.v2.${sessionPart}.${currencyPart}`;
+};
 
 const loadMeta = (): MetaState => {
 	const empty: MetaState = {
@@ -48,7 +63,7 @@ const loadMeta = (): MetaState => {
 		bestStreak: 0,
 	};
 	try {
-		const raw = globalThis.localStorage?.getItem(META_KEY);
+		const raw = globalThis.sessionStorage?.getItem(metaKey());
 		if (!raw) return empty;
 		return { ...empty, ...JSON.parse(raw) };
 	} catch {
@@ -58,7 +73,7 @@ const loadMeta = (): MetaState => {
 
 const saveMeta = (meta: MetaState) => {
 	try {
-		globalThis.localStorage?.setItem(META_KEY, JSON.stringify(meta));
+		globalThis.sessionStorage?.setItem(metaKey(), JSON.stringify(meta));
 	} catch {
 		// storage unavailable (private mode / iframe policy): stay in-memory
 	}
@@ -70,9 +85,9 @@ export const stateSession = $state({
 	/** consecutive rounds that secured at least one checkpoint */
 	heatStreak: 0,
 	/** set for one round when a personal best was just broken */
-	newBest: null as { rigTier: RigId; kind: 'temp' | 'mult' } | null,
+	newBest: null as { rigTier: RigId; kind: 'mult' } | null,
 	/** RGS round id of the most recent bet (fairness panel reference) */
-	lastRoundID: null as number | null,
+	lastRoundID: null as number | string | null,
 	meta: loadMeta(),
 });
 
@@ -94,11 +109,13 @@ export const recordRound = (round: RoundRecord) => {
 
 	const best = meta.bests[round.rigTier] ?? { bestTemp: 0, bestMult: 0 };
 	stateSession.newBest = null;
+	// bestTemp is tracked silently (feeds the config peaks line) but never
+	// wears the badge: a hotter zero-bank near miss is not a "best run".
+	// the badge fires only on genuine banked improvement.
 	if (round.crashTemp > best.bestTemp) {
 		best.bestTemp = round.crashTemp;
-		stateSession.newBest = { rigTier: round.rigTier, kind: 'temp' };
 	}
-	if (round.payoutMult > best.bestMult) {
+	if (round.payoutMult > 0 && round.payoutMult > best.bestMult) {
 		best.bestMult = round.payoutMult;
 		stateSession.newBest = { rigTier: round.rigTier, kind: 'mult' };
 	}

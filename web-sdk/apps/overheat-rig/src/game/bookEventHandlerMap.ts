@@ -3,6 +3,7 @@ import { stateBet, stateConfig } from 'state-shared';
 import { waitForTimeout } from 'utils-shared/wait';
 
 import { BOOK_AMOUNT_SCALE, LADDERS, RIG_MAP, type LadderRung } from './constants';
+import { bookPayoutCents } from './money';
 import { stateGame, pushLog } from './stateGame.svelte';
 import { recordRound } from './stateSession.svelte';
 import {
@@ -214,7 +215,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				? (shutdownEvent?.couldHaveReached ?? stateGame.targetTemp)
 				: (meltdownEvent?.crashTemp ?? stateGame.crashTemp),
 			win,
-			payoutMW: (bookEvent.amount / BOOK_AMOUNT_SCALE) * stateBet.wageredBetAmount,
+			// integer-cents payout (QA 4.2): matches the credited amount exactly,
+			// so BEST BANK can never disagree with the header balance
+			payoutMW: bookPayoutCents(bookEvent.amount, stateBet.wageredBetAmount) / 100,
 			payoutMult: bookEvent.amount / BOOK_AMOUNT_SCALE,
 			tier: shutdownEvent?.tier,
 		});

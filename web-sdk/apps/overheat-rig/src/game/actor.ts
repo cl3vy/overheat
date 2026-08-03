@@ -1,9 +1,10 @@
 import { stateBet } from 'state-shared';
 import { createPrimaryMachines, createIntermediateMachines, createGameActor } from 'utils-xstate';
 
+import { RIG_MAP, type RigId } from './constants';
 import type { Bet } from './typesBookEvent';
 import { playBet, convertToResumableBet, settleInactiveBet } from './utils';
-import { resetRound, stateGame } from './stateGame.svelte';
+import { pushLog, resetRound, stateGame } from './stateGame.svelte';
 
 const primaryMachines = createPrimaryMachines<Bet>({
 	onResumeGameActive: (betToResume) => convertToResumableBet(betToResume),
@@ -11,7 +12,16 @@ const primaryMachines = createPrimaryMachines<Bet>({
 	onNewGameStart: async () => {
 		stateBet.winBookEventAmount = 0;
 		resetRound();
+		// seed the run screen from the CURRENT selection before the play
+		// response arrives, so the boot frame can never show the previous
+		// round's rig, stake or target (QA 5.1: stale first frame)
+		const rig = RIG_MAP[stateBet.activeBetModeKey as RigId];
+		if (rig) {
+			stateGame.rigTier = rig.id;
+			stateGame.targetTemp = rig.targetTemp;
+		}
 		stateGame.phase = 'booting';
+		pushLog('> POWER ON -- contacting RGS...', 'dim');
 	},
 	onNewGameError: () => {
 		resetRound();

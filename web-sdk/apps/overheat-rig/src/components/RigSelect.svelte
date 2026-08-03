@@ -4,6 +4,7 @@
 	import { stateBet, stateBetDerived, stateConfig } from 'state-shared';
 
 	import { LADDERS, MAX_WIN_MULT, RIGS } from '../game/constants';
+	import { formatMoney, formatMW } from '../game/money';
 	import { getContext } from '../game/context';
 	import { stateSession, sessionStats } from '../game/stateSession.svelte';
 	import { requestBoot } from '../game/utils';
@@ -21,9 +22,6 @@
 
 	const betOptions = $derived(stateConfig.betAmountOptions ?? []);
 
-	const formatMW = (value: number) =>
-		value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
 	let stakeText = $state('');
 
 	// reflect external stake changes (steppers, seeding, balance clamps) in the field
@@ -31,16 +29,28 @@
 		stakeText = stateBet.betAmount.toFixed(2);
 	});
 
-	/** Parse the typed stake, clamp to RGS limits, snap to the bet step grid. */
+	/**
+	 * Commit a typed stake against the bet template from /wallet/authenticate
+	 * (QA 4.3): snap to the nearest configured bet level; outside min/max
+	 * clamps to the boundary level. Falls back to the stepBet grid only if
+	 * no bet levels were provided. The RGS can never reject the result.
+	 */
 	const commitStake = () => {
 		const raw = Number(stakeText.replace(/,/g, ''));
 		if (!Number.isFinite(raw) || raw <= 0) {
 			stakeText = stateBet.betAmount.toFixed(2);
 			return;
 		}
-		const step = stateConfig.stepBet > 0 ? stateConfig.stepBet : 0.1;
 		const clamped = Math.min(Math.max(raw, stateConfig.minBet), stateConfig.maxBet);
-		const snapped = Number((Math.round(clamped / step) * step).toFixed(6));
+		let snapped: number;
+		if (betOptions.length) {
+			snapped = betOptions.reduce((best, option) =>
+				Math.abs(option - clamped) < Math.abs(best - clamped) ? option : best,
+			);
+		} else {
+			const step = stateConfig.stepBet > 0 ? stateConfig.stepBet : 0.1;
+			snapped = Number((Math.round(clamped / step) * step).toFixed(6));
+		}
 		stateBetDerived.setBetAmount(snapped);
 		stakeText = stateBet.betAmount.toFixed(2);
 	};
@@ -72,44 +82,16 @@
 	const anyPayout = $derived(rigLadder.anyPayoutProb * 100);
 	const winPays = $derived(stateBet.betAmount * rig.targetTemp);
 	const maxPays = $derived(stateBet.betAmount * rig.targetTemp * MAX_WIN_MULT);
-	// mode personality in two words (R2 3.2)
-	const profileLabel = $derived(
-		rigLadder.profile === 'drip'
-			? 'frequent, small'
-			: rigLadder.profile === 'balanced'
-				? 'steady'
-				: 'rare, big',
-	);
-
-	// mini ladder preview: rung positions on a log scale up to the target
-	// (shape only -- no values, no probabilities)
-	const previewTicks = $derived.by(() => {
-		const logTarget = Math.log(rig.targetTemp);
-		return rigLadder.rungs.map((rung) => ({
-			pos: (Math.log(rung.temp) / logTarget) * 100,
-			aboveStake: rung.bank >= 1,
-		}));
-	});
-
 	// 0..1 along the ladder, drives the heat colors
 	const heat = $derived(rigIndex / (RIGS.length - 1));
 	const heatClass = $derived(heat < 0.35 ? 'heat-low' : heat < 0.7 ? 'heat-mid' : 'heat-high');
 
 	// ---------------------------------------------------------- stats strip
-	// peaks first and loudest; no net P/L, no attempt tallies, no loss rates
+	// HOTTEST + BEST BANK only -- no RECENT chips, streak, or per-rig best
 
-	const rigBest = $derived(sessionStats.bestFor(rig.id));
 	const hottest = $derived(sessionStats.hottestRun());
 	const bestBank = $derived(sessionStats.bestBankMW());
-	const hasPeaks = $derived(hottest > 0 || bestBank > 0 || rigBest.bestMult > 0);
-
-	// recent chips, reweighted: the eye should land on the wins
-	const chipClass = (round: (typeof stateSession.rounds)[number]) => {
-		if (round.tier === 'golden') return 'chip-golden chip-big';
-		if (round.payoutMult >= 1) return 'chip-win chip-big';
-		if (round.payoutMult > 0) return 'chip-part chip-mid';
-		return 'chip-bust chip-low';
-	};
+	const hasPeaks = $derived(hottest > 0 || bestBank > 0);
 
 	const setRigIndex = (index: number) => {
 		const clamped = Math.min(Math.max(index, 0), RIGS.length - 1);
@@ -179,39 +161,21 @@
 	</div>
 {/if}
 
-{#if hasPeaks}
-	<!-- personal peaks lead the strip: biggest, brightest, first -->
-	<div class="peak-strip">
-		{#if hottest > 0}
-			<span class="peak">HOTTEST <span class="peak-value">{hottest.toFixed(2)}x</span></span>
-		{/if}
-		{#if bestBank > 0}
-			<span class="peak amber">BEST BANK <span class="peak-value">{bestBank.toFixed(2)} MW</span></span>
-		{/if}
-		{#if rigBest.bestMult > 0}
-			<span class="peak">{rig.name} BEST <span class="peak-value">{rigBest.bestMult.toFixed(2)}x</span></span>
+<!-- single peak row reserved at load so first bank never reflows the page -->
+<div class="stats-block">
+	<div class="peak-strip" class:strip-empty={!hasPeaks}>
+		{#if hasPeaks}
+			{#if hottest > 0}
+				<span class="peak">HOTTEST <span class="peak-value">{hottest.toFixed(2)}x</span></span>
+			{/if}
+			{#if bestBank > 0}
+				<span class="peak amber">BEST BANK <span class="peak-value">{formatMoney(bestBank)}</span></span>
+			{/if}
+		{:else}
+			<span class="peak dim">HOTTEST --</span>
 		{/if}
 	</div>
-{/if}
-
-{#if stateSession.rounds.length > 0}
-	<div class="history-strip">
-		<span class="dim">RECENT:</span>
-		{#each stateSession.rounds.slice(-14) as round, index (index)}
-			<span class="history-chip {chipClass(round)}">
-				{round.crashTemp.toFixed(2)}x
-			</span>
-		{/each}
-	</div>
-{/if}
-
-{#if stateSession.heatStreak >= 1 || stateSession.meta.bestStreak >= 2}
-	<!-- the live streak is the sticky element; the rank ladder is gone (R2 P2) -->
-	<div class="record-strip dim">
-		STREAK <span class="warn">{stateSession.heatStreak}</span>
-		(BEST <span class="warn">{stateSession.meta.bestStreak}</span>)
-	</div>
-{/if}
+</div>
 
 <div class="dial-panel {heatClass}">
 	<div class="dial-header">
@@ -219,7 +183,6 @@
 		<span class="dial-title">CASH OUT TARGET</span>
 		<span class="dial-rig-name">[ {rig.name} ]</span>
 	</div>
-	<div class="dial-subtitle dim">shutdown temp</div>
 
 	<div class="dial-readout">
 		<span class="dial-mult">{rig.targetTemp.toFixed(2)}x</span>
@@ -262,37 +225,18 @@
 		</button>
 	</div>
 
-	{#if hasPlayed}
-		<!-- checkpoint ladder preview: shape of the climb, no numbers.
-		     hidden on a first-ever run -- checkpoints are taught by watching
-		     the reveal, not by boot copy (brief 4 / 8) -->
-		<div class="ladder-preview">
-			<div class="ladder-preview-track" aria-hidden="true">
-				{#each previewTicks as tick, index (index)}
-					<span
-						class="ladder-tick {tick.aboveStake ? 'tick-profit' : 'tick-scrap'}"
-						style="left: {tick.pos}%"
-					></span>
-				{/each}
-				<span class="ladder-tick tick-target" style="left: 100%"></span>
-			</div>
-			<div class="ladder-preview-caption dim">
-				each tick banks a partial payout as the rig climbs
-				&nbsp;|&nbsp; this mode: <span class="profile-tag">{profileLabel}</span>
-			</div>
-		</div>
-	{/if}
-
 	<!-- standalone mode descriptor: never shares a line with any other figure -->
-	<div class="dial-facts">
+	<div class="dial-facts dial-odds-line">
 		<span>
 			pays something: <span class="dial-odds">{anyPayout.toFixed(1)}%</span> of runs
 		</span>
 	</div>
 
-	<div class="dial-facts">
-		<span>
-			stake:
+	<div class="dial-facts stake-facts">
+		<span class="stake-row">
+			<span class="stake-label"
+				>{stateConfig.jurisdiction.socialCasino ? 'play amount:' : 'stake:'}</span
+			>
 			<button class="term-btn" onclick={() => stepBet(-1)} disabled={atMinLevel}>-</button>
 			<input
 				class="stake-input"
@@ -301,21 +245,19 @@
 				bind:value={stakeText}
 				onblur={commitStake}
 				onkeydown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-				aria-label="stake amount in MW"
+				aria-label="stake amount"
 			/>
-			<span class="dim">MW</span>
 			<button class="term-btn" onclick={() => stepBet(1)} disabled={atMaxLevel}>+</button>
-		</span>
-		<span class="dial-fact-sep dim">|</span>
-		<span>
-			full send pays: <span class="win">{formatMW(winPays)} MW</span>
+			<!-- real currency is primary; MW is theme garnish (QA 4.1) -->
+			<span class="win">{formatMoney(stateBet.betAmount)}</span>
+			<span class="dim mw-garnish">{formatMW(stateBet.betAmount)}</span>
 		</span>
 	</div>
 
-	<!-- overdrive/golden copy lives on the result screen the first time one
-	     lands (brief 3 / 8); the boot screen keeps only the max win callout -->
+	<!-- one payout line carries both figures (final declutter 1.4) -->
 	<div class="dial-spice dim">
-		max win <span class="win">{formatMW(maxPays)} MW</span>
+		full send pays <span class="win">{formatMoney(winPays)}</span>,
+		up to <span class="win">{formatMoney(maxPays)}</span> on overdrive
 	</div>
 
 	<div class="boot-row">

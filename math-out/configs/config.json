@@ -162,12 +162,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_inferno_0.csv",
-                    "sha256": "9ea3573c89434c71b1247551d032ff3c9d59b8b4b287a13ac1ab727d56232699"
+                    "sha256": "46cdc41888365a071de715b88b6294c01a970f41d302011ed17e49a080299719"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 4.024,
+            "std": 4.0545,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -175,7 +175,7 @@
             "maxWin": 150.0,
             "booksFile": {
                 "file": "books_inferno.jsonl.zst",
-                "sha256": "44b4ac242b47b961e2b6750fc897d0c8656b042000f3222216c2b80b42b61365"
+                "sha256": "5c1a5edcf8305e81a4b2d2fabb3d44255d9f2c8913efb73c603b428e88454770"
             }
         },
         {
@@ -204,12 +204,12 @@
             "tables": [
                 {
                     "file": "lookUpTable_reactor_0.csv",
-                    "sha256": "a655f85c0e4b468e19d534106c97950258a61e230691dc30bfce970c6e9edf3e"
+                    "sha256": "1bfd50469dc4bf23e660f61ae5170115b46515154a1ec437a9f0188d470f0d3e"
                 }
             ],
             "cost": 1.0,
             "rtp": 0.965,
-            "std": 4.4543,
+            "std": 4.4908,
             "bookLength": 100000,
             "feature": true,
             "autoEndRoundDisabled": true,
@@ -217,7 +217,7 @@
             "maxWin": 500.0,
             "booksFile": {
                 "file": "books_reactor.jsonl.zst",
-                "sha256": "16aca0a91053c410bd03ea3959a6c698d3873b52d4d94fefccd96ed9b2269b14"
+                "sha256": "20ab5f4ca2439620f8d70b7600000bd1d7ccfbbe1b6f4ce28ff3c36bcb3bf358"
             }
         },
         {

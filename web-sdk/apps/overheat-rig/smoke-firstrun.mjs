@@ -1,6 +1,6 @@
 // One-off check: first-ever boot screen carries the loop sentence and no
-// checkpoint copy; after one run the intro collapses and the ladder caption
-// appears. Also verifies BOOT AGAIN renders as the solid primary button.
+// checkpoint preview; after one run the intro collapses and the ladder
+// caption stays gone (decluttered). Also verifies BOOT AGAIN is solid green.
 import { chromium } from 'playwright-core';
 
 const url =
@@ -27,7 +27,11 @@ try {
 		first.includes('each tick banks a partial payout') ? 'LEAKED' : 'OK',
 	);
 	console.log('overdrive copy gone:', first.includes('OVERDRIVE') ? 'LEAKED' : 'OK');
-	console.log('max win kept:', first.includes('max win') ? 'OK' : 'MISSING');
+	// payout ceiling lives on the collapsed "full send / overdrive" line now
+	console.log(
+		'payout ceiling kept:',
+		first.includes('on overdrive') || first.includes('full send pays') ? 'OK' : 'MISSING',
+	);
 	await page.screenshot({ path: '/tmp/overheat-firstrun.png' });
 
 	await page.click('.turbo-btn');
@@ -50,7 +54,11 @@ try {
 	const after = await page.evaluate(() => document.body.innerText);
 	console.log('--- after one run ---');
 	console.log('intro collapsed:', after.includes('HOW IT WORKS') ? 'STILL EXPANDED' : 'OK');
-	console.log('ladder caption shown:', after.includes('each tick banks a partial payout') ? 'OK' : 'MISSING');
+	console.log(
+		'ladder caption gone:',
+		after.includes('each tick banks a partial payout') ? 'LEAKED' : 'OK',
+	);
+	console.log('peaks only:', after.includes('HOTTEST') && !after.includes('RECENT') ? 'OK' : 'MISSING');
 	await page.screenshot({ path: '/tmp/overheat-select-after.png' });
 	console.log('FIRSTRUN SMOKE OK');
 } catch (err) {

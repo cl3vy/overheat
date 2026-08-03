@@ -8,8 +8,6 @@
 
 	let { checked, onToggle }: Props = $props();
 
-	const FLAME_CHARS = ['^', ')', '*', '(', ';', "'", '~', '^', '*', ')', ';', '('];
-
 	const flip = () => {
 		const next = !checked;
 		onToggle(next);
@@ -24,12 +22,5 @@
 	aria-pressed={checked}
 	title="turbo: faster reveal, same odds"
 >
-	{#if checked}
-		<span class="turbo-flames" aria-hidden="true">
-			{#each FLAME_CHARS as char, index (index)}
-				<span class="fglyph" style="--i: {index}">{char}</span>
-			{/each}
-		</span>
-	{/if}
 	<span class="turbo-text">TURBO [{checked ? 'ON' : 'OFF'}]</span>
 </button>

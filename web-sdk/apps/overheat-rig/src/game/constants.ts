@@ -30,7 +30,11 @@ export const RIGS: RigInfo[] = [
 	{ id: 'nitro', name: 'NITRO', targetTemp: 7, flavor: 'aftermarket fans, screaming.' },
 	{ id: 'furnace', name: 'FURNACE', targetTemp: 10, flavor: 'heats the room. sometimes the house.' },
 	{ id: 'inferno', name: 'INFERNO', targetTemp: 15, flavor: 'the smoke detector is unplugged.' },
-	{ id: 'meltdown', name: 'MELTDOWN', targetTemp: 25, flavor: 'silicon roulette. bring a fire blanket.' },
+	// display name only (QA 6.1): "MELTDOWN" stays the bust word everywhere
+	// else, so this rig tier is renamed to avoid the collision. `id` is
+	// unchanged -- it's the published mode key (books_meltdown.jsonl.zst,
+	// lookUpTable_meltdown_0.csv, config.json) and must match the math build.
+	{ id: 'meltdown', name: 'SUPERNOVA', targetTemp: 25, flavor: 'silicon roulette. bring a fire blanket.' },
 	{ id: 'reactor', name: 'REACTOR', targetTemp: 50, flavor: 'unlicensed fission. tell no one.' },
 	{ id: 'plasma', name: 'PLASMA', targetTemp: 100, flavor: 'this is not mining. this is a star.' },
 ];

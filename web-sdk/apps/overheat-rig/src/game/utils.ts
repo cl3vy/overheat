@@ -31,12 +31,25 @@ export const requestBoot = (context: ReturnType<typeof getContext>) => {
 	context.eventEmitter.broadcast({ type: 'bet' });
 };
 
+// the most recent bet's book, kept so a replay window can re-run the same
+// round playback (QA phase 3: BOOT AGAIN must replay the same event)
+let lastPlayedBet: Bet | null = null;
+
 export const playBet = async (bet: Bet) => {
-	// fairness panel reference: the RGS round id for this settled bet
-	// (absent in Storybook fixtures)
+	// fairness reference: the RGS round id for this settled bet, shown in
+	// the fairness panel and on the result screen (absent in Storybook)
 	stateSession.lastRoundID = bet.roundID ?? null;
+	lastPlayedBet = bet;
 	stateBet.winBookEventAmount = 0;
 	await playBookEvents(bet.state);
+};
+
+/** Re-run the last round's playback (read-only; no RGS calls). */
+export const replayLastBet = async () => {
+	if (!lastPlayedBet?.state?.length) return;
+	stateGame.skipUntilIndex = 0;
+	stateBet.winBookEventAmount = 0;
+	await playBookEvents(lastPlayedBet.state);
 };
 
 /**

@@ -7,8 +7,10 @@
 import { stateSession } from './stateSession.svelte';
 
 let audioContext: AudioContext | null = null;
-let humOscillator: OscillatorNode | null = null;
+let humNoise: AudioBufferSourceNode | null = null;
+let humFilter: BiquadFilterNode | null = null;
 let humGain: GainNode | null = null;
+let noiseBufferCache: AudioBuffer | null = null;
 
 const getContext = () => {
 	if (!audioContext) audioContext = new AudioContext();
@@ -46,29 +48,47 @@ export const playBoot = () => {
 	} catch {}
 };
 
-/** Low rig hum that rises in pitch with the temperature. */
+/** Soft fan-noise bed for the climb: looped noise through a low-pass filter.
+ * The filter opens and the level creeps up as the rig heats, so it reads as
+ * "working harder" without the buzz of a raw oscillator. */
 export const startHum = () => {
 	if (!enabled()) return;
 	try {
 		const ctx = getContext();
 		stopHum();
-		humOscillator = ctx.createOscillator();
+		if (!noiseBufferCache) {
+			noiseBufferCache = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+			const channel = noiseBufferCache.getChannelData(0);
+			for (let i = 0; i < channel.length; i += 1) {
+				channel[i] = Math.random() * 2 - 1;
+			}
+		}
+		humNoise = ctx.createBufferSource();
+		humNoise.buffer = noiseBufferCache;
+		humNoise.loop = true;
+		humFilter = ctx.createBiquadFilter();
+		humFilter.type = 'lowpass';
+		humFilter.frequency.value = 220;
+		humFilter.Q.value = 0.4;
 		humGain = ctx.createGain();
-		humOscillator.type = 'sawtooth';
-		humOscillator.frequency.value = 55;
-		humGain.gain.value = 0.025;
-		humOscillator.connect(humGain).connect(ctx.destination);
-		humOscillator.start();
+		humGain.gain.value = 0.012;
+		humNoise.connect(humFilter).connect(humGain).connect(ctx.destination);
+		humNoise.start();
 	} catch {}
 };
 
 /** fillFraction 0..1 = progress toward the shutdown temperature. */
 export const setHumLevel = (fillFraction: number) => {
-	if (!humOscillator || !humGain || !audioContext) return;
+	if (!humFilter || !humGain || !audioContext) return;
 	try {
 		const clamped = Math.min(Math.max(fillFraction, 0), 1);
-		humOscillator.frequency.setTargetAtTime(55 + clamped * 260, audioContext.currentTime, 0.05);
-		humGain.gain.setTargetAtTime(0.02 + clamped * 0.04, audioContext.currentTime, 0.05);
+		// airflow brightens and swells gently as the temp climbs
+		humFilter.frequency.setTargetAtTime(
+			220 + clamped * 900,
+			audioContext.currentTime,
+			0.1,
+		);
+		humGain.gain.setTargetAtTime(0.012 + clamped * 0.03, audioContext.currentTime, 0.1);
 	} catch {}
 };
 
@@ -77,11 +97,12 @@ export const stopHum = () => {
 		if (humGain && audioContext) {
 			humGain.gain.setTargetAtTime(0.0001, audioContext.currentTime, 0.03);
 		}
-		if (humOscillator) {
-			humOscillator.stop(audioContext ? audioContext.currentTime + 0.15 : undefined);
+		if (humNoise) {
+			humNoise.stop(audioContext ? audioContext.currentTime + 0.15 : undefined);
 		}
 	} catch {}
-	humOscillator = null;
+	humNoise = null;
+	humFilter = null;
 	humGain = null;
 };
 

@@ -103,6 +103,19 @@ RIG_PROFILE: dict[str, str] = {
     "plasma": "spike_deep",
 }
 
+# Per-rig nudges on top of the shared profile (QA 6.2): the profile buckets
+# set the checkpoint *shape* (frequent-small vs rare-big) for the rules
+# table, but two profile boundaries left "pays something" non-monotonic --
+# inferno (spike) rolled higher than furnace (balanced) and reactor
+# (spike_deep) rolled higher than meltdown (spike), even though both sit at
+# a higher target. Raising `start` (the first rung moves later in log-temp)
+# on just those two rigs restores a strictly decreasing hit rate along the
+# whole ladder without touching furnace/meltdown/plasma's own math.
+PROFILE_OVERRIDES: dict[str, dict] = {
+    "inferno": {"start": 0.105},
+    "reactor": {"start": 0.07},
+}
+
 # ETL(40x) rebalance for the top rigs: the pure crash law loads ~50% of the
 # RTP into payouts >= 40x on REACTOR/PLASMA (target-tier mass), failing the
 # expected-tail-liability check and starving the 1x-40x band the player can
@@ -169,7 +182,7 @@ def build_rungs(rig_id: str) -> list[Rung]:
     """Banking rungs strictly below the target, geometric temps, banked
     fraction ramping by rig personality."""
     target_c = int(RIGS[rig_id] * 100)
-    prof = PROFILES[RIG_PROFILE[rig_id]]
+    prof = {**PROFILES[RIG_PROFILE[rig_id]], **PROFILE_OVERRIDES.get(rig_id, {})}
     n = prof["below"]
     ln_t = math.log(float(RIGS[rig_id]))
     ln_start = prof["start"] * ln_t
