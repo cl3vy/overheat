@@ -9,10 +9,12 @@
 	import RunView from './RunView.svelte';
 	import RulesPanel from './RulesPanel.svelte';
 	import ErrorPanel from './ErrorPanel.svelte';
+	import { RIGS } from '../game/constants';
 	import { getContext } from '../game/context';
-	import { stateGame } from '../game/stateGame.svelte';
 	import { formatMoney, formatMW } from '../game/money';
+	import { prefersReducedMotion } from '../game/motion';
 	import { refreshBalance } from '../game/rgs';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { requestBoot } from '../game/utils';
 
 	const context = getContext();
@@ -25,6 +27,43 @@
 	let flicker = $state(false);
 	let rulesOpen = $state(false);
 
+	// ambient heat tier drives background glow + ember tint (visual feel P1)
+	const ambientTier = $derived.by(() => {
+		if (stateGame.phase === 'fried') return 'ambient-melt';
+		if (stateGame.phase === 'banked') return 'ambient-win';
+		if (stateGame.phase === 'heating' || stateGame.phase === 'booting') {
+			const fill = Math.min(
+				Math.max(
+					(stateGame.currentTemp - 1) / Math.max(stateGame.targetTemp - 1, 0.0001),
+					0,
+				),
+				1,
+			);
+			if (fill < 0.35) return 'ambient-low';
+			if (fill < 0.7) return 'ambient-mid';
+			return 'ambient-high';
+		}
+		const index = Math.max(
+			0,
+			RIGS.findIndex((rig) => rig.id === stateBet.activeBetModeKey),
+		);
+		const heat = index / Math.max(RIGS.length - 1, 1);
+		if (heat < 0.35) return 'ambient-low';
+		if (heat < 0.7) return 'ambient-mid';
+		return 'ambient-high';
+	});
+
+	type Ember = { id: number; left: number; delay: number; duration: number; size: number };
+	const embers = $derived.by((): Ember[] => {
+		if (prefersReducedMotion()) return [];
+		return Array.from({ length: 14 }, (_, id) => ({
+			id,
+			left: 4 + ((id * 37) % 92),
+			delay: (id * 0.7) % 8,
+			duration: 9 + (id % 5) * 1.4,
+			size: 1.5 + (id % 3),
+		}));
+	});
 
 	// header balance: decreases (stake taken) snap instantly, increases roll
 	// up like an odometer with a green flash so the player watches it grow
@@ -121,12 +160,23 @@
 
 <div class="tv-shell">
 <div
-	class="crt"
+	class="crt {ambientTier}"
 	class:scanlines
 	class:flicker
 	class:melt={stateGame.phase === 'fried'}
 	class:bank={stateGame.phase === 'banked'}
+	class:powering={stateGame.poweringUp}
 >
+	<div class="crt-ambient" aria-hidden="true"></div>
+	<div class="crt-embers" aria-hidden="true">
+		{#each embers as ember (ember.id)}
+			<span
+				class="ember"
+				style="left: {ember.left}%; animation-delay: {ember.delay}s; animation-duration: {ember.duration}s; width: {ember.size}px; height: {ember.size}px;"
+			></span>
+		{/each}
+	</div>
+
 	<div class="term-header">
 		<span>OVERHEAT // MINING RIG THERMAL CONSOLE</span>
 		<span class="term-header-right">

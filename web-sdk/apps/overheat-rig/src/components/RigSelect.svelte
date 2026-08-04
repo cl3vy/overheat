@@ -5,7 +5,15 @@
 
 	import { LADDERS, MAX_WIN_MULT, RIGS } from '../game/constants';
 	import { formatMoney, formatMW } from '../game/money';
+	import {
+		flavorForSocial,
+		labelCashOutTarget,
+		wordCashOut,
+		wordPays,
+		wordStake,
+	} from '../game/socialCopy';
 	import { getContext } from '../game/context';
+	import { isCoarsePointer, prefersReducedMotion } from '../game/motion';
 	import { stateSession, sessionStats } from '../game/stateSession.svelte';
 	import { requestBoot } from '../game/utils';
 	import FairnessPanel from './FairnessPanel.svelte';
@@ -19,6 +27,9 @@
 
 	let settingsOpen = $state(false);
 	let fairnessOpen = $state(false);
+	let bootCharging = $state(false);
+	let panelTilt = $state({ x: 0, y: 0 });
+	let dialEl = $state<HTMLDivElement | null>(null);
 
 	const betOptions = $derived(stateConfig.betAmountOptions ?? []);
 
@@ -69,12 +80,18 @@
 	// checkpoint copy appears once there is a run to hang it on.
 	const hasPlayed = $derived(stateSession.meta.lifetimeRounds > 0);
 
+	const cashOut = $derived(wordCashOut());
+	const paysWord = $derived(wordPays());
+	const stakeWord = $derived(wordStake());
+	const cashOutTitle = $derived(labelCashOutTarget());
+	const rigFlavor = $derived(flavorForSocial(rig.flavor));
+
 	// meltdown clause gated on whether the active mode banks checkpoints
 	// (all current rigs do; the gate keeps the copy honest if one ever doesn't)
 	const meltdownClause = $derived(
 		(LADDERS[rig.id]?.rungs.length ?? 0) > 0
 			? 'if it melts down first, you keep only what the checkpoints banked.'
-			: 'if it melts down first, you lose the stake.',
+			: `if it melts down first, you lose the ${stakeWord}.`,
 	);
 
 	// hit frequency stays as a standalone mode descriptor -- never rendered
@@ -122,7 +139,24 @@
 	);
 
 	const boot = () => {
+		if (!canBoot) return;
+		bootCharging = true;
+		setTimeout(() => {
+			bootCharging = false;
+		}, 220);
 		requestBoot(context);
+	};
+
+	const onPanelMove = (event: PointerEvent) => {
+		if (isCoarsePointer() || prefersReducedMotion() || !dialEl) return;
+		const rect = dialEl.getBoundingClientRect();
+		const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+		const y = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+		panelTilt = { x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) };
+	};
+
+	const onPanelLeave = () => {
+		panelTilt = { x: 0, y: 0 };
 	};
 
 	onMount(() => {
@@ -150,13 +184,13 @@
 	<div class="loop-callout">
 		<div class="loop-title dim">// HOW IT WORKS</div>
 		<div class="loop-text">
-			set your auto cash out target. boot the rig. it climbs on its own and
+			set your auto {cashOut} target. boot the rig. it climbs on its own and
 			stops there automatically. {meltdownClause}
 		</div>
 	</div>
 {:else}
 	<div class="log-line dim">
-		&gt; set your auto cash out target -- the rig climbs on its own and stops there
+		&gt; set your auto {cashOut} target -- the rig climbs on its own and stops there
 		automatically. {meltdownClause}
 	</div>
 {/if}
@@ -177,103 +211,114 @@
 	</div>
 </div>
 
-<div class="dial-panel {heatClass}">
-	<div class="dial-header">
-		<!-- plain meaning is the primary label; the themed name is flavor (R2 3.1) -->
-		<span class="dial-title">CASH OUT TARGET</span>
-		<span class="dial-rig-name">[ {rig.name} ]</span>
-	</div>
-
-	<div class="dial-readout">
-		<span class="dial-mult">{rig.targetTemp.toFixed(2)}x</span>
-		<!-- inline translation: themed label above, plain meaning here (brief 3) -->
-		<span class="dial-translate">cash out at {rig.targetTemp.toFixed(2)}x</span>
-		<span class="dial-flavor dim">{rig.flavor}</span>
-	</div>
-
-	<div class="dial-slider-row">
-		<button class="term-btn" onclick={() => setRigIndex(rigIndex - 1)} disabled={rigIndex <= 0}>
-			-
-		</button>
-		<div class="dial-slider-track">
-			<input
-				class="dial-slider"
-				type="range"
-				min="0"
-				max={RIGS.length - 1}
-				step="1"
-				value={rigIndex}
-				oninput={(event) => setRigIndex(Number(event.currentTarget.value))}
-				aria-label="shutdown temperature"
-			/>
-			<div class="dial-heatbar" aria-hidden="true">
-				<div class="dial-heatbar-fill" style="width: {heat * 100}%"></div>
-			</div>
-			<div class="dial-scale dim" aria-hidden="true">
-				<span>1.20x</span>
-				<span>safe</span>
-				<span>spicy</span>
-				<span>100.00x</span>
-			</div>
+<div
+	class="dial-panel {heatClass}"
+	bind:this={dialEl}
+	style="--px: {panelTilt.x}; --py: {panelTilt.y}"
+	onpointermove={onPanelMove}
+	onpointerleave={onPanelLeave}
+>
+	<div class="dial-body">
+		<div class="dial-header">
+			<!-- plain meaning is the primary label; the themed name is flavor (R2 3.1) -->
+			<span class="dial-title">{cashOutTitle}</span>
+			<span class="dial-rig-name">[ {rig.name} ]</span>
 		</div>
-		<button
-			class="term-btn"
-			onclick={() => setRigIndex(rigIndex + 1)}
-			disabled={rigIndex >= RIGS.length - 1}
-		>
-			+
-		</button>
-	</div>
 
-	<!-- standalone mode descriptor: never shares a line with any other figure -->
-	<div class="dial-facts dial-odds-line">
-		<span>
-			pays something: <span class="dial-odds">{anyPayout.toFixed(1)}%</span> of runs
-		</span>
-	</div>
+		<div class="dial-readout">
+			<span class="dial-mult">{rig.targetTemp.toFixed(2)}x</span>
+			<!-- inline translation: themed label above, plain meaning here (brief 3) -->
+			<span class="dial-translate">{cashOut} at {rig.targetTemp.toFixed(2)}x</span>
+			<span class="dial-flavor dim">{rigFlavor}</span>
+		</div>
 
-	<div class="dial-facts stake-facts">
-		<span class="stake-row">
-			<span class="stake-label"
-				>{stateConfig.jurisdiction.socialCasino ? 'play amount:' : 'stake:'}</span
+		<div class="dial-slider-row">
+			<button class="term-btn" onclick={() => setRigIndex(rigIndex - 1)} disabled={rigIndex <= 0}>
+				-
+			</button>
+			<div class="dial-slider-track">
+				<input
+					class="dial-slider"
+					type="range"
+					min="0"
+					max={RIGS.length - 1}
+					step="1"
+					value={rigIndex}
+					oninput={(event) => setRigIndex(Number(event.currentTarget.value))}
+					aria-label="shutdown temperature"
+				/>
+				<div class="dial-heatbar" aria-hidden="true">
+					<div class="dial-heatbar-fill" style="width: {heat * 100}%"></div>
+				</div>
+				<div class="dial-scale dim" aria-hidden="true">
+					<span>1.20x</span>
+					<span>safe</span>
+					<span>spicy</span>
+					<span>100.00x</span>
+				</div>
+			</div>
+			<button
+				class="term-btn"
+				onclick={() => setRigIndex(rigIndex + 1)}
+				disabled={rigIndex >= RIGS.length - 1}
 			>
-			<button class="term-btn" onclick={() => stepBet(-1)} disabled={atMinLevel}>-</button>
-			<input
-				class="stake-input"
-				type="text"
-				inputmode="decimal"
-				bind:value={stakeText}
-				onblur={commitStake}
-				onkeydown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-				aria-label="stake amount"
-			/>
-			<button class="term-btn" onclick={() => stepBet(1)} disabled={atMaxLevel}>+</button>
-			<!-- real currency is primary; MW is theme garnish (QA 4.1) -->
-			<span class="win">{formatMoney(stateBet.betAmount)}</span>
-			<span class="dim mw-garnish">{formatMW(stateBet.betAmount)}</span>
-		</span>
-	</div>
+				+
+			</button>
+		</div>
 
-	<!-- one payout line carries both figures (final declutter 1.4) -->
-	<div class="dial-spice dim">
-		full send pays <span class="win">{formatMoney(winPays)}</span>,
-		up to <span class="win">{formatMoney(maxPays)}</span> on overdrive
-	</div>
+		<!-- standalone mode descriptor: never shares a line with any other figure -->
+		<div class="dial-facts dial-odds-line">
+			<span>
+				{paysWord} something: <span class="dial-odds">{anyPayout.toFixed(1)}%</span> of runs
+			</span>
+		</div>
 
-	<div class="boot-row">
-		<button class="boot-btn" onclick={boot} disabled={!canBoot}>&gt;&gt; BOOT RIG &lt;&lt;</button>
-		{#if !stateConfig.jurisdiction.disabledTurbo}
-			<TurboToggle
-				checked={stateBet.isTurbo}
-				onToggle={(value) => stateBetDerived.updateIsTurbo(value, { persistent: true })}
-			/>
+		<div class="dial-facts stake-facts">
+			<span class="stake-row">
+				<span class="stake-label">{stakeWord}:</span>
+				<button class="term-btn" onclick={() => stepBet(-1)} disabled={atMinLevel}>-</button>
+				<input
+					class="stake-input"
+					type="text"
+					inputmode="decimal"
+					bind:value={stakeText}
+					onblur={commitStake}
+					onkeydown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
+					aria-label={stakeWord}
+				/>
+				<button class="term-btn" onclick={() => stepBet(1)} disabled={atMaxLevel}>+</button>
+				<!-- real currency is primary; MW is theme garnish (QA 4.1) -->
+				<span class="win">{formatMoney(stateBet.betAmount)}</span>
+				<span class="dim mw-garnish">{formatMW(stateBet.betAmount)}</span>
+			</span>
+		</div>
+
+		<!-- one payout line carries both figures (final declutter 1.4) -->
+		<div class="dial-spice dim">
+			full send {paysWord} <span class="win">{formatMoney(winPays)}</span>,
+			up to <span class="win">{formatMoney(maxPays)}</span> on overdrive
+		</div>
+
+		<div class="boot-row">
+			<button
+				class="boot-btn"
+				class:charging={bootCharging}
+				onclick={boot}
+				disabled={!canBoot}>&gt;&gt; BOOT RIG &lt;&lt;</button
+			>
+			{#if !stateConfig.jurisdiction.disabledTurbo}
+				<TurboToggle
+					checked={stateBet.isTurbo}
+					onToggle={(value) => stateBetDerived.updateIsTurbo(value, { persistent: true })}
+				/>
+			{/if}
+		</div>
+		{#if !stateBetDerived.isBetCostAvailable()}
+			<!-- red is reserved for the meltdown moment (brief 7) -->
+			<div class="warn">insufficient power reserve -- lower the {stakeWord}</div>
 		{/if}
+		<div class="key-hint-line">[SPACE] to boot</div>
 	</div>
-	{#if !stateBetDerived.isBetCostAvailable()}
-		<!-- red is reserved for the meltdown moment (brief 7) -->
-		<div class="warn">insufficient power reserve -- lower the stake</div>
-	{/if}
-	<div class="key-hint-line dim">[SPACE] to boot</div>
 </div>
 
 <div class="log-line cursor"></div>

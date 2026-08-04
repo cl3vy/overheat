@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { stateModal } from 'state-shared';
 
+	import { wordGambling } from '../game/socialCopy';
+
 	const ERROR_HINTS: Record<string, string> = {
 		ERR_VAL: 'request rejected: invalid parameters',
 		ERR_IPB: 'insufficient power reserve (balance too low)',
@@ -27,7 +29,11 @@
 		);
 	});
 
-	const hint = $derived(ERROR_HINTS[errorCode] ?? 'unexpected fault -- check console for details');
+	const hint = $derived.by(() => {
+		const base = ERROR_HINTS[errorCode] ?? 'unexpected fault -- check console for details';
+		if (errorCode === 'ERR_GLE') return `${wordGambling()} limits exceeded`;
+		return base;
+	});
 
 	const dismiss = () => {
 		stateModal.modal = null;

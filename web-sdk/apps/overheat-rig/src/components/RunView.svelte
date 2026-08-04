@@ -6,6 +6,8 @@
 	import { BOOK_AMOUNT_SCALE, LADDERS, RIG_MAP, type WinTier } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { bookPayoutCents, formatMoney, formatMW } from '../game/money';
+	import { prefersReducedMotion } from '../game/motion';
+	import { labelStake, wordCashOut, wordPayout, wordStake } from '../game/socialCopy';
 	import { stateGame, resetRound } from '../game/stateGame.svelte';
 	import { stateSession } from '../game/stateSession.svelte';
 	import { playMilestoneChirp, playCoinTick, playWinFanfare } from '../game/sound';
@@ -16,61 +18,107 @@
 	// read-only replay window: replay controls only, no wallet UI (QA phase 3)
 	const isReplay = stateUrlDerived.replay();
 
-	const GAUGE_CELLS = 34;
-
-	// coin toasts: mined coins pop a small +MW that gets absorbed by the counter
-	// (the sha256 hash dump they used to ride on is gone -- R2 1.3: provably
-	// fair data lives behind [FAIRNESS], not on the play screen)
+	// checkpoint lock hits: discrete reward pulses (not random garnish)
 	type CoinToast = { id: number; amount: number; offset: number };
+	type LockBurst = { id: number; sparks: { sx: number; sy: number }[] };
 	let coinToasts = $state([] as CoinToast[]);
+	let lockBursts = $state([] as LockBurst[]);
 	let toastId = 0;
+	let lockPulse = $state(false);
+	let lastSecured = 0;
 
-	const spawnCoinToast = () => {
+	const spawnLockHit = (deltaMult: number) => {
 		const id = (toastId += 1);
 		coinToasts.push({
 			id,
-			amount: stateBet.wageredBetAmount * (0.08 + Math.random() * 0.45),
-			offset: -60 + Math.random() * 120,
+			amount: stateBet.wageredBetAmount * deltaMult,
+			offset: -50 + Math.random() * 100,
 		});
+		lockPulse = true;
+		setTimeout(() => {
+			lockPulse = false;
+		}, 380);
+		if (!prefersReducedMotion()) {
+			const burstId = id;
+			lockBursts.push({
+				id: burstId,
+				sparks: Array.from({ length: 6 }, () => ({
+					sx: -40 + Math.random() * 80,
+					sy: -50 + Math.random() * 20,
+				})),
+			});
+			setTimeout(() => {
+				const index = lockBursts.findIndex((burst) => burst.id === burstId);
+				if (index >= 0) lockBursts.splice(index, 1);
+			}, 450);
+		}
 		playCoinTick();
 		setTimeout(() => {
 			const index = coinToasts.findIndex((toast) => toast.id === id);
 			if (index >= 0) coinToasts.splice(index, 1);
-		}, 1000);
+		}, 900);
 	};
 
 	$effect(() => {
-		if (stateGame.phase !== 'heating') return;
-		const interval = setInterval(() => {
-			if (Math.random() < 0.16) spawnCoinToast();
-		}, 380);
-		return () => {
-			clearInterval(interval);
-			coinToasts.length = 0;
-		};
-	});
-
-	// bank moment: measure the vector from the yield box to the header balance
-	// so the winnings visibly fly into the PWR RESERVE
-	let flyDelta = $state(null as null | { dx: number; dy: number });
-	$effect(() => {
+		const secured = stateGame.securedMult;
 		const phase = stateGame.phase;
 		untrack(() => {
-			if (phase !== 'banked') {
-				flyDelta = null;
+			if (phase !== 'heating') {
+				lastSecured = secured;
 				return;
 			}
-			requestAnimationFrame(() => {
-				const fromEl = document.querySelector('.yield-box');
-				const toEl = document.querySelector('.pwr-reserve');
-				if (!fromEl || !toEl) return;
-				const from = fromEl.getBoundingClientRect();
-				const to = toEl.getBoundingClientRect();
-				flyDelta = {
-					dx: to.left + to.width / 2 - (from.left + from.width / 2),
-					dy: to.top + to.height / 2 - (from.top + from.height / 2),
-				};
-			});
+			if (secured > lastSecured + 1e-9) {
+				spawnLockHit(secured - lastSecured);
+			}
+			lastSecured = secured;
+		});
+	});
+
+	// eased display temp so digits never hard-snap between climb segments
+	let displayTemp = $state(1);
+	let digitFlicker = $state(false);
+	let settleClass = $state('' as '' | 'settle-win' | 'settle-melt');
+	let tempAnimId = 0;
+	$effect(() => {
+		const target = stateGame.currentTemp;
+		const phase = stateGame.phase;
+		untrack(() => {
+			if (phase === 'booting') {
+				displayTemp = 1;
+				settleClass = '';
+				return;
+			}
+			if (phase === 'fried') {
+				displayTemp = target;
+				settleClass = 'settle-melt';
+				return;
+			}
+			if (phase === 'banked') {
+				displayTemp = target;
+				settleClass = 'settle-win';
+				return;
+			}
+			if (prefersReducedMotion()) {
+				displayTemp = target;
+				return;
+			}
+			const id = ++tempAnimId;
+			const from = displayTemp;
+			const startedAt = performance.now();
+			const durationMs = stateBet.isTurbo ? 90 : 180;
+			digitFlicker = true;
+			setTimeout(() => {
+				if (id === tempAnimId) digitFlicker = false;
+			}, 120);
+			const step = () => {
+				if (id !== tempAnimId) return;
+				const t = Math.min((performance.now() - startedAt) / durationMs, 1);
+				const eased = 1 - (1 - t) * (1 - t);
+				displayTemp = from + (target - from) * eased;
+				if (t < 1) requestAnimationFrame(step);
+				else displayTemp = target;
+			};
+			requestAnimationFrame(step);
 		});
 	});
 
@@ -107,7 +155,6 @@
 			1,
 		),
 	);
-	const filledCells = $derived(Math.round(fillFraction * GAUGE_CELLS));
 	const gaugeTone = $derived(
 		// red is reserved for the meltdown moment itself (brief 7): the climb
 		// runs green into amber, and only an actual fry turns anything red
@@ -116,9 +163,6 @@
 			: stateGame.phase === 'banked' || fillFraction < 0.6
 				? 'win'
 				: 'warn',
-	);
-	const gaugeBar = $derived(
-		'\u2588'.repeat(filledCells) + '\u2591'.repeat(GAUGE_CELLS - filledCells),
 	);
 
 	// one shared money path (QA 4.2): payouts computed in integer cents from
@@ -168,18 +212,11 @@
 			.reverse(),
 	]);
 
-	const TIER_YIELD_LABELS = {
-		clean: 'BANKED YIELD',
-		overdrive: 'OVERDRIVE YIELD',
-		critical: 'CRITICAL YIELD',
-		golden: 'GOLDEN YIELD',
-	} as const;
 	const winTier = $derived(stateGame.winTier ?? 'clean');
 
 	// ------------------------------------------------ win celebration (in-place)
-	// the whole run screen becomes the congratulations: glyph rain behind the
-	// dashboard, screen flash, and a huge payout count-up in the center stage --
-	// no blocking popup, the BOOT AGAIN button stays reachable throughout
+	// single win presentation: CLEAN BANK / tier label + payout. no amber
+	// LOCKED / BANKED YIELD intermediate before it.
 
 	type Celebration = {
 		label: string;
@@ -253,9 +290,6 @@
 				return;
 			}
 			(async () => {
-				// let the bank moment land first: LOCKED stamp, fly-to-balance,
-				// header count-up -- then the congratulations takes the stage
-				await waitForTimeout(stateBet.isTurbo ? 200 : 1100);
 				if (id !== celebrationId || stateGame.phase !== 'banked') return;
 				const payoutMultiple = stateBet.winBookEventAmount / BOOK_AMOUNT_SCALE;
 				const tier = celebrationFor(payoutMultiple, stateGame.winTier ?? 'clean');
@@ -285,6 +319,10 @@
 	);
 
 	const canRebet = $derived(stateBetDerived.isBetCostAvailable());
+	const stakeLabel = $derived(labelStake());
+	const stakeWord = $derived(wordStake());
+	const cashOut = $derived(wordCashOut());
+	const payoutWord = $derived(wordPayout());
 
 	const bootAgain = () => {
 		requestBoot(context);
@@ -308,7 +346,7 @@
 
 	<div class="run-topline dim">
 		RIG: <span class="win">{rig?.name ?? stateGame.rigTier}</span>
-		| STAKE: <span class="win">{formatMoney(stateBet.wageredBetAmount)}</span>
+		| {stakeLabel}: <span class="win">{formatMoney(stateBet.wageredBetAmount)}</span>
 	</div>
 
 	<div class="run-grid">
@@ -325,58 +363,62 @@
 		<div class="run-center">
 			<div class="temp-block">
 				<div class="temp-label dim">CORE TEMP</div>
-				<div class="temp-giant {gaugeTone}" class:overdrive={inOverdrive}>
-					{stateGame.currentTemp.toFixed(2)}x
+				<div
+					class="temp-giant {gaugeTone} {settleClass}"
+					class:overdrive={inOverdrive}
+					class:shimmer={stateGame.phase === 'heating' && fillFraction > 0.55 && !prefersReducedMotion()}
+					class:flicker-digit={digitFlicker}
+					style="--heat: {fillFraction.toFixed(3)}"
+				>
+					{displayTemp.toFixed(2)}x
 				</div>
 				{#if inOverdrive && stateGame.phase === 'heating'}
 					<div class="temp-sub overdrive-tag">!! LIMITER SLIPPED -- OVERDRIVE !!</div>
 				{:else}
 					<!-- the target line, in plain language, always visible (brief 4) -->
-					<div class="temp-sub dim">cash out @ {stateGame.targetTemp.toFixed(2)}x</div>
+					<div class="temp-sub dim">{cashOut} @ {stateGame.targetTemp.toFixed(2)}x</div>
 				{/if}
 				<div class="gauge-big {gaugeTone}">
-					[{gaugeBar}]
+					<div class="gauge-track-row">
+						<span class="gauge-bracket" aria-hidden="true">[</span>
+						<div class="gauge-track" aria-hidden="true">
+							<div
+								class="gauge-fill"
+								style="width: {(Math.min(fillFraction, 1) * 100).toFixed(1)}%"
+							></div>
+						</div>
+						<span class="gauge-bracket" aria-hidden="true">]</span>
+					</div>
 					<span class="gauge-target">{stateGame.targetTemp.toFixed(2)}x</span>
 				</div>
 			</div>
 
-			{#if stateGame.phase === 'heating' || (stateGame.phase === 'banked' && !celebration)}
-				<div
-					class="yield-box"
-					class:locked={stateGame.phase === 'banked'}
-					class:golden={stateGame.phase === 'banked' && winTier === 'golden'}
-					style="--yglow: {(0.35 + fillFraction * 0.65).toFixed(3)}"
-				>
-					<div class="yield-label dim">
-						{stateGame.phase === 'banked' ? TIER_YIELD_LABELS[winTier] : 'SECURED YIELD'}
+			{#if stateGame.phase === 'heating'}
+				<div class="yield-box" style="--yglow: {(0.35 + fillFraction * 0.65).toFixed(3)}">
+					<div class="yield-label dim">SECURED YIELD</div>
+					<div class="yield-amount" class:lock-hit={lockPulse}>
+						{formatMoney(securedMW)}
 					</div>
-					<div class="yield-amount">
-						{formatMoney(stateGame.phase === 'banked' ? winMW : securedMW)}
-					</div>
-					<div class="mw-garnish dim">
-						{formatMW(stateGame.phase === 'banked' ? winMW : securedMW)}
-					</div>
-					{#if stateGame.phase === 'banked'}
-						<div class="locked-stamp">LOCKED</div>
-						{#if flyDelta}
-							<div class="fly-amount" style="--fdx: {flyDelta.dx}px; --fdy: {flyDelta.dy}px">
-								+{formatMoney(winMW)}
-							</div>
-						{/if}
-					{:else}
-						<div class="yield-caption dim">
-							{#if nextRung}
-								next lock @ {nextRung.temp.toFixed(2)}x &rarr; {nextRung.bank.toFixed(2)}x
-							{:else}
-								all checkpoints locked -- push for the target
-							{/if}
+					<div class="mw-garnish dim">{formatMW(securedMW)}</div>
+					{#each lockBursts as burst (burst.id)}
+						<div class="lock-burst" aria-hidden="true">
+							{#each burst.sparks as spark, index (index)}
+								<span style="--sx: {spark.sx}px; --sy: {spark.sy}px"></span>
+							{/each}
 						</div>
-						{#each coinToasts as toast (toast.id)}
-							<div class="coin-toast" style="--tx: {toast.offset}px">
-								+{formatMoney(toast.amount)}
-							</div>
-						{/each}
-					{/if}
+					{/each}
+					<div class="yield-caption dim">
+						{#if nextRung}
+							next lock @ {nextRung.temp.toFixed(2)}x &rarr; {nextRung.bank.toFixed(2)}x
+						{:else}
+							all checkpoints locked -- push for the target
+						{/if}
+					</div>
+					{#each coinToasts as toast (toast.id)}
+						<div class="coin-toast" style="--tx: {toast.offset}px">
+							+{formatMoney(toast.amount)}
+						</div>
+					{/each}
 				</div>
 			{/if}
 
@@ -415,7 +457,7 @@
 						<!-- overdrive/golden taught the moment one lands (brief 2 / 8) -->
 						<div class="win-translate dim">
 							{winTier === 'golden' ? '10x' : winTier === 'critical' ? '3x' : '1.5x'}
-							bonus multiplier on your payout
+							bonus multiplier on your {payoutWord}
 						</div>
 					{/if}
 					<!-- neutral crash-point reveal on wins (QA 6.4): honest tease,
@@ -438,19 +480,25 @@
 					{#if isReplay}
 						<!-- read-only replay window (QA phase 3): replay the same
 						     round, no wallet UI, no live betting entry -->
-						<button class="term-btn rebet-btn" onclick={() => replayLastBet()}>
-							&gt;&gt; REPLAY AGAIN &lt;&lt;
-						</button>
+						<div class="settled-buttons">
+							<button class="term-btn rebet-btn" onclick={() => replayLastBet()}>
+								&gt;&gt; REPLAY AGAIN &lt;&lt;
+							</button>
+						</div>
 					{:else}
 						{#if stateGame.phase === 'fried' && stateSession.newBest?.rigTier === stateGame.rigTier}
-							<div class="new-best warn">&#9733; NEW PERSONAL BEST RUN &#9733;</div>
+							<div class="new-best">&#9733; NEW PERSONAL BEST RUN &#9733;</div>
 						{/if}
-						<button class="term-btn rebet-btn" onclick={bootAgain} disabled={!canRebet}>
-							&gt;&gt; BOOT AGAIN &lt;&lt; <span class="key-hint">[SPACE]</span>
-						</button>
-						<button class="term-btn" onclick={() => resetRound()}>RETURN TO RIG SELECT</button>
+						<div class="settled-buttons">
+							<button class="term-btn rebet-btn" onclick={bootAgain} disabled={!canRebet}>
+								&gt;&gt; BOOT AGAIN &lt;&lt; <span class="key-hint">[SPACE]</span>
+							</button>
+							<button class="term-btn settled-secondary" onclick={() => resetRound()}>
+								RETURN TO RIG SELECT
+							</button>
+						</div>
 						{#if !canRebet}
-							<span class="warn">insufficient power reserve -- lower the stake</span>
+							<div class="settled-note warn">insufficient power reserve -- lower the {stakeWord}</div>
 						{/if}
 					{/if}
 					{#if stateSession.lastRoundID != null}

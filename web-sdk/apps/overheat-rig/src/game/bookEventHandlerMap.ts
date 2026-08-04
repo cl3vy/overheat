@@ -185,9 +185,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.phase = 'banked';
 		stopHum();
 		if (!instant) playBankLock();
-		// win fanfare, tier headline and post-mortem all render in the
-		// RunView celebration; the log stays boot flavor only (R2 1.3)
-		if (!instant) await waitForTimeout(650);
+		// win fanfare + CLEAN BANK / tier stage render immediately in RunView;
+		// brief hold so the book sequence doesn't yank past the count-up
+		if (!instant) await waitForTimeout(stateBet.isTurbo ? 200 : 400);
 	},
 
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {

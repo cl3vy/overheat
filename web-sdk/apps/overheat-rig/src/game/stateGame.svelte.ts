@@ -21,6 +21,8 @@ export const stateGame = $state({
 	logs: [] as LogLine[],
 	/** resume fast-forward: book events with index < skipUntilIndex apply instantly */
 	skipUntilIndex: 0,
+	/** brief power-up ceremony between config and reveal (visual feel P4) */
+	poweringUp: false,
 });
 
 export const pushLog = (text: string, tone: LogTone = 'normal') => {
@@ -41,4 +43,5 @@ export const resetRound = () => {
 	stateGame.logs = [];
 	stateGame.skipUntilIndex = 0;
 	stateGame.hashrate = 0;
+	stateGame.poweringUp = false;
 };

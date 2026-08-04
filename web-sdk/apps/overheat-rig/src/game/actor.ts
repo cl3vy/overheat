@@ -21,7 +21,12 @@ const primaryMachines = createPrimaryMachines<Bet>({
 			stateGame.targetTemp = rig.targetTemp;
 		}
 		stateGame.phase = 'booting';
+		stateGame.poweringUp = true;
 		pushLog('> POWER ON -- contacting RGS...', 'dim');
+		// brief power-up ceremony (visual feel P4); turbo shortens, never skips
+		const holdMs = stateBet.isTurbo ? 160 : 480;
+		await new Promise((resolve) => setTimeout(resolve, holdMs));
+		stateGame.poweringUp = false;
 	},
 	onNewGameError: () => {
 		resetRound();
