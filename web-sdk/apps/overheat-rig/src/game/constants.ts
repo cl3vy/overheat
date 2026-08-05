@@ -43,10 +43,28 @@ export const RIG_MAP: Record<RigId, RigInfo> = Object.fromEntries(
 	RIGS.map((rig) => [rig.id, rig]),
 ) as Record<RigId, RigInfo>;
 
-// must match tools/gen_overheat_math.py (checkpoint-banking distribution)
+// must match tools/gen_overheat_math.py / math v4 max wins
 export const RTP = 0.965;
 
 export type WinTier = 'clean' | 'overdrive' | 'critical' | 'golden';
+
+/** Per-mode absolute max win (v4). Golden 10×target is no longer the ceiling. */
+export const MODE_MAX_WIN: Record<RigId, number> = {
+	idle: 20,
+	eco: 25,
+	standard: 30,
+	boost: 40,
+	overclock: 50,
+	nitro: 75,
+	furnace: 100,
+	inferno: 150,
+	meltdown: 250,
+	reactor: 500,
+	plasma: 2500,
+};
+
+/** @deprecated use MODE_MAX_WIN; kept as plasma ceiling helper */
+export const MAX_WIN_MULT = 25; // 2500 / 100
 
 export type LadderRung = {
 	/** temperature the rung sits at (multiplier) */
@@ -91,9 +109,6 @@ export const securedAtTemp = (rigId: RigId, temp: number): number => {
 	}
 	return secured;
 };
-
-/** max win per rig = golden tier = 10x the shutdown target */
-export const MAX_WIN_MULT = 10;
 
 // terminal palette (brief 5.3)
 export const COLORS = {

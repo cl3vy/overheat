@@ -12,8 +12,8 @@ root="$(cd "$(dirname "$0")/.." && pwd)"
 python="$root/env/bin/python"
 [ -x "$python" ] || python="python3"
 
-echo "== verifying math package =="
-(cd "$root/tools" && "$python" verify_overheat_math.py --out "$root/math-out")
+echo "== verifying math package (v4) =="
+(cd "$root/math" && "$python" validate_books.py)
 
 frontend_build="$root/web-sdk/apps/overheat-rig/build"
 if [ ! -f "$frontend_build/index.html" ]; then
@@ -34,3 +34,4 @@ echo
 echo "Staged for upload:"
 echo "  math:     $(ls "$root/acp-upload/math" | wc -l | tr -d ' ') files -> acp-upload/math/"
 echo "  frontend: $(ls "$root/acp-upload/frontend" | wc -l | tr -d ' ') entries -> acp-upload/frontend/"
+echo "  Tip: run 'cd math && ../env/bin/python emit_stake.py' before this if books changed."

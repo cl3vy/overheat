@@ -1,0 +1,174 @@
+{
+  "version": "4.0.0",
+  "total_weight": 100000000,
+  "rtp_target": 0.965,
+  "config_hash": "f34faa9621d03aab48a1530d158a72ad26fbb65ebc76afcce78af514dff86372",
+  "idle_fallback": false,
+  "modes": {
+    "idle": {
+      "path": "books/idle_v4.csv",
+      "metrics": {
+        "rtp": 0.9650000003,
+        "hit_rate": 0.71009556,
+        "zero_rate": 0.28990444,
+        "break_even": 0.38009368,
+        "std": 1.2009752992620206,
+        "max": 20.0,
+        "unique": 98,
+        "etl40": 0.0
+      },
+      "n_outcomes": 99,
+      "max_win": 20.0
+    },
+    "eco": {
+      "path": "books/eco_v4.csv",
+      "metrics": {
+        "rtp": 0.9649999991,
+        "hit_rate": 0.61766787,
+        "zero_rate": 0.38233213,
+        "break_even": 0.48233213,
+        "std": 1.5389998993833627,
+        "max": 25.0,
+        "unique": 105,
+        "etl40": 0.0
+      },
+      "n_outcomes": 106,
+      "max_win": 25.0
+    },
+    "standard": {
+      "path": "books/standard_v4.csv",
+      "metrics": {
+        "rtp": 0.96500000065,
+        "hit_rate": 0.51705074,
+        "zero_rate": 0.48294926,
+        "break_even": 0.58399884,
+        "std": 1.8078951393545342,
+        "max": 30.0,
+        "unique": 110,
+        "etl40": 0.0
+      },
+      "n_outcomes": 111,
+      "max_win": 30.0
+    },
+    "boost": {
+      "path": "books/boost_v4.csv",
+      "metrics": {
+        "rtp": 0.9649999990000001,
+        "hit_rate": 0.46717916,
+        "zero_rate": 0.53282084,
+        "break_even": 0.66282084,
+        "std": 2.200025512814681,
+        "max": 40.0,
+        "unique": 117,
+        "etl40": 0.0401232
+      },
+      "n_outcomes": 118,
+      "max_win": 40.0
+    },
+    "overclock": {
+      "path": "books/overclock_v4.csv",
+      "metrics": {
+        "rtp": 0.9650000006999999,
+        "hit_rate": 0.37752559,
+        "zero_rate": 0.62247441,
+        "break_even": 0.71574673,
+        "std": 2.6008734252419896,
+        "max": 50.0,
+        "unique": 113,
+        "etl40": 0.040410214
+      },
+      "n_outcomes": 114,
+      "max_win": 50.0
+    },
+    "nitro": {
+      "path": "books/nitro_v4.csv",
+      "metrics": {
+        "rtp": 0.9650000005500001,
+        "hit_rate": 0.33167447,
+        "zero_rate": 0.66832553,
+        "break_even": 0.76262554,
+        "std": 3.220670017644659,
+        "max": 75.0,
+        "unique": 124,
+        "etl40": 0.07787414200000001
+      },
+      "n_outcomes": 125,
+      "max_win": 75.0
+    },
+    "furnace": {
+      "path": "books/furnace_v4.csv",
+      "metrics": {
+        "rtp": 0.9649999994499999,
+        "hit_rate": 0.29140098,
+        "zero_rate": 0.70859902,
+        "break_even": 0.80859902,
+        "std": 4.079848848479224,
+        "max": 100.0,
+        "unique": 131,
+        "etl40": 0.146897686
+      },
+      "n_outcomes": 132,
+      "max_win": 100.0
+    },
+    "inferno": {
+      "path": "books/inferno_v4.csv",
+      "metrics": {
+        "rtp": 0.965,
+        "hit_rate": 0.27936884,
+        "zero_rate": 0.72063116,
+        "break_even": 0.82683381,
+        "std": 4.856017814913419,
+        "max": 150.0,
+        "unique": 154,
+        "etl40": 0.178917147
+      },
+      "n_outcomes": 155,
+      "max_win": 150.0
+    },
+    "meltdown": {
+      "path": "books/meltdown_v4.csv",
+      "metrics": {
+        "rtp": 0.965,
+        "hit_rate": 0.25541684,
+        "zero_rate": 0.74458316,
+        "break_even": 0.84441417,
+        "std": 5.965291019729381,
+        "max": 250.0,
+        "unique": 152,
+        "etl40": 0.23879457
+      },
+      "n_outcomes": 153,
+      "max_win": 250.0
+    },
+    "reactor": {
+      "path": "books/reactor_v4.csv",
+      "metrics": {
+        "rtp": 0.96500000045,
+        "hit_rate": 0.23768679,
+        "zero_rate": 0.76231321,
+        "break_even": 0.86231321,
+        "std": 7.784300475480423,
+        "max": 500.0,
+        "unique": 168,
+        "etl40": 0.34163736
+      },
+      "n_outcomes": 169,
+      "max_win": 500.0
+    },
+    "plasma": {
+      "path": "books/plasma_v4.csv",
+      "metrics": {
+        "rtp": 0.96500000035,
+        "hit_rate": 0.21997664,
+        "zero_rate": 0.78002336,
+        "break_even": 0.88002336,
+        "std": 11.847928737971491,
+        "max": 2500.0,
+        "unique": 194,
+        "etl40": 0.40556281299999997
+      },
+      "n_outcomes": 195,
+      "max_win": 2500.0
+    }
+  }
+}

@@ -33,16 +33,25 @@ export const bookPayoutCents = (bookAmount: number, wageredAmount: number): numb
 /** Format an amount in the session currency (locale + currency aware). */
 export const formatMoney = (amount: number): string => {
 	const value = toCents(amount) / 100;
-	const currency = stateBet.currency;
+	const currency = stateBet.currency || 'USD';
 	if (currency in NO_LOCALISATION_CURRENCY_MAP) {
 		return `${NO_LOCALISATION_CURRENCY_MAP[currency]} ${value.toFixed(2)}`;
 	}
+	const opts = {
+		style: 'currency' as const,
+		currency,
+		// narrowSymbol keeps "$1.00" instead of "USD 1.00" so the stake
+		// row never jumps between a wrapping code and a symbol
+		currencyDisplay: 'narrowSymbol' as const,
+	};
 	try {
-		// no minimum/maximumFractionDigits: Intl resolves the currency's own
-		// digits, so JPY renders as ¥100, USD as $1.00
-		return stateI18n.i18n.number(value, { style: 'currency', currency });
+		return stateI18n.i18n.number(value, opts);
 	} catch {
-		return `${currency} ${value.toFixed(2)}`;
+		try {
+			return new Intl.NumberFormat(undefined, opts).format(value);
+		} catch {
+			return `${currency} ${value.toFixed(2)}`;
+		}
 	}
 };
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { stateBet } from 'state-shared';
 
-	import { LADDERS, MAX_WIN_MULT, RIGS, RTP } from '../game/constants';
+	import { LADDERS, MODE_MAX_WIN, RIGS, RTP } from '../game/constants';
 	import { formatMoney } from '../game/money';
 	import {
 		isSocialCasino,
@@ -36,9 +36,8 @@
 		spike_deep: 'rare, big',
 	} as const;
 
-	// max win across the whole game: highest target x the golden multiplier
-	const maxTarget = Math.max(...RIGS.map((rig) => rig.targetTemp));
-	const maxWinMult = maxTarget * MAX_WIN_MULT;
+	const maxWinMult = Math.max(...Object.values(MODE_MAX_WIN));
+	const maxWinMode = RIGS.find((rig) => MODE_MAX_WIN[rig.id] === maxWinMult)?.name ?? 'PLASMA';
 </script>
 
 <!-- submission checklist: RTP, max win, payout information, mode descriptions
@@ -113,7 +112,7 @@
 			</p>
 			<p>
 				maximum win: <span class="win">{maxWinMult.toFixed(0)}x the {stakeWord}</span>
-				(a golden shutdown on the {maxTarget.toFixed(0)}x rig). {payoutsWord} are capped
+				(a top payout on {maxWinMode}). {payoutsWord} are capped
 				at the maximum win.
 			</p>
 		</div>

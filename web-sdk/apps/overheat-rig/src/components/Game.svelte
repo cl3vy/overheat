@@ -178,7 +178,8 @@
 	</div>
 
 	<div class="term-header">
-		<span>OVERHEAT // MINING RIG THERMAL CONSOLE</span>
+		<span class="term-title-full">OVERHEAT // MINING RIG THERMAL CONSOLE</span>
+		<span class="term-title-mini">OVERHEAT</span>
 		<span class="term-header-right">
 			<button class="rules-btn" onclick={() => (rulesOpen = !rulesOpen)}>[RULES]</button>
 			{#if isReplay}
@@ -190,7 +191,7 @@
 				</span>
 				<span class="dim mw-garnish">{formatMW(displayedBalance)}</span>
 			{/if}
-			{#if stateBet.isTurbo}<span class="warn"> [TURBO]</span>{/if}
+			{#if stateBet.isTurbo}<span class="warn header-turbo"> [TURBO]</span>{/if}
 		</span>
 	</div>
 

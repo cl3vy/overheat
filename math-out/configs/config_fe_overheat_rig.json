@@ -1,89 +1,59 @@
 {
-    "providerName": "overheat",
-    "gameName": "OVERHEAT",
-    "gameID": "overheat_rig",
-    "rtp": 0.965,
-    "numReels": 0,
-    "numRows": [],
-    "betModes": {
-        "idle": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 12.0
-        },
-        "eco": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 15.0
-        },
-        "standard": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 20.0
-        },
-        "boost": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 30.0
-        },
-        "overclock": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 50.0
-        },
-        "nitro": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 70.0
-        },
-        "furnace": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 100.0
-        },
-        "inferno": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 150.0
-        },
-        "meltdown": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 250.0
-        },
-        "reactor": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 500.0
-        },
-        "plasma": {
-            "cost": 1.0,
-            "feature": true,
-            "buyBonus": false,
-            "rtp": 0.965,
-            "max_win": 1000.0
-        }
+  "betModes": [
+    {
+      "key": "idle",
+      "costMultiplier": 1.0,
+      "maxWin": 20.0
     },
-    "symbols": [],
-    "paddingReels": {}
+    {
+      "key": "eco",
+      "costMultiplier": 1.0,
+      "maxWin": 25.0
+    },
+    {
+      "key": "standard",
+      "costMultiplier": 1.0,
+      "maxWin": 30.0
+    },
+    {
+      "key": "boost",
+      "costMultiplier": 1.0,
+      "maxWin": 40.0
+    },
+    {
+      "key": "overclock",
+      "costMultiplier": 1.0,
+      "maxWin": 50.0
+    },
+    {
+      "key": "nitro",
+      "costMultiplier": 1.0,
+      "maxWin": 75.0
+    },
+    {
+      "key": "furnace",
+      "costMultiplier": 1.0,
+      "maxWin": 100.0
+    },
+    {
+      "key": "inferno",
+      "costMultiplier": 1.0,
+      "maxWin": 150.0
+    },
+    {
+      "key": "meltdown",
+      "costMultiplier": 1.0,
+      "maxWin": 250.0
+    },
+    {
+      "key": "reactor",
+      "costMultiplier": 1.0,
+      "maxWin": 500.0
+    },
+    {
+      "key": "plasma",
+      "costMultiplier": 1.0,
+      "maxWin": 2500.0
+    }
+  ]
 }

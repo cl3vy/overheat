@@ -494,7 +494,8 @@
 								&gt;&gt; BOOT AGAIN &lt;&lt; <span class="key-hint">[SPACE]</span>
 							</button>
 							<button class="term-btn settled-secondary" onclick={() => resetRound()}>
-								RETURN TO RIG SELECT
+								<span class="settled-return-full">RETURN TO RIG SELECT</span>
+								<span class="settled-return-mini">RIG SELECT</span>
 							</button>
 						</div>
 						{#if !canRebet}

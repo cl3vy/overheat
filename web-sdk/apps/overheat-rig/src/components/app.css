@@ -212,6 +212,10 @@ a {
 	letter-spacing: 0.06em;
 }
 
+.term-title-mini {
+	display: none;
+}
+
 .term-main {
 	flex: 1;
 	min-height: 0;
@@ -228,7 +232,9 @@ a {
 	flex-wrap: wrap;
 }
 
-.mw-garnish { font-size: 0.78em; }
+.pwr-reserve {
+	white-space: nowrap;
+}
 
 button.rules-btn {
 	background: none;
@@ -577,8 +583,19 @@ button.term-btn.danger {
 .stake-row {
 	display: inline-flex;
 	align-items: baseline;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 6px;
+	max-width: 100%;
+}
+
+/* currency figure must not wrap ("USD 1.00" → two lines) or the dial
+   panel width jumps when Intl switches to "$1.00" after authenticate */
+.stake-row .win {
+	display: inline-block;
+	white-space: nowrap;
+	min-width: 7ch;
+	text-align: left;
+	flex: 0 0 auto;
 }
 
 .stake-input {
@@ -1458,6 +1475,10 @@ button.settled-secondary {
 	opacity: 0.9;
 }
 
+.settled-return-mini {
+	display: none;
+}
+
 .settled-actions .round-id-line {
 	text-align: center;
 	width: 100%;
@@ -1915,8 +1936,8 @@ button.settled-secondary {
 	.crt { padding: 6px clamp(10px, 4vw, 24px); }
 	.term-header { padding-bottom: 3px; margin-bottom: 3px; font-size: 0.8em; }
 
-	.select-screen { justify-content: flex-start; padding-top: 0; padding-bottom: 4px; }
-	.dial-panel { margin: 2px auto; padding: 4px 10px; border: none; box-shadow: none; }
+	.select-screen { justify-content: center; padding-top: 0; padding-bottom: 4px; }
+	.dial-panel { margin: 2px auto; padding: 4px 10px; border: none; box-shadow: none; width: 100%; max-width: 100%; box-sizing: border-box; }
 	.dial-readout { margin: 0; }
 	.dial-mult { font-size: 1.5em; }
 	.dial-slider-row { margin: 2px 0; }
@@ -1953,9 +1974,240 @@ button.settled-secondary {
 	.banner { padding: 3px 10px; margin: 3px 0; font-size: 0.8em; }
 	.near-miss-hero, .aimed-line, .secured-line { font-size: 0.72em; }
 	.settled-actions { margin-top: 4px; gap: 4px; max-width: 100%; }
-	.settled-buttons { gap: 4px; }
-	button.rebet-btn { padding: 4px 12px; font-size: 0.8em; }
-	button.settled-secondary { display: none; }
+	.settled-buttons {
+		gap: 4px;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		align-items: stretch;
+	}
+	button.rebet-btn {
+		padding: 4px 10px;
+		font-size: 0.78em;
+		flex: 1 1 auto;
+		width: auto;
+	}
+	button.settled-secondary {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: auto;
+		flex: 0 0 auto;
+		padding: 4px 8px;
+		font-size: 0.72em;
+		letter-spacing: 0.06em;
+		white-space: nowrap;
+	}
+	.settled-return-full { display: none; }
+	.settled-return-mini { display: inline; }
+}
+
+/* Popout S (400x225): keep the CONFIG composition (mult → slider → stake →
+   BOOT), just tighter chrome. Do not flatten into a top-packed control strip. */
+@media (max-width: 420px) and (max-height: 240px) {
+	.loop-callout,
+	.stats-block,
+	.dial-header,
+	.dial-flavor,
+	.dial-translate,
+	.dial-odds-line,
+	.dial-spice,
+	.dial-heatbar,
+	.dial-scale,
+	.mw-garnish,
+	.stake-label,
+	.key-hint-line,
+	.settings-corner,
+	.run-topline,
+	.gauge-big,
+	.header-turbo,
+	.select-col > .log-line,
+	.term-title-full {
+		display: none !important;
+	}
+
+	.term-title-mini {
+		display: inline;
+		letter-spacing: 0.1em;
+		font-weight: bold;
+	}
+
+	.tv-shell { padding: 4px; }
+	.crt {
+		padding: 8px 14px;
+		border-radius: 12px;
+		font-size: 11px;
+		line-height: 1.25;
+	}
+	.term-header {
+		flex-wrap: nowrap;
+		align-items: baseline;
+		gap: 6px;
+		padding-bottom: 3px;
+		margin-bottom: 4px;
+		font-size: 0.75em;
+	}
+	.term-header-right {
+		gap: 6px;
+		flex-wrap: nowrap;
+	}
+	button.rules-btn {
+		padding: 0 5px;
+		font-size: 0.9em;
+	}
+
+	/* center the dial in leftover height — empty bottom looked broken */
+	.select-screen {
+		justify-content: center;
+		padding: 4px 0;
+		box-sizing: border-box;
+	}
+	.select-col {
+		width: 100%;
+		max-width: 100%;
+		padding: 0 2px;
+		box-sizing: border-box;
+	}
+	.dial-panel {
+		margin: 0 auto;
+		padding: 6px 12px 8px;
+		border: none;
+		box-shadow: none;
+		width: 100%;
+		max-width: 100%;
+		box-sizing: border-box;
+		transform: none;
+	}
+	.dial-panel::before,
+	.dial-panel::after {
+		/* keep brackets inside the padded panel so they don't clip the CRT */
+		width: 10px;
+		height: 10px;
+	}
+	.dial-panel .dial-body {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 4px;
+		transform: none;
+		min-width: 0;
+	}
+	.dial-readout {
+		margin: 0;
+		text-align: center;
+	}
+	.dial-mult {
+		font-size: 1.65em;
+		line-height: 1;
+	}
+	.dial-slider-row {
+		margin: 0;
+		gap: 6px;
+		min-width: 0;
+		width: 100%;
+		box-sizing: border-box;
+	}
+	.dial-slider-row .term-btn {
+		padding: 2px 7px;
+		flex: 0 0 auto;
+	}
+	.dial-slider-track {
+		flex: 1 1 auto;
+		min-width: 0;
+		/* thumb is 14px wide — give it room at both ends so max doesn't clip */
+		padding: 0 10px;
+		box-sizing: border-box;
+	}
+	.dial-slider {
+		height: 20px;
+	}
+	.stake-facts { margin: 0; }
+	.stake-row {
+		justify-content: center;
+		gap: 5px;
+		flex-wrap: nowrap;
+	}
+	.stake-row .win {
+		min-width: 8ch;
+	}
+	.stake-row button.term-btn { padding: 2px 7px; }
+	.stake-input { width: 52px; min-width: 0; padding: 1px 2px; }
+	.boot-row {
+		margin: 4px 0 0;
+		flex-direction: row !important;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		width: 100%;
+		min-width: 0;
+		box-sizing: border-box;
+	}
+	.boot-row .boot-btn {
+		flex: 1 1 auto;
+		max-width: 200px;
+		min-width: 0;
+		padding: 5px 12px;
+		font-size: 0.85em;
+		letter-spacing: 0.1em;
+	}
+	.turbo-btn {
+		padding: 4px 8px 4px 6px;
+		font-size: 0.72em;
+		gap: 5px;
+		flex: 0 0 auto;
+	}
+
+	/* run / settled / replay -- payout + BOOT AGAIN + RIG SELECT */
+	.temp-label,
+	.round-id-line,
+	.new-best,
+	.win-headline,
+	.win-translate,
+	.yield-caption,
+	.near-miss-hero,
+	.aimed-line,
+	.secured-line {
+		display: none !important;
+	}
+	.run-center { gap: 2px; }
+	.temp-giant { font-size: 1.35em; }
+	.yield-box { padding: 2px 8px; }
+	.win-stage { padding: 3px 8px; margin-top: 0; border-width: 1px; }
+	.win-tier { font-size: 0.65em; }
+	.win-amount,
+	.win-stage.level-3 .win-amount,
+	.win-stage.level-4 .win-amount,
+	.win-stage.level-5 .win-amount {
+		font-size: 1.25em;
+		margin: 0;
+	}
+	.win-sub { font-size: 0.6em; }
+	.banner { padding: 2px 8px; margin: 2px 0; font-size: 0.72em; }
+	.settled-actions { margin-top: 2px; gap: 2px; max-width: 100%; }
+	.settled-buttons {
+		gap: 4px;
+		flex-direction: row;
+		flex-wrap: nowrap;
+		align-items: stretch;
+	}
+	button.rebet-btn {
+		padding: 4px 8px;
+		font-size: 0.75em;
+		flex: 1 1 auto;
+		width: auto;
+	}
+	button.settled-secondary {
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+		width: auto;
+		flex: 0 0 auto;
+		padding: 4px 8px;
+		font-size: 0.7em;
+		letter-spacing: 0.05em;
+		white-space: nowrap;
+	}
+	.settled-return-full { display: none; }
+	.settled-return-mini { display: inline; }
 }
 
 /* no keyboard on a touch device -- every SPACE hint is dead copy there

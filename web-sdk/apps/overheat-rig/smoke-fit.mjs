@@ -1,6 +1,6 @@
 // CONFIG fits short viewports with BOOT RIG fully visible and no scrollbar.
-// Checks desktop short (1280x600) and mobile S (320x568) after a round so
-// the config screen carries its worst-case furniture (HOTTEST / BEST BANK).
+// Checks desktop short (1280x600), mobile S (320x568), and Popout S (400x225)
+// after a round so the config screen carries its worst-case furniture.
 import { chromium } from 'playwright-core';
 
 const url =
@@ -9,22 +9,44 @@ const url =
 const viewports = [
 	{ name: 'desktop-short', width: 1280, height: 600 },
 	{ name: 'mobile-s', width: 320, height: 568 },
+	{ name: 'popout-s', width: 400, height: 225 },
 ];
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true });
 
-const measure = (page) =>
+const measureConfig = (page) =>
 	page.evaluate(() => {
 		const boot = document.querySelector('.boot-btn');
 		const rect = boot?.getBoundingClientRect();
 		const scroller = document.scrollingElement;
 		return {
 			bootVisible: rect
-				? rect.top >= 0 && rect.bottom <= window.innerHeight
+				? rect.top >= 0 && rect.bottom <= window.innerHeight + 0.5
 				: false,
 			bootBottom: rect ? Math.round(rect.bottom) : null,
 			innerHeight: window.innerHeight,
 			overflow: scroller ? scroller.scrollHeight - scroller.clientHeight : null,
+		};
+	});
+
+const measureSettled = (page) =>
+	page.evaluate(() => {
+		const cta =
+			document.querySelector('button.rebet-btn') ||
+			document.querySelector('.settled-buttons button.action') ||
+			[...document.querySelectorAll('button')].find((b) =>
+				/BOOT AGAIN|REPLAY AGAIN/i.test(b.textContent || ''),
+			);
+		const rect = cta?.getBoundingClientRect();
+		const scroller = document.scrollingElement;
+		return {
+			ctaVisible: rect
+				? rect.top >= 0 && rect.bottom <= window.innerHeight + 0.5
+				: false,
+			ctaBottom: rect ? Math.round(rect.bottom) : null,
+			innerHeight: window.innerHeight,
+			overflow: scroller ? scroller.scrollHeight - scroller.clientHeight : null,
+			ctaText: cta?.textContent?.trim() ?? null,
 		};
 	});
 
@@ -42,13 +64,27 @@ try {
 	});
 	await page.waitForTimeout(300);
 
-	console.log('--- first-run desktop-short ---', await measure(page));
+	console.log('--- first-run desktop-short ---', await measureConfig(page));
 
 	await page.click('.turbo-btn');
 	await page.click('button.action');
 	await page.waitForFunction(() => document.body.innerText.includes('BOOT AGAIN'), {
 		timeout: 60000,
 	});
+
+	// settled / primary CTA must fit at Popout S before returning to config
+	await page.setViewportSize({ width: 400, height: 225 });
+	await page.waitForTimeout(200);
+	const settled = await measureSettled(page);
+	console.log('--- settled popout-s ---', settled);
+	await page.screenshot({ path: '/tmp/overheat-fit-popout-s-settled.png' });
+	if (!settled.ctaVisible || (settled.overflow ?? 0) > 0) {
+		console.log('FIT SMOKE FAILED at popout-s settled: CTA clipped or page scrolls');
+		failed = true;
+	}
+
+	await page.setViewportSize({ width: 1280, height: 600 });
+	await page.waitForTimeout(100);
 	await page.click('text=RETURN TO RIG SELECT');
 	await page.waitForFunction(() => document.body.innerText.includes('CASH OUT TARGET'));
 	await page.waitForTimeout(300);
@@ -56,7 +92,7 @@ try {
 	for (const viewport of viewports) {
 		await page.setViewportSize({ width: viewport.width, height: viewport.height });
 		await page.waitForTimeout(200);
-		const result = await measure(page);
+		const result = await measureConfig(page);
 		console.log(`--- post-run ${viewport.name} ---`, result);
 		await page.screenshot({ path: `/tmp/overheat-fit-${viewport.name}.png` });
 		if (!result.bootVisible || (result.overflow ?? 0) > 0) {

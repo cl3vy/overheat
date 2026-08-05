@@ -3,7 +3,7 @@
 
 	import { stateBet, stateBetDerived, stateConfig } from 'state-shared';
 
-	import { LADDERS, MAX_WIN_MULT, RIGS } from '../game/constants';
+	import { LADDERS, MODE_MAX_WIN, RIGS } from '../game/constants';
 	import { formatMoney, formatMW } from '../game/money';
 	import {
 		flavorForSocial,
@@ -98,7 +98,7 @@
 	// on the same line as any payout, odds-for-payout, or profit figure
 	const anyPayout = $derived(rigLadder.anyPayoutProb * 100);
 	const winPays = $derived(stateBet.betAmount * rig.targetTemp);
-	const maxPays = $derived(stateBet.betAmount * rig.targetTemp * MAX_WIN_MULT);
+	const maxPays = $derived(stateBet.betAmount * MODE_MAX_WIN[rig.id]);
 	// 0..1 along the ladder, drives the heat colors
 	const heat = $derived(rigIndex / (RIGS.length - 1));
 	const heatClass = $derived(heat < 0.35 ? 'heat-low' : heat < 0.7 ? 'heat-mid' : 'heat-high');

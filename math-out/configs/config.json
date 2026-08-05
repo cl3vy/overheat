@@ -1,245 +1,131 @@
 {
-    "workingName": "overheat_rig",
-    "frontendConfig": {
-        "file": "config_fe_overheat_rig.json",
-        "sha256": "cde1d38f82c7716a2d0cc400e4abb744df26a2d7ce3555e83e3c25dd84d2d415"
+  "workingName": "overheat_rig",
+  "gameID": "overheat_rig",
+  "rtp": 0.965,
+  "mathVersion": "4.0.0",
+  "totalWeight": 100000000,
+  "betDenomination": 1000,
+  "bookShelfConfig": [
+    {
+      "mode": "idle",
+      "cost": 1.0,
+      "bookLength": 99,
+      "maxWin": 20.0,
+      "weightsFile": "lookUpTable_idle_0.csv",
+      "weightsSha256": "fb9b53ccbc8d37cd9d23323dc17272b7e32d1abfbb81f01d93d40c0ecd463048",
+      "booksFile": "books_idle.jsonl.zst",
+      "booksSha256": "1c3d8411769a3cff30e6d1d4c210266473730b8bfb0db63dde42e7a98ab3d7ca",
+      "autoEndRoundDisabled": true
     },
-    "gameID": "overheat_rig",
-    "rtp": 0.965,
-    "betDenomination": 1000,
-    "minDenomination": 10,
-    "providerNumber": 1,
-    "bookShelfConfig": [
-        {
-            "name": "idle",
-            "tables": [
-                {
-                    "file": "lookUpTable_idle_0.csv",
-                    "sha256": "cfa99ca96ed458be908f697302a014645e0771828e5462c9061a67e39b153943"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 1.1047,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 12.0,
-            "booksFile": {
-                "file": "books_idle.jsonl.zst",
-                "sha256": "424d15d6e46a5ecf153675ecf929e1c22fe02708b145405341bdfa21b04b4ea8"
-            }
-        },
-        {
-            "name": "eco",
-            "tables": [
-                {
-                    "file": "lookUpTable_eco_0.csv",
-                    "sha256": "29972e7898f870afde569faa6c7336f0276631a8f3634d4d08caad25c03b75b6"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 1.2631,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 15.0,
-            "booksFile": {
-                "file": "books_eco.jsonl.zst",
-                "sha256": "7c13362061adf8a9b5c287b62d1b555979669968e8f9e72dc1290a373d66cc8a"
-            }
-        },
-        {
-            "name": "standard",
-            "tables": [
-                {
-                    "file": "lookUpTable_standard_0.csv",
-                    "sha256": "0b3ad085e842e5e352d57caf8053ec7217941cfea822eae1100473c971d3fd9b"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 1.4838,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 20.0,
-            "booksFile": {
-                "file": "books_standard.jsonl.zst",
-                "sha256": "7f78bb6ed934ae9d4e7098ff365e6ccf44a6509e3dc3cbdf62cee1c904a3f5fe"
-            }
-        },
-        {
-            "name": "boost",
-            "tables": [
-                {
-                    "file": "lookUpTable_boost_0.csv",
-                    "sha256": "13006afbd0ecbe591f45f92f2200c1233a5fe1fb70acd1ed700d94173f1a5863"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 1.8356,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 30.0,
-            "booksFile": {
-                "file": "books_boost.jsonl.zst",
-                "sha256": "d8e58e2c1b370a6076312ee43da45cc993bf2e68f80f8d7b61ba632175e146d4"
-            }
-        },
-        {
-            "name": "overclock",
-            "tables": [
-                {
-                    "file": "lookUpTable_overclock_0.csv",
-                    "sha256": "313098df5cf5ecd900a7fefc52288fddca0502510079c8b00a43e201b29a0ef0"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 2.3485,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 50.0,
-            "booksFile": {
-                "file": "books_overclock.jsonl.zst",
-                "sha256": "de1022ff4676bc60ace14f177d3c311fa534b6659b2ff00aa4190884af52cabb"
-            }
-        },
-        {
-            "name": "nitro",
-            "tables": [
-                {
-                    "file": "lookUpTable_nitro_0.csv",
-                    "sha256": "e20907945a324df4a7d55d94c967e0952c90b9159fd9fbd6d799d60da8a12bf4"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 2.7467,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 70.0,
-            "booksFile": {
-                "file": "books_nitro.jsonl.zst",
-                "sha256": "534bb7bd65f850770429d65f25c4d2becc701d57787c12165585948851910d82"
-            }
-        },
-        {
-            "name": "furnace",
-            "tables": [
-                {
-                    "file": "lookUpTable_furnace_0.csv",
-                    "sha256": "06e64a52891c04ad4da9810feac9b8109968c321c442b65acd733328547eb437"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 3.2303,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 100.0,
-            "booksFile": {
-                "file": "books_furnace.jsonl.zst",
-                "sha256": "d192495d528c9c58021f0b95ec2969840afb3c66fd71c44111ac2e4d8c623d07"
-            }
-        },
-        {
-            "name": "inferno",
-            "tables": [
-                {
-                    "file": "lookUpTable_inferno_0.csv",
-                    "sha256": "46cdc41888365a071de715b88b6294c01a970f41d302011ed17e49a080299719"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 4.0545,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 150.0,
-            "booksFile": {
-                "file": "books_inferno.jsonl.zst",
-                "sha256": "5c1a5edcf8305e81a4b2d2fabb3d44255d9f2c8913efb73c603b428e88454770"
-            }
-        },
-        {
-            "name": "meltdown",
-            "tables": [
-                {
-                    "file": "lookUpTable_meltdown_0.csv",
-                    "sha256": "2a4b3db93b9acfbd9e85a70f410e09ca5ecfab7fb0d451157b11b6a87f838aef"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 5.0707,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 250.0,
-            "booksFile": {
-                "file": "books_meltdown.jsonl.zst",
-                "sha256": "dd238d6e4c16a54831f06037974ba7481244701c668ffaf9dc4176eb307696d9"
-            }
-        },
-        {
-            "name": "reactor",
-            "tables": [
-                {
-                    "file": "lookUpTable_reactor_0.csv",
-                    "sha256": "1bfd50469dc4bf23e660f61ae5170115b46515154a1ec437a9f0188d470f0d3e"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 4.4908,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 500.0,
-            "booksFile": {
-                "file": "books_reactor.jsonl.zst",
-                "sha256": "20ab5f4ca2439620f8d70b7600000bd1d7ccfbbe1b6f4ce28ff3c36bcb3bf358"
-            }
-        },
-        {
-            "name": "plasma",
-            "tables": [
-                {
-                    "file": "lookUpTable_plasma_0.csv",
-                    "sha256": "12d7a650bef881fe5cc9f4187109881a53b6d7f9e1eeef2c3ccbc05d6c62626e"
-                }
-            ],
-            "cost": 1.0,
-            "rtp": 0.965,
-            "std": 5.4573,
-            "bookLength": 100000,
-            "feature": true,
-            "autoEndRoundDisabled": true,
-            "buyBonus": false,
-            "maxWin": 1000.0,
-            "booksFile": {
-                "file": "books_plasma.jsonl.zst",
-                "sha256": "73ffdf5a75f87ff9ad38588dc27a24f1516b22186a4ac41acbb01515ce0edc7d"
-            }
-        }
-    ]
+    {
+      "mode": "eco",
+      "cost": 1.0,
+      "bookLength": 106,
+      "maxWin": 25.0,
+      "weightsFile": "lookUpTable_eco_0.csv",
+      "weightsSha256": "f18e671cce8395c83aefbf8515ba5d4f0b66715c9c813424466feb08ff5cad6a",
+      "booksFile": "books_eco.jsonl.zst",
+      "booksSha256": "26f188ded9bbecf803ccaf59d05b8ca6ffb365f60ed95012446742b665bde3c5",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "standard",
+      "cost": 1.0,
+      "bookLength": 111,
+      "maxWin": 30.0,
+      "weightsFile": "lookUpTable_standard_0.csv",
+      "weightsSha256": "fb4926cf1be8a01414fda5ea99312b25b709ca8fa015cb2c9a080f2973bf0e37",
+      "booksFile": "books_standard.jsonl.zst",
+      "booksSha256": "a566d8e526a62b259f871871e1a685c931fac8d618496adbf88abb69a67890e0",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "boost",
+      "cost": 1.0,
+      "bookLength": 118,
+      "maxWin": 40.0,
+      "weightsFile": "lookUpTable_boost_0.csv",
+      "weightsSha256": "092e5fd894cef3c063edd3d990b5387f130beaa57dfa29d8e76bdbbf5743d07c",
+      "booksFile": "books_boost.jsonl.zst",
+      "booksSha256": "781f5462794f551f58d3353463738b3de875860cd8feafdbaa098fa0719bd835",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "overclock",
+      "cost": 1.0,
+      "bookLength": 114,
+      "maxWin": 50.0,
+      "weightsFile": "lookUpTable_overclock_0.csv",
+      "weightsSha256": "a7337c8b4f5a7e0f816f5f44ac5f20afa42dc21b9bc8e146c688bc03c83bb919",
+      "booksFile": "books_overclock.jsonl.zst",
+      "booksSha256": "35af6b6dfa051b087b64f9eaaf9535edc5e89a4cc398ca1d7b02f854627cf766",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "nitro",
+      "cost": 1.0,
+      "bookLength": 125,
+      "maxWin": 75.0,
+      "weightsFile": "lookUpTable_nitro_0.csv",
+      "weightsSha256": "8ac4e1639db7bdbd7f9346d76c81589911590b74f0eac94eee54e1dcc6822356",
+      "booksFile": "books_nitro.jsonl.zst",
+      "booksSha256": "8c1b130d2c899333550d67df3184f174e7bdf7224f2e3d51eacd73cfd59f423c",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "furnace",
+      "cost": 1.0,
+      "bookLength": 132,
+      "maxWin": 100.0,
+      "weightsFile": "lookUpTable_furnace_0.csv",
+      "weightsSha256": "4b9290950c6492f73fca3696e9784b6a66f18076c35a89d89e4715e45bbeb6f1",
+      "booksFile": "books_furnace.jsonl.zst",
+      "booksSha256": "f74bff155290b21245e4e7f0deeef40488cb9bb97a97db2665648a1d50fb5910",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "inferno",
+      "cost": 1.0,
+      "bookLength": 155,
+      "maxWin": 150.0,
+      "weightsFile": "lookUpTable_inferno_0.csv",
+      "weightsSha256": "05753c697ea030d73600c3ff9b0e1333426adfe04d30d8563257b338827e70b7",
+      "booksFile": "books_inferno.jsonl.zst",
+      "booksSha256": "8489059c5e5a31b504072cc49901cc12dc4fa6d2b90a22c8912db6340cd778b6",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "meltdown",
+      "cost": 1.0,
+      "bookLength": 153,
+      "maxWin": 250.0,
+      "weightsFile": "lookUpTable_meltdown_0.csv",
+      "weightsSha256": "e20aa2ce7d98439a3fdefec5cd58bbeda5d404097326ce71873aaef37826d72a",
+      "booksFile": "books_meltdown.jsonl.zst",
+      "booksSha256": "279b999f85f3126185f53dc321de93136e4caf9922f37f673b4f60698bd6b7a7",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "reactor",
+      "cost": 1.0,
+      "bookLength": 169,
+      "maxWin": 500.0,
+      "weightsFile": "lookUpTable_reactor_0.csv",
+      "weightsSha256": "93bfe6beee1d21e763e91548c6d287759818b7c1c46353f2ade3297cb6263b4c",
+      "booksFile": "books_reactor.jsonl.zst",
+      "booksSha256": "3f804b6f26fd96ee69fa0a099c297a77f74cf468be5289b417a211237dea0a94",
+      "autoEndRoundDisabled": true
+    },
+    {
+      "mode": "plasma",
+      "cost": 1.0,
+      "bookLength": 195,
+      "maxWin": 2500.0,
+      "weightsFile": "lookUpTable_plasma_0.csv",
+      "weightsSha256": "801235e7f97ad9582197fb701b19a52cb9acce2a8812d1104c332e5a0e212fbb",
+      "booksFile": "books_plasma.jsonl.zst",
+      "booksSha256": "2311825be55b81b5a97f72d01f78d6b5d72ecc43e8d148bb772f7b34944764be",
+      "autoEndRoundDisabled": true
+    }
+  ]
 }
