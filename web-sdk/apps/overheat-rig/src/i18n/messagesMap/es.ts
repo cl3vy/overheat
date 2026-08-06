@@ -151,7 +151,7 @@ const es = {
 	rules_howto_body:
 		'fija tu objetivo auto de {cashOut} y tu {stake}, luego arranca el rig. el rig sube solo y se detiene en tu objetivo automáticamente -- no hay acción que tomar durante la ronda. si se funde antes del objetivo, solo conservas lo que los checkpoints hayan bancado por el camino.',
 	rules_controls:
-		'controles: elige un rig con el slider o los botones - / + (eso fija el objetivo de {cashOut}), ajusta la {stake} con - / + o escribiéndola, luego pulsa ARRANCAR RIG. en escritorio, ESPACIO arranca. los resultados se liquidan solos; ARRANCAR OTRA VEZ repite la misma ronda.',
+		'controles: elige un rig con el slider o los botones - / + (eso fija el objetivo de {cashOut}), ajusta la {stake} con - / + o Min / 1/2 / 2x / Max, luego pulsa ARRANCAR RIG. en escritorio, ESPACIO arranca. los resultados se liquidan solos; ARRANCAR OTRA VEZ repite la misma ronda.',
 	rules_modes: 'MODOS',
 	rules_modes_intro:
 		'{modeCosts} la {stake} que fijes{noCostNote}. "{pays} algo" es la probabilidad de que una ronda devuelva algún {payout}.',

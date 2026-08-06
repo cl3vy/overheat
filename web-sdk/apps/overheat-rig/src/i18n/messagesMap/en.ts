@@ -158,7 +158,7 @@ const en = {
 	rules_howto_body:
 		'set your auto {cashOut} target and your {stake}, then boot the rig. the rig climbs on its own and stops at your target automatically -- there is no action to take during the round. if it melts down before the target, you keep only what the checkpoints banked along the way.',
 	rules_controls:
-		'controls: pick a rig with the slider or the - / + buttons (that sets the {cashOut} target), set the {stake} with - / + or by typing it, then press BOOT RIG. on desktop, SPACE boots. results settle automatically; BOOT AGAIN repeats the same round.',
+		'controls: pick a rig with the slider or the - / + buttons (that sets the {cashOut} target), set the {stake} with - / + or Min / 1/2 / 2x / Max, then press BOOT RIG. on desktop, SPACE boots. results settle automatically; BOOT AGAIN repeats the same round.',
 	rules_modes: 'MODES',
 	rules_modes_intro:
 		'{modeCosts} the {stake} you set{noCostNote}. "{pays} something" is the chance a round returns any {payout} at all.',

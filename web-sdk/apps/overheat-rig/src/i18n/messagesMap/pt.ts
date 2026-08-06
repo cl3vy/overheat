@@ -151,7 +151,7 @@ const pt = {
 	rules_howto_body:
 		'defina seu alvo auto de {cashOut} e sua {stake}, depois ligue o rig. o rig sobe sozinho e para no seu alvo automaticamente -- não há ação a tomar durante a rodada. se der meltdown antes do alvo, você fica só com o que os checkpoints bancaram no caminho.',
 	rules_controls:
-		'controles: escolha um rig com o slider ou os botões - / + (isso define o alvo de {cashOut}), ajuste a {stake} com - / + ou digitando, depois pressione LIGAR RIG. no desktop, ESPAÇO liga. os resultados liquidam sozinhos; LIGAR DE NOVO repete a mesma rodada.',
+		'controles: escolha um rig com o slider ou os botões - / + (isso define o alvo de {cashOut}), ajuste a {stake} com - / + ou Min / 1/2 / 2x / Max, depois pressione LIGAR RIG. no desktop, ESPAÇO liga. os resultados liquidam sozinhos; LIGAR DE NOVO repete a mesma rodada.',
 	rules_modes: 'MODOS',
 	rules_modes_intro:
 		'{modeCosts} a {stake} que você definir{noCostNote}. "{pays} algo" é a chance de uma rodada devolver algum {payout}.',

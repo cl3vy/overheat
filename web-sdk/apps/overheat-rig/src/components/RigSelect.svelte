@@ -34,7 +34,7 @@
 
 	const betOptions = $derived(stateConfig.betAmountOptions);
 
-	/** Index into authenticate betLevels — the only selectable set. */
+	/** Index into authenticate betLevels — the only selectable set / source of truth. */
 	const betIndex = $derived.by(() => {
 		const levels = betOptions;
 		if (!levels.length) return -1;
@@ -42,7 +42,7 @@
 			(level) => Math.abs(level - stateBet.betAmount) < 1e-9,
 		);
 		if (exact >= 0) return exact;
-		// off-ladder (resume / typed): nearest level for display/stepping
+		// off-ladder (resume edge): nearest level for display/stepping
 		let best = 0;
 		for (let i = 1; i < levels.length; i++) {
 			if (Math.abs(levels[i] - stateBet.betAmount) < Math.abs(levels[best] - stateBet.betAmount)) {
@@ -52,35 +52,33 @@
 		return best;
 	});
 
-	let stakeText = $state('');
-
-	// reflect external stake changes (steppers, seeding, balance clamps) in the field
-	$effect(() => {
-		stakeText = stateBet.betAmount.toFixed(2);
-	});
-
-	const nearestBetLevel = (raw: number) => {
+	const setBetIndex = (index: number) => {
 		const levels = betOptions;
-		if (!levels.length) return raw;
-		const { minBet, maxBet } = stateConfig;
-		const clamped = Math.min(Math.max(raw, minBet), maxBet);
-		return levels.reduce((best, level) =>
-			Math.abs(level - clamped) < Math.abs(best - clamped) ? level : best,
-		);
+		if (!levels.length) return;
+		const clamped = Math.min(Math.max(index, 0), levels.length - 1);
+		stateBetDerived.setBetAmount(levels[clamped]);
 	};
 
-	/**
-	 * Commit a typed stake by snapping to the nearest authenticate betLevels entry.
-	 * Manual field stays; stepBet does not drive selection.
-	 */
-	const commitStake = () => {
-		const raw = Number(stakeText.replace(/,/g, ''));
-		if (!Number.isFinite(raw) || raw <= 0) {
-			stakeText = stateBet.betAmount.toFixed(2);
-			return;
+	/** Snap a target amount to the nearest betLevels index (never off-ladder). */
+	const nearestBetIndex = (target: number): number => {
+		const levels = betOptions;
+		if (!levels.length) return -1;
+		let best = 0;
+		for (let i = 1; i < levels.length; i++) {
+			if (Math.abs(levels[i] - target) < Math.abs(levels[best] - target)) best = i;
 		}
-		stateBetDerived.setBetAmount(nearestBetLevel(raw));
-		stakeText = stateBet.betAmount.toFixed(2);
+		return best;
+	};
+
+	const jumpBetMin = () => setBetIndex(0);
+	const jumpBetMax = () => setBetIndex(betOptions.length - 1);
+	const jumpBetHalf = () => {
+		if (betIndex < 0) return;
+		setBetIndex(nearestBetIndex(betOptions[betIndex] / 2));
+	};
+	const jumpBetDouble = () => {
+		if (betIndex < 0) return;
+		setBetIndex(nearestBetIndex(betOptions[betIndex] * 2));
 	};
 
 	const rigIndex = $derived(
@@ -132,13 +130,10 @@
 		stateBet.activeBetModeKey = RIGS[clamped].id;
 	};
 
-	/** +/- moves to adjacent betLevels entries (index-based; not stepBet). */
+	/** +/- moves to adjacent betLevels entries (index-based). */
 	const stepBetAmount = (direction: 1 | -1) => {
-		const levels = betOptions;
-		if (!levels.length || betIndex < 0) return;
-		const next = betIndex + direction;
-		if (next < 0 || next >= levels.length) return;
-		stateBetDerived.setBetAmount(levels[next]);
+		if (betIndex < 0) return;
+		setBetIndex(betIndex + direction);
 	};
 
 	const atMinLevel = $derived(betIndex <= 0);
@@ -172,15 +167,14 @@
 	};
 
 	onMount(() => {
-		// live play: Authenticate already set defaultBetLevel. Snap any off-ladder
-		// amount onto betLevels so no control can leave an invalid stake selected.
-		if (betOptions.length) {
+		// live play: Authenticate already set defaultBetLevel / launch amount.
+		// Snap any off-ladder amount onto betLevels so no control can leave an
+		// invalid stake selected.
+		if (betOptions.length && betIndex >= 0) {
 			const onLadder = betOptions.some(
 				(option) => Math.abs(option - stateBet.betAmount) < 1e-9,
 			);
-			if (!onLadder) {
-				stateBetDerived.setBetAmount(nearestBetLevel(stateBet.betAmount));
-			}
+			if (!onLadder) setBetIndex(betIndex);
 		}
 		// default rig if the mode key is not one of ours (e.g. initial 'BASE')
 		if (!RIGS.some((r) => r.id === stateBet.activeBetModeKey)) {
@@ -295,19 +289,16 @@
 			<span class="stake-row">
 				<span class="stake-label">{t('label_stake_row', { stake: stakeWord })}</span>
 				<button class="term-btn" onclick={() => stepBetAmount(-1)} disabled={atMinLevel}>-</button>
-				<input
-					class="stake-input"
-					type="text"
-					inputmode="decimal"
-					bind:value={stakeText}
-					onblur={commitStake}
-					onkeydown={(event) => event.key === 'Enter' && event.currentTarget.blur()}
-					aria-label={stakeWord}
-				/>
+				<!-- read-only selected level — no free typing -->
+				<span class="stake-value" aria-live="polite">{formatMoney(stateBet.betAmount)}</span>
 				<button class="term-btn" onclick={() => stepBetAmount(1)} disabled={atMaxLevel}>+</button>
-				<!-- real currency is primary; MW is theme garnish (QA 4.1) -->
-				<span class="win">{formatMoney(stateBet.betAmount)}</span>
 				<span class="dim mw-garnish">{formatMW(stateBet.betAmount)}</span>
+			</span>
+			<span class="stake-presets" role="group" aria-label={stakeWord}>
+				<button class="term-btn stake-preset" onclick={jumpBetMin} disabled={atMinLevel}>Min</button>
+				<button class="term-btn stake-preset" onclick={jumpBetHalf} disabled={atMinLevel}>1/2</button>
+				<button class="term-btn stake-preset" onclick={jumpBetDouble} disabled={atMaxLevel}>2x</button>
+				<button class="term-btn stake-preset" onclick={jumpBetMax} disabled={atMaxLevel}>Max</button>
 			</span>
 		</div>
 

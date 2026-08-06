@@ -151,7 +151,7 @@ const zh = {
 	rules_howto_body:
 		'设定自动{cashOut}目标和{stake}，然后启动矿机。矿机自行爬升并在目标处自动停下 -- 回合中无需操作。若在目标前熔毁，你只保留沿途检查点已存入的部分。',
 	rules_controls:
-		'操作：用滑块或 - / + 按钮选择矿机（设定{cashOut}目标），用 - / + 或输入设定{stake}，然后按启动矿机。桌面端按空格启动。结果自动结算；再次启动重复同一回合。',
+		'操作：用滑块或 - / + 按钮选择矿机（设定{cashOut}目标），用 - / + 或 Min / 1/2 / 2x / Max 设定{stake}，然后按启动矿机。桌面端按空格启动。结果自动结算；再次启动重复同一回合。',
 	rules_modes: '模式',
 	rules_modes_intro:
 		'{modeCosts}你设定的{stake}{noCostNote}。“{pays}有回报”是回合有任何{payout}的概率。',

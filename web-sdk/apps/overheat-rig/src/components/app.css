@@ -33,6 +33,7 @@ body {
 /* one tap = one action: no double-tap zoom on any control (QA 2.2) */
 button,
 input,
+select,
 label,
 a {
 	touch-action: manipulation;
@@ -584,8 +585,16 @@ button.term-btn.danger {
 	display: inline-flex;
 	align-items: baseline;
 	flex-wrap: nowrap;
+	justify-content: center;
 	gap: 6px;
 	max-width: 100%;
+}
+
+.stake-facts {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
 }
 
 /* currency figure must not wrap ("USD 1.00" → two lines) or the dial
@@ -598,23 +607,38 @@ button.term-btn.danger {
 	flex: 0 0 auto;
 }
 
-.stake-input {
-	width: 88px;
-	padding: 3px 8px;
-	background: rgba(0, 0, 0, 0.4);
-	border: 1px solid var(--green-dim);
+/* read-only stake — plain phosphor text, not an input chrome */
+.stake-value {
+	display: inline-block;
+	min-width: 4ch;
+	padding: 0 4px;
+	background: transparent;
+	border: none;
 	color: var(--green);
 	font-family: var(--font);
-	font-size: inherit;
+	font-size: 1.15em;
 	font-weight: bold;
-	text-align: right;
+	text-align: center;
 	text-shadow: inherit;
+	white-space: nowrap;
+	user-select: none;
+	pointer-events: none;
 }
 
-.stake-input:focus {
-	outline: none;
-	border-color: var(--green);
-	box-shadow: 0 0 8px rgba(0, 255, 65, 0.4);
+.stake-presets {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+	margin-top: 6px;
+}
+
+.stake-preset {
+	padding: 2px 7px;
+	font-size: 0.85em;
+	letter-spacing: 0.04em;
+	min-width: 2.4em;
 }
 
 /* ---- run dashboard: full-screen money printer ---- */
@@ -1835,7 +1859,7 @@ button.settled-secondary {
    target, slider, stake and BOOT RIG must all land above the fold. */
 @media (max-width: 480px) {
 	.stake-row { flex-wrap: nowrap; }
-	.stake-input { min-width: 54px; flex: 0 1 64px; }
+	.stake-value { min-width: 54px; flex: 0 1 64px; }
 
 	.dial-flavor,
 	.dial-spice {
@@ -1881,7 +1905,7 @@ button.settled-secondary {
 	.dial-slider-row { margin: 4px 0 1px; }
 	.dial-facts { margin: 2px 0 0; }
 	.stake-row button.term-btn { padding: 3px 8px; }
-	.stake-input { width: 56px; min-width: 0; }
+	.stake-value { width: auto; min-width: 5ch; }
 	.boot-row { margin-top: 4px; }
 
 	/* result screen at this tier: keep the payout and BOOT AGAIN / REPLAY
@@ -1943,7 +1967,7 @@ button.settled-secondary {
 	.dial-slider-row { margin: 2px 0; }
 	.stake-facts { margin: 2px 0; }
 	.stake-row button.term-btn { padding: 3px 8px; }
-	.stake-input { width: 56px; min-width: 0; }
+	.stake-value { width: auto; min-width: 5ch; }
 	.boot-row { margin-top: 2px; }
 	.boot-btn { padding: 4px 0; font-size: 0.85em; letter-spacing: 0.12em; }
 
@@ -2130,7 +2154,7 @@ button.settled-secondary {
 		min-width: 8ch;
 	}
 	.stake-row button.term-btn { padding: 2px 7px; }
-	.stake-input { width: 52px; min-width: 0; padding: 1px 2px; }
+	.stake-value { width: auto; min-width: 5ch; padding: 1px 2px; }
 	.boot-row {
 		margin: 4px 0 0;
 		flex-direction: row !important;
