@@ -8,8 +8,9 @@ export type BetModeKey = string;
 export const stateBet = $state({
 	currency: 'USD' as Currency,
 	balanceAmount: 0,
-	betAmount: 1,
-	wageredBetAmount: 1,
+	// display units; set to authenticate defaultBetLevel (or resume amount) before play
+	betAmount: 0,
+	wageredBetAmount: 0,
 	betToResume: null as BetToResume,
 	activeBetModeKey: 'BASE' as BetModeKey,
 	winBookEventAmount: 0,

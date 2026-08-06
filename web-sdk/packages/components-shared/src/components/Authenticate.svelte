@@ -9,7 +9,7 @@
 		stateAuth,
 		stateUi,
 	} from 'state-shared';
-	import { API_AMOUNT_MULTIPLIER, MOST_USED_BET_INDEXES } from 'constants-shared/bet';
+	import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 
 	type Props = {
 		children: Snippet;
@@ -27,6 +27,71 @@
 		stateAuth.status = 'failed';
 		authFailed = true;
 		// Do not open a dismissible modal — auth failure is terminal.
+	};
+
+	const isPositiveNumber = (value: unknown): value is number =>
+		typeof value === 'number' && Number.isFinite(value) && value > 0;
+
+	/** All five bet fields are required; missing/invalid → auth failure (no local fallback). */
+	const assertBetConfig = (config: any) => {
+		const { minBet, maxBet, stepBet, defaultBetLevel, betLevels } = config ?? {};
+
+		if (!isPositiveNumber(minBet)) {
+			throw { error: 'AUTH_BET_CONFIG', message: 'authenticate config.minBet missing or invalid' };
+		}
+		if (!isPositiveNumber(maxBet) || maxBet < minBet) {
+			throw { error: 'AUTH_BET_CONFIG', message: 'authenticate config.maxBet missing or invalid' };
+		}
+		if (!isPositiveNumber(stepBet)) {
+			throw {
+				error: 'AUTH_BET_CONFIG',
+				message: 'authenticate config.stepBet missing or invalid',
+			};
+		}
+		if (typeof defaultBetLevel !== 'number' || !Number.isFinite(defaultBetLevel) || defaultBetLevel <= 0) {
+			throw {
+				error: 'AUTH_BET_CONFIG',
+				message: 'authenticate config.defaultBetLevel missing or invalid',
+			};
+		}
+		if (
+			!Array.isArray(betLevels) ||
+			betLevels.length === 0 ||
+			!betLevels.every((level: unknown) => typeof level === 'number' && Number.isFinite(level) && level > 0)
+		) {
+			throw {
+				error: 'AUTH_BET_CONFIG',
+				message: 'authenticate config.betLevels missing or invalid',
+			};
+		}
+		if (defaultBetLevel < minBet || defaultBetLevel > maxBet) {
+			throw {
+				error: 'AUTH_BET_CONFIG',
+				message: 'authenticate config.defaultBetLevel outside minBet/maxBet',
+			};
+		}
+		if (!betLevels.includes(defaultBetLevel)) {
+			throw {
+				error: 'AUTH_BET_CONFIG',
+				message: 'authenticate config.defaultBetLevel not present in betLevels',
+			};
+		}
+		for (const level of betLevels) {
+			if (level < minBet || level > maxBet) {
+				throw {
+					error: 'AUTH_BET_CONFIG',
+					message: 'authenticate config.betLevels outside minBet/maxBet',
+				};
+			}
+		}
+
+		return {
+			minBet,
+			maxBet,
+			stepBet,
+			defaultBetLevel,
+			betLevels: betLevels as number[],
+		};
 	};
 
 	const assertAuthResponse = (authenticateData: any) => {
@@ -52,30 +117,41 @@
 		}
 
 		const config = authenticateData.config;
-		if (
-			!config ||
-			!Array.isArray(config.betLevels) ||
-			config.betLevels.length === 0 ||
-			!config.jurisdiction ||
-			typeof config.jurisdiction !== 'object'
-		) {
+		if (!config || !config.jurisdiction || typeof config.jurisdiction !== 'object') {
 			throw {
 				error: 'AUTH_RESPONSE',
 				message: 'authenticate response missing config',
 			};
 		}
 
-		return authenticateData as {
-			balance: { amount: number; currency: string };
+		const betConfig = assertBetConfig(config);
+
+		return {
+			balance: balance as { amount: number; currency: string },
 			config: {
-				betLevels: number[];
-				minBet?: number;
-				maxBet?: number;
-				stepBet?: number;
-				jurisdiction: typeof stateConfig.jurisdiction;
-			};
-			round?: any;
+				...betConfig,
+				jurisdiction: config.jurisdiction as typeof stateConfig.jurisdiction,
+			},
+			round: authenticateData.round as any,
 		};
+	};
+
+	const applyBetConfig = (betConfig: {
+		minBet: number;
+		maxBet: number;
+		stepBet: number;
+		defaultBetLevel: number;
+		betLevels: number[];
+	}) => {
+		const toDisplay = (amount: number) => amount / API_AMOUNT_MULTIPLIER;
+		const levels = betConfig.betLevels.map(toDisplay);
+		stateConfig.minBet = toDisplay(betConfig.minBet);
+		stateConfig.maxBet = toDisplay(betConfig.maxBet);
+		stateConfig.stepBet = toDisplay(betConfig.stepBet);
+		stateConfig.defaultBetLevel = toDisplay(betConfig.defaultBetLevel);
+		stateConfig.betAmountOptions = levels;
+		// full ladder — no hardcoded "most used" subset
+		stateConfig.betMenuOptions = levels;
 	};
 
 	const authenticate = async () => {
@@ -91,18 +167,11 @@
 		stateBet.balanceAmount = authenticateData.balance.amount / API_AMOUNT_MULTIPLIER;
 
 		stateConfig.jurisdiction = authenticateData.config.jurisdiction;
-		stateConfig.betAmountOptions = authenticateData.config.betLevels.map(
-			(level) => level / API_AMOUNT_MULTIPLIER,
-		);
-		if (authenticateData.config.minBet)
-			stateConfig.minBet = authenticateData.config.minBet / API_AMOUNT_MULTIPLIER;
-		if (authenticateData.config.maxBet)
-			stateConfig.maxBet = authenticateData.config.maxBet / API_AMOUNT_MULTIPLIER;
-		if (authenticateData.config.stepBet)
-			stateConfig.stepBet = authenticateData.config.stepBet / API_AMOUNT_MULTIPLIER;
-		stateConfig.betMenuOptions = stateConfig.betAmountOptions.filter((_, index) =>
-			MOST_USED_BET_INDEXES.includes(index),
-		);
+		applyBetConfig(authenticateData.config);
+
+		// starting stake is defaultBetLevel unless an active/resumable round overrides it
+		stateBet.betAmount = stateConfig.defaultBetLevel;
+		stateBet.wageredBetAmount = stateConfig.defaultBetLevel;
 
 		if (authenticateData.round) {
 			if (authenticateData.round?.state) {

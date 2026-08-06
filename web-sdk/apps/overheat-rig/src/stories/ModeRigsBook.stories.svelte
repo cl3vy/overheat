@@ -35,11 +35,23 @@
 		type FixtureBook,
 	} from './data/books';
 
-	import { stateBet } from 'state-shared';
+	import { stateBet, stateConfig } from 'state-shared';
 
 	setContext();
 
-	// storybook only: seed a balance so the rig select screen is usable
+	// storybook only: simulate /wallet/authenticate bet config + wallet
+	// (live play gets these exclusively from the RGS — never from game defaults)
+	if (!stateConfig.betAmountOptions.length) {
+		const levels = [0.1, 0.2, 0.5, 1, 2, 5, 10, 25, 50, 100];
+		stateConfig.minBet = levels[0];
+		stateConfig.maxBet = levels[levels.length - 1];
+		stateConfig.stepBet = 0.1;
+		stateConfig.defaultBetLevel = 1;
+		stateConfig.betAmountOptions = levels;
+		stateConfig.betMenuOptions = levels;
+		stateBet.betAmount = stateConfig.defaultBetLevel;
+		stateBet.wageredBetAmount = stateConfig.defaultBetLevel;
+	}
 	if (stateBet.balanceAmount === 0) stateBet.balanceAmount = 1000;
 
 	const runBook = async (fixture: FixtureBook) => {
