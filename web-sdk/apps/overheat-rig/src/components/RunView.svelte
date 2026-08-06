@@ -11,6 +11,7 @@
 	import { stateGame, resetRound } from '../game/stateGame.svelte';
 	import { stateSession } from '../game/stateSession.svelte';
 	import { playMilestoneChirp, playCoinTick, playWinFanfare } from '../game/sound';
+	import { rigName, t } from '../game/t';
 	import { replayLastBet, requestBoot } from '../game/utils';
 
 	const context = getContext();
@@ -204,7 +205,7 @@
 	const simpleLadder = $derived.by((): LadderRow[] => [
 		{
 			temp: stateGame.targetTemp,
-			value: `FULL ${stateGame.targetTemp.toFixed(2)}x`,
+			value: t('ladder_full', { mult: stateGame.targetTemp.toFixed(2) }),
 			target: true,
 		},
 		...rigLadder.rungs
@@ -226,33 +227,33 @@
 		glyphCount: number;
 	};
 
-	const HEADLINES: Record<WinTier, string> = {
-		clean: 'SHUTDOWN CLEAN',
-		overdrive: 'THERMAL LIMITER SLIPPED -- 1.5x TARGET',
-		critical: 'BREAKER SLAMMED -- 3x TARGET',
-		golden: 'THE SILICON ASCENDED -- 10x TARGET',
+	const HEADLINES: Record<WinTier, () => string> = {
+		clean: () => t('win_headline_clean'),
+		overdrive: () => t('win_headline_overdrive'),
+		critical: () => t('win_headline_critical'),
+		golden: () => t('win_headline_golden'),
 	};
 
 	// keyed off the payout multiple of the stake, not the rig target:
 	// a golden shutdown on a small rig still gets the full treatment
 	const celebrationFor = (payoutMultiple: number, tier: WinTier): Celebration => {
-		const headline = HEADLINES[tier];
+		const headline = HEADLINES[tier]();
 		const golden = tier === 'golden';
 		if (golden || payoutMultiple >= 100)
 			return {
-				label: golden ? 'GOLDEN SHUTDOWN' : 'LEGENDARY RUN',
+				label: golden ? t('win_label_golden') : t('win_label_legendary'),
 				headline,
 				level: 5,
 				golden,
 				glyphCount: 110,
 			};
 		if (payoutMultiple >= 25)
-			return { label: 'MASSIVE BANK', headline, level: 4, golden, glyphCount: 80 };
+			return { label: t('win_label_massive'), headline, level: 4, golden, glyphCount: 80 };
 		if (payoutMultiple >= 10)
-			return { label: 'HUGE BANK', headline, level: 3, golden, glyphCount: 60 };
+			return { label: t('win_label_huge'), headline, level: 3, golden, glyphCount: 60 };
 		if (payoutMultiple >= 5)
-			return { label: 'BIG BANK', headline, level: 2, golden, glyphCount: 45 };
-		return { label: 'CLEAN BANK', headline, level: 1, golden, glyphCount: 30 };
+			return { label: t('win_label_big'), headline, level: 2, golden, glyphCount: 45 };
+		return { label: t('win_label_clean'), headline, level: 1, golden, glyphCount: 30 };
 	};
 
 	const GLYPHS = '$¤01▓ΞÐ+';
@@ -345,15 +346,18 @@
 	{/if}
 
 	<div class="run-topline dim">
-		RIG: <span class="win">{rig?.name ?? stateGame.rigTier}</span>
-		| {stakeLabel}: <span class="win">{formatMoney(stateBet.wageredBetAmount)}</span>
+		{t('run_topline', {
+			rig: rig ? rigName(rig.id) : stateGame.rigTier,
+			stakeLabel,
+			amount: formatMoney(stateBet.wageredBetAmount),
+		})}
 	</div>
 
 	<div class="run-grid">
 		<div class="run-col run-left sys-log-ambient">
 			<!-- ambient boot flavor only (R2 1.3/1.4): banked progress lives in
 			     the SECURED YIELD box, fairness data behind [FAIRNESS] -->
-			<div class="col-title dim">// SYS LOG</div>
+			<div class="col-title dim">{t('col_sys_log')}</div>
 			{#each stateGame.logs as line, index (index)}
 				<div class="log-line dim">{line.text}</div>
 			{/each}
@@ -362,7 +366,7 @@
 
 		<div class="run-center">
 			<div class="temp-block">
-				<div class="temp-label dim">CORE TEMP</div>
+				<div class="temp-label dim">{t('label_core_temp')}</div>
 				<div
 					class="temp-giant {gaugeTone} {settleClass}"
 					class:overdrive={inOverdrive}
@@ -373,10 +377,12 @@
 					{displayTemp.toFixed(2)}x
 				</div>
 				{#if inOverdrive && stateGame.phase === 'heating'}
-					<div class="temp-sub overdrive-tag">!! LIMITER SLIPPED -- OVERDRIVE !!</div>
+					<div class="temp-sub overdrive-tag">{t('tag_limiter_slipped')}</div>
 				{:else}
 					<!-- the target line, in plain language, always visible (brief 4) -->
-					<div class="temp-sub dim">{cashOut} @ {stateGame.targetTemp.toFixed(2)}x</div>
+					<div class="temp-sub dim">
+						{t('run_cashout_at', { cashOut, mult: stateGame.targetTemp.toFixed(2) })}
+					</div>
 				{/if}
 				<div class="gauge-big {gaugeTone}">
 					<div class="gauge-track-row">
@@ -395,7 +401,7 @@
 
 			{#if stateGame.phase === 'heating'}
 				<div class="yield-box" style="--yglow: {(0.35 + fillFraction * 0.65).toFixed(3)}">
-					<div class="yield-label dim">SECURED YIELD</div>
+					<div class="yield-label dim">{t('label_secured_yield')}</div>
 					<div class="yield-amount" class:lock-hit={lockPulse}>
 						{formatMoney(securedMW)}
 					</div>
@@ -409,9 +415,12 @@
 					{/each}
 					<div class="yield-caption dim">
 						{#if nextRung}
-							next lock @ {nextRung.temp.toFixed(2)}x &rarr; {nextRung.bank.toFixed(2)}x
+							{t('yield_next_lock', {
+								nextMult: nextRung.temp.toFixed(2),
+								bankMult: nextRung.bank.toFixed(2),
+							})}
 						{:else}
-							all checkpoints locked -- push for the target
+							{t('yield_all_locked')}
 						{/if}
 					</div>
 					{#each coinToasts as toast (toast.id)}
@@ -426,26 +435,30 @@
 				<!-- loss screen hero: the near miss and the target aimed for,
 				     pointed at BOOT AGAIN -- never a funeral (brief 5) -->
 				<div class="banner fried">
-					** MELTDOWN @ {stateGame.crashTemp.toFixed(2)}x **
+					{t('result_meltdown', { mult: stateGame.crashTemp.toFixed(2) })}
 				</div>
 				{#if nearMiss}
 					<div class="near-miss-hero warn">
-						died {nearMiss.shortBy.toFixed(2)}x short of the
-						{nearMiss.nextTemp.toFixed(2)}x checkpoint
+						{t('result_near_miss', {
+							delta: nearMiss.shortBy.toFixed(2),
+							checkpoint: nearMiss.nextTemp.toFixed(2),
+						})}
 					</div>
 				{/if}
-				<div class="aimed-line dim">aimed for {stateGame.targetTemp.toFixed(2)}x</div>
+				<div class="aimed-line dim">
+					{t('result_aimed_for', { mult: stateGame.targetTemp.toFixed(2) })}
+				</div>
 				{#if stateGame.securedMult > 0}
 					<!-- the checkpoints held: part of the climb survived the fry -->
 					<div class="secured-line warn">
-						&gt;&gt; CHECKPOINTS HELD: +{formatMoney(securedMW)} secured
+						{t('result_checkpoints_held', { amount: formatMoney(securedMW) })}
 					</div>
 				{/if}
 			{/if}
 
 			{#if stateGame.phase === 'banked' && celebration}
 				<div class="win-stage level-{celebration.level}" class:golden={celebration.golden}>
-					<div class="win-tier">&gt;&gt;&gt; {celebration.label} &lt;&lt;&lt;</div>
+					<div class="win-tier">{t('win_banner', { label: celebration.label })}</div>
 					<div class="win-amount">+{formatMoney(displayedWin)}</div>
 					<div class="mw-garnish dim">{formatMW(displayedWin)}</div>
 					{#if winTier !== 'clean'}
@@ -456,21 +469,23 @@
 					{#if winTier !== 'clean'}
 						<!-- overdrive/golden taught the moment one lands (brief 2 / 8) -->
 						<div class="win-translate dim">
-							{winTier === 'golden' ? '10x' : winTier === 'critical' ? '3x' : '1.5x'}
-							bonus multiplier on your {payoutWord}
+							{t('win_bonus_mult', {
+								mult: winTier === 'golden' ? '10' : winTier === 'critical' ? '3' : '1.5',
+								payout: payoutWord,
+							})}
 						</div>
 					{/if}
 					<!-- neutral crash-point reveal on wins (QA 6.4): honest tease,
 					     never "you left money on the table" framing -->
 					<div class="win-sub dim">
 						{#if stateGame.couldHaveReached > stateGame.currentTemp}
-							ran clean -- peaked at {stateGame.couldHaveReached.toFixed(2)}x
+							{t('win_peaked', { mult: stateGame.couldHaveReached.toFixed(2) })}
 						{:else}
-							{stateGame.currentTemp.toFixed(2)}x survived
+							{t('win_survived', { mult: stateGame.currentTemp.toFixed(2) })}
 						{/if}
 					</div>
 					{#if stateSession.newBest?.rigTier === stateGame.rigTier}
-						<div class="new-best warn">&#9733; NEW PERSONAL BEST &#9733;</div>
+						<div class="new-best warn">{t('badge_personal_best')}</div>
 					{/if}
 				</div>
 			{/if}
@@ -482,32 +497,36 @@
 						     round, no wallet UI, no live betting entry -->
 						<div class="settled-buttons">
 							<button class="term-btn rebet-btn" onclick={() => replayLastBet()}>
-								&gt;&gt; REPLAY AGAIN &lt;&lt;
+								{t('btn_replay_again')}
 							</button>
 						</div>
 					{:else}
 						{#if stateGame.phase === 'fried' && stateSession.newBest?.rigTier === stateGame.rigTier}
-							<div class="new-best">&#9733; NEW PERSONAL BEST RUN &#9733;</div>
+							<div class="new-best">{t('badge_personal_best_run')}</div>
 						{/if}
 						<div class="settled-buttons">
 							<button class="term-btn rebet-btn" onclick={bootAgain} disabled={!canRebet}>
-								&gt;&gt; BOOT AGAIN &lt;&lt; <span class="key-hint">[SPACE]</span>
+								{t('btn_boot_again')}
 							</button>
 							<button class="term-btn settled-secondary" onclick={() => resetRound()}>
-								<span class="settled-return-full">RETURN TO RIG SELECT</span>
-								<span class="settled-return-mini">RIG SELECT</span>
+								<span class="settled-return-full">{t('btn_return_rig_select')}</span>
+								<span class="settled-return-mini">{t('btn_return_rig_select_mini')}</span>
 							</button>
 						</div>
 						{#if !canRebet}
-							<div class="settled-note warn">insufficient power reserve -- lower the {stakeWord}</div>
+							<div class="settled-note warn">
+								{t('warn_insufficient_pwr', { stake: stakeWord })}
+							</div>
 						{/if}
 					{/if}
 					{#if stateSession.lastRoundID != null}
-						<div class="round-id-line dim">round id: {stateSession.lastRoundID}</div>
+						<div class="round-id-line dim">
+							{t('label_round_id', { id: stateSession.lastRoundID })}
+						</div>
 					{/if}
 				</div>
 			{:else if stateGame.phase === 'banked' || stateGame.phase === 'fried'}
-				<div class="log-line dim settling">settling round...</div>
+				<div class="log-line dim settling">{t('status_settling')}</div>
 			{/if}
 		</div>
 
@@ -515,7 +534,7 @@
 			{#if stateGame.phase === 'booting' || stateGame.phase === 'heating'}
 				<!-- live climb companion only: once the round settles the center
 				     summary is the single readout, never the full paytable -->
-				<div class="col-title dim">// CHECKPOINTS</div>
+				<div class="col-title dim">{t('col_checkpoints')}</div>
 				<div class="ladder">
 					{#each simpleLadder as row (row.temp)}
 						<div class="rung" class:lit={peakTemp >= row.temp - 0.0001} class:target={row.target}>

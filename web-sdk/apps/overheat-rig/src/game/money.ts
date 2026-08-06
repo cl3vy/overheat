@@ -3,10 +3,8 @@
  *
  * Rules:
  * - every amount is rounded to integer cents exactly once, here, at render.
- *   No component keeps its own toFixed/toLocaleString path, so the header
- *   balance, stats strip and result screens can never disagree by a cent.
- * - the display currency comes from the authenticate response
- *   (stateBet.currency); MW is theme garnish only, never the money unit.
+ * - the active currency is stateBet.currency (launch `currency` if valid,
+ *   otherwise RGS balance.currency). Do not format money elsewhere.
  * - zero-decimal currencies (JPY, KRW, ...) render without ".00": the
  *   Intl currency data decides the fraction digits, we don't force them.
  */
@@ -30,10 +28,16 @@ export const toCents = (amount: number): number => Math.round(amount * 100);
 export const bookPayoutCents = (bookAmount: number, wageredAmount: number): number =>
 	Math.round((bookAmount * toCents(wageredAmount)) / 100);
 
-/** Format an amount in the session currency (locale + currency aware). */
+/** Active session currency (set at authenticate). */
+export const activeCurrency = (): string => stateBet.currency;
+
+/** Format an amount in the active session currency (locale + currency aware). */
 export const formatMoney = (amount: number): string => {
 	const value = toCents(amount) / 100;
-	const currency = stateBet.currency || 'USD';
+	const currency = activeCurrency();
+	if (!currency) {
+		return value.toFixed(2);
+	}
 	if (currency in NO_LOCALISATION_CURRENCY_MAP) {
 		return `${NO_LOCALISATION_CURRENCY_MAP[currency]} ${value.toFixed(2)}`;
 	}

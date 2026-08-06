@@ -9,12 +9,13 @@
 	import RunView from './RunView.svelte';
 	import RulesPanel from './RulesPanel.svelte';
 	import ErrorPanel from './ErrorPanel.svelte';
-	import { RIGS } from '../game/constants';
+	import { RIGS, RTP } from '../game/constants';
 	import { getContext } from '../game/context';
 	import { formatMoney, formatMW } from '../game/money';
 	import { prefersReducedMotion } from '../game/motion';
 	import { refreshBalance } from '../game/rgs';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { t } from '../game/t';
 	import { requestBoot } from '../game/utils';
 
 	const context = getContext();
@@ -26,6 +27,22 @@
 	// flicker is opt-in for photosensitivity (QA 6.5); scanlines stay
 	let flicker = $state(false);
 	let rulesOpen = $state(false);
+
+	// jurisdiction.displaySessionTimer — elapsed session clock
+	const sessionStartedAt = Date.now();
+	let sessionElapsedMs = $state(0);
+	const sessionTimerLabel = $derived.by(() => {
+		const totalSec = Math.floor(sessionElapsedMs / 1000);
+		const h = Math.floor(totalSec / 3600);
+		const m = Math.floor((totalSec % 3600) / 60);
+		const s = totalSec % 60;
+		const pad = (n: number) => String(n).padStart(2, '0');
+		return h > 0 ? `${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+	});
+
+	// jurisdiction.displayNetPosition — delta vs balance at authenticate
+	const sessionStartBalance = stateBet.balanceAmount;
+	const netPosition = $derived(stateBet.balanceAmount - sessionStartBalance);
 
 	// ambient heat tier drives background glow + ember tint (visual feel P1)
 	const ambientTier = $derived.by(() => {
@@ -85,9 +102,10 @@
 			const durationMs = 900;
 			const step = () => {
 				if (id !== balanceAnimId) return;
-				const t = Math.min((performance.now() - startedAt) / durationMs, 1);
-				displayedBalance = from + (target - from) * (1 - (1 - t) * (1 - t));
-				if (t < 1) {
+				const progress = Math.min((performance.now() - startedAt) / durationMs, 1);
+				displayedBalance =
+					from + (target - from) * (1 - (1 - progress) * (1 - progress));
+				if (progress < 1) {
 					requestAnimationFrame(step);
 				} else {
 					displayedBalance = target;
@@ -149,8 +167,17 @@
 		const balanceInterval = setInterval(() => {
 			if (context.stateXstateDerived.isIdle()) refreshBalance();
 		}, 30_000);
+
+		let timerInterval: ReturnType<typeof setInterval> | undefined;
+		if (stateConfig.jurisdiction.displaySessionTimer) {
+			timerInterval = setInterval(() => {
+				sessionElapsedMs = Date.now() - sessionStartedAt;
+			}, 1000);
+		}
+
 		return () => {
 			clearInterval(balanceInterval);
+			if (timerInterval) clearInterval(timerInterval);
 			window.removeEventListener('keydown', onKeydown, { capture: true });
 			document.removeEventListener('fullscreenchange', blockFullscreen);
 		};
@@ -179,20 +206,33 @@
 	</div>
 
 	<div class="term-header">
-		<span class="term-title-full">OVERHEAT // MINING RIG THERMAL CONSOLE</span>
-		<span class="term-title-mini">OVERHEAT</span>
+		<span class="term-title-full">{t('hdr_console_full')}</span>
+		<span class="term-title-mini">{t('brand_overheat')}</span>
 		<span class="term-header-right">
-			<button class="rules-btn" onclick={() => (rulesOpen = !rulesOpen)}>[RULES]</button>
+			<button class="rules-btn" onclick={() => (rulesOpen = !rulesOpen)}>{t('btn_rules')}</button>
+			{#if stateConfig.jurisdiction.displaySessionTimer}
+				<span class="dim">{t('hdr_session', { time: sessionTimerLabel })}</span>
+			{/if}
+			{#if stateConfig.jurisdiction.displayRTP}
+				<span class="dim">{t('hdr_rtp', { percent: (RTP * 100).toFixed(1) })}</span>
+			{/if}
 			{#if isReplay}
-				<span class="dim">REPLAY -- ROUND PLAYBACK</span>
+				<span class="dim">{t('hdr_replay')}</span>
 			{:else}
-				PWR RESERVE:
+				{t('hdr_pwr_reserve')}
 				<span class="win pwr-reserve" class:flash={balanceFlash}>
 					{formatMoney(displayedBalance)}
 				</span>
 				<span class="dim mw-garnish">{formatMW(displayedBalance)}</span>
+				{#if stateConfig.jurisdiction.displayNetPosition}
+					<span class="dim">
+						{t('hdr_net', {
+							amount: `${netPosition >= 0 ? '+' : ''}${formatMoney(netPosition)}`,
+						})}
+					</span>
+				{/if}
 			{/if}
-			{#if stateBet.isTurbo}<span class="warn header-turbo"> [TURBO]</span>{/if}
+			{#if stateBet.isTurbo}<span class="warn header-turbo">{t('hdr_turbo')}</span>{/if}
 		</span>
 	</div>
 
@@ -200,7 +240,7 @@
 		{#if isReplay}
 			<!-- never drop a replay viewer into the live betting UI (QA phase 3) -->
 			{#if stateGame.phase === 'idle'}
-				<div class="log-line dim">loading replay...</div>
+				<div class="log-line dim">{t('status_loading_replay')}</div>
 			{:else}
 				<RunView />
 			{/if}

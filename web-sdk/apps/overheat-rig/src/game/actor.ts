@@ -5,6 +5,7 @@ import { RIG_MAP, type RigId } from './constants';
 import type { Bet } from './typesBookEvent';
 import { playBet, convertToResumableBet, settleInactiveBet } from './utils';
 import { pushLog, resetRound, stateGame } from './stateGame.svelte';
+import { t } from './t';
 
 const primaryMachines = createPrimaryMachines<Bet>({
 	onResumeGameActive: (betToResume) => convertToResumableBet(betToResume),
@@ -22,7 +23,7 @@ const primaryMachines = createPrimaryMachines<Bet>({
 		}
 		stateGame.phase = 'booting';
 		stateGame.poweringUp = true;
-		pushLog('> POWER ON -- contacting RGS...', 'dim');
+		pushLog(t('log_power_contacting'), 'dim');
 		// brief power-up ceremony (visual feel P4); turbo shortens, never skips
 		const holdMs = stateBet.isTurbo ? 160 : 480;
 		await new Promise((resolve) => setTimeout(resolve, holdMs));

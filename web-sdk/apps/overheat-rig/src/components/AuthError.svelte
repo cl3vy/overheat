@@ -1,6 +1,8 @@
 <script lang="ts">
 	// Game never mounts on auth failure, so pull CRT styles in here.
 	import './app.css';
+
+	import { t } from '../game/t';
 </script>
 
 <!--
@@ -10,15 +12,15 @@
 	<div class="crt ambient-low scanlines auth-fail-crt">
 		<div class="crt-ambient" aria-hidden="true"></div>
 		<div class="term-header">
-			<span class="term-title-full">OVERHEAT // MINING RIG THERMAL CONSOLE</span>
-			<span class="term-title-mini">OVERHEAT</span>
+			<span class="term-title-full">{t('hdr_console_full')}</span>
+			<span class="term-title-mini">{t('brand_overheat')}</span>
 		</div>
 		<div class="term-main auth-fail-main" role="alert">
 			<div class="auth-fail-panel">
-				<div class="log-line fault">!! AUTHENTICATION FAILED</div>
-				<div class="log-line fault">&gt; Authentication failed. Cannot start game.</div>
+				<div class="log-line fault">{t('auth_failed_banner')}</div>
+				<div class="log-line fault">&gt; {t('auth_failed_body')}</div>
 				<div class="log-line dim" style="margin-top: 12px;">
-					&gt; rgs handshake rejected -- reload with a valid session to continue
+					{t('auth_rgs_rejected')}
 				</div>
 			</div>
 		</div>

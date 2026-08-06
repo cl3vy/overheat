@@ -2,7 +2,7 @@ import { recordBookEvent, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateConfig } from 'state-shared';
 import { waitForTimeout } from 'utils-shared/wait';
 
-import { BOOK_AMOUNT_SCALE, LADDERS, RIG_MAP, type LadderRung } from './constants';
+import { BOOK_AMOUNT_SCALE, LADDERS, type LadderRung } from './constants';
 import { bookPayoutCents } from './money';
 import { stateGame, pushLog } from './stateGame.svelte';
 import { recordRound } from './stateSession.svelte';
@@ -24,6 +24,7 @@ import {
 	playOverdriveSurge,
 } from './sound';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
+import { rigName, t } from './t';
 
 const TICK_MS = 33;
 
@@ -75,7 +76,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	boot: async (bookEvent: BookEventOfType<'boot'>) => {
 		recordBookEvent({ bookEvent });
 		const instant = isInstant(bookEvent);
-		const rig = RIG_MAP[bookEvent.rigTier];
 
 		stateGame.phase = 'booting';
 		stateGame.rigTier = bookEvent.rigTier;
@@ -92,11 +92,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (!instant) playBoot();
 
 		const bootLines = [
-			`> POWER ON -- RIG: ${rig?.name ?? bookEvent.rigTier}`,
-			'> BIOS OK .. volt rails nominal',
-			`> hashrate online: ${bookEvent.hashrate} MH/s`,
-			`> shutdown temp locked: ${bookEvent.targetTemp.toFixed(2)}x`,
-			'> mining...',
+			t('log_power_rig', { rig: rigName(bookEvent.rigTier) }),
+			t('log_bios_ok'),
+			t('log_hashrate', { hashrate: bookEvent.hashrate }),
+			t('log_shutdown_locked', { mult: bookEvent.targetTemp.toFixed(2) }),
+			t('log_mining'),
 		];
 		for (const line of bootLines) {
 			pushLog(line, 'dim');

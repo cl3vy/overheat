@@ -8,17 +8,22 @@
 	 */
 	import { onMount } from 'svelte';
 
+	import type { MessageKey } from '../i18n/messagesMap/en';
+	import { t } from '../game/t';
+
 	type Props = { oncomplete?: () => void };
 
 	const { oncomplete }: Props = $props();
 
-	const BOOT_LINES = [
-		'OVERHEAT THERMAL BIOS v2.0',
-		'POST........................ OK',
-		'checking cooling loop....... OK',
-		'spinning up rig array....... OK',
-		'RGS handshake...............',
+	const BOOT_KEYS: MessageKey[] = [
+		'boot_bios',
+		'boot_post',
+		'boot_cooling',
+		'boot_rig_array',
+		'boot_rgs',
 	];
+
+	const bootLines = $derived(BOOT_KEYS.map((key) => t(key)));
 
 	// total time the boot screen holds, matching the SDK template's own
 	// splash timing (~2s) so load doesn't feel slower or faster than before
@@ -28,9 +33,9 @@
 	let linesShown = $state(0);
 
 	onMount(() => {
-		const stepMs = Math.round((HOLD_MS * 0.7) / BOOT_LINES.length);
+		const stepMs = Math.round((HOLD_MS * 0.7) / BOOT_KEYS.length);
 		const timers: ReturnType<typeof setTimeout>[] = [];
-		BOOT_LINES.forEach((_, index) => {
+		BOOT_KEYS.forEach((_, index) => {
 			timers.push(
 				setTimeout(() => {
 					linesShown = index + 1;
@@ -48,15 +53,15 @@
 </script>
 
 {#if visible}
-	<div class="loader-wrap" role="status" aria-label="loading">
+	<div class="loader-wrap" role="status" aria-label={t('a11y_loading')}>
 		<div class="loader-scanlines" aria-hidden="true"></div>
 		<div class="loader-body">
-			<div class="loader-logo">OVERHEAT</div>
-			<div class="loader-sub">MINING RIG THERMAL CONSOLE</div>
+			<div class="loader-logo">{t('brand_overheat')}</div>
+			<div class="loader-sub">{t('hdr_console_sub')}</div>
 			<div class="loader-log">
-				{#each BOOT_LINES.slice(0, linesShown) as line, index (line)}
+				{#each bootLines.slice(0, linesShown) as line, index (BOOT_KEYS[index])}
 					<div class="loader-line">
-						&gt; {line}{#if index === linesShown - 1 && index === BOOT_LINES.length - 1}<span
+						&gt; {line}{#if index === linesShown - 1 && index === BOOT_KEYS.length - 1}<span
 								class="loader-cursor">_</span
 							>{/if}
 					</div>

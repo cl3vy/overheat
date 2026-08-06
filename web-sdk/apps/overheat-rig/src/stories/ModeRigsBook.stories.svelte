@@ -52,6 +52,7 @@
 		stateBet.betAmount = stateConfig.defaultBetLevel;
 		stateBet.wageredBetAmount = stateConfig.defaultBetLevel;
 	}
+	if (!stateBet.currency) stateBet.currency = 'USD';
 	if (stateBet.balanceAmount === 0) stateBet.balanceAmount = 1000;
 
 	const runBook = async (fixture: FixtureBook) => {

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { playSwitchClick } from '../game/sound';
+	import { t } from '../game/t';
 
 	type Props = {
 		checked: boolean;
@@ -20,7 +21,7 @@
 	class:on={checked}
 	onclick={flip}
 	aria-pressed={checked}
-	title="turbo: faster reveal, same odds"
+	title={t('turbo_tooltip')}
 >
-	<span class="turbo-text">TURBO [{checked ? 'ON' : 'OFF'}]</span>
+	<span class="turbo-text">{checked ? t('turbo_on') : t('turbo_off')}</span>
 </button>

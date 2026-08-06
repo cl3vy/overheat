@@ -1,18 +1,20 @@
 <script lang="ts">
 	import { stateModal } from 'state-shared';
 
+	import type { MessageKey } from '../i18n/messagesMap/en';
 	import { wordGambling } from '../game/socialCopy';
+	import { t } from '../game/t';
 
-	const ERROR_HINTS: Record<string, string> = {
-		ERR_VAL: 'request rejected: invalid parameters',
-		ERR_IPB: 'insufficient power reserve (balance too low)',
-		ERR_IS: 'session invalid or expired -- relaunch the game',
-		ERR_ATE: 'authentication token expired -- relaunch the game',
-		ERR_GLE: 'gambling limits exceeded',
-		ERR_LOC: 'play not permitted from this location',
-		ERR_BE: 'a round is already active on this session',
-		ERR_GEN: 'server fault -- try again',
-		ERR_MAINTENANCE: 'engine down for maintenance -- try again later',
+	const ERROR_HINTS: Record<string, MessageKey> = {
+		ERR_VAL: 'err_val',
+		ERR_IPB: 'err_ipb',
+		ERR_IS: 'err_is',
+		ERR_ATE: 'err_ate',
+		ERR_GLE: 'err_gle',
+		ERR_LOC: 'err_loc',
+		ERR_BE: 'err_be',
+		ERR_GEN: 'err_gen',
+		ERR_MAINTENANCE: 'err_maintenance',
 	};
 
 	const modal = $derived(stateModal.modal);
@@ -30,9 +32,9 @@
 	});
 
 	const hint = $derived.by(() => {
-		const base = ERROR_HINTS[errorCode] ?? 'unexpected fault -- check console for details';
-		if (errorCode === 'ERR_GLE') return `${wordGambling()} limits exceeded`;
-		return base;
+		if (errorCode === 'ERR_GLE') return t('err_gle', { gambling: wordGambling() });
+		const key = ERROR_HINTS[errorCode] ?? 'err_unexpected';
+		return t(key);
 	});
 
 	const dismiss = () => {
@@ -43,10 +45,12 @@
 {#if modal?.name === 'error'}
 	<div class="overlay">
 		<div class="panel">
-			<div class="log-line fault">!! SYSTEM FAULT {errorCode ? `[${errorCode}]` : ''}</div>
+			<div class="log-line fault">
+				{t('error_system_fault', { code: errorCode ? `[${errorCode}]` : '' })}
+			</div>
 			<div class="log-line fault">&gt; {hint}</div>
 			<div style="margin-top: 12px;">
-				<button class="term-btn danger" onclick={dismiss}>ACKNOWLEDGE</button>
+				<button class="term-btn danger" onclick={dismiss}>{t('btn_acknowledge')}</button>
 			</div>
 		</div>
 	</div>

@@ -6,7 +6,7 @@
 	import { LADDERS, MODE_MAX_WIN, RIGS } from '../game/constants';
 	import { formatMoney, formatMW } from '../game/money';
 	import {
-		flavorForSocial,
+		flavorForRig,
 		labelCashOutTarget,
 		wordCashOut,
 		wordPays,
@@ -15,6 +15,7 @@
 	import { getContext } from '../game/context';
 	import { isCoarsePointer, prefersReducedMotion } from '../game/motion';
 	import { stateSession, sessionStats } from '../game/stateSession.svelte';
+	import { rigName, t } from '../game/t';
 	import { requestBoot } from '../game/utils';
 	import FairnessPanel from './FairnessPanel.svelte';
 	import TurboToggle from './TurboToggle.svelte';
@@ -100,14 +101,14 @@
 	const paysWord = $derived(wordPays());
 	const stakeWord = $derived(wordStake());
 	const cashOutTitle = $derived(labelCashOutTarget());
-	const rigFlavor = $derived(flavorForSocial(rig.flavor));
+	const rigFlavor = $derived(flavorForRig(rig.id));
 
 	// meltdown clause gated on whether the active mode banks checkpoints
 	// (all current rigs do; the gate keeps the copy honest if one ever doesn't)
 	const meltdownClause = $derived(
 		(LADDERS[rig.id]?.rungs.length ?? 0) > 0
-			? 'if it melts down first, you keep only what the checkpoints banked.'
-			: `if it melts down first, you lose the ${stakeWord}.`,
+			? t('loop_melt_keep_checkpoints')
+			: t('loop_melt_lose_stake', { stake: stakeWord }),
 	);
 
 	// hit frequency stays as a standalone mode descriptor -- never rendered
@@ -194,16 +195,14 @@
 	<!-- the loop, in one plain sentence -- honest: there is no mid-round
 	     action, the rig stops at the preset target on its own (R2 P0) -->
 	<div class="loop-callout">
-		<div class="loop-title dim">// HOW IT WORKS</div>
+		<div class="loop-title dim">{t('loop_title')}</div>
 		<div class="loop-text">
-			set your auto {cashOut} target. boot the rig. it climbs on its own and
-			stops there automatically. {meltdownClause}
+			{t('loop_body_first', { cashOut, meltdownClause })}
 		</div>
 	</div>
 {:else}
 	<div class="log-line dim">
-		&gt; set your auto {cashOut} target -- the rig climbs on its own and stops there
-		automatically. {meltdownClause}
+		{t('loop_body_return', { cashOut, meltdownClause })}
 	</div>
 {/if}
 
@@ -212,13 +211,18 @@
 	<div class="peak-strip" class:strip-empty={!hasPeaks}>
 		{#if hasPeaks}
 			{#if hottest > 0}
-				<span class="peak">HOTTEST <span class="peak-value">{hottest.toFixed(2)}x</span></span>
+				<span class="peak">
+					{t('stat_hottest')}
+					<span class="peak-value">{t('stat_hottest_value', { mult: hottest.toFixed(2) })}</span>
+				</span>
 			{/if}
 			{#if bestBank > 0}
-				<span class="peak amber">BEST BANK <span class="peak-value">{formatMoney(bestBank)}</span></span>
+				<span class="peak amber">
+					{t('stat_best_bank')} <span class="peak-value">{formatMoney(bestBank)}</span>
+				</span>
 			{/if}
 		{:else}
-			<span class="peak dim">HOTTEST --</span>
+			<span class="peak dim">{t('stat_hottest_empty')}</span>
 		{/if}
 	</div>
 </div>
@@ -234,13 +238,15 @@
 		<div class="dial-header">
 			<!-- plain meaning is the primary label; the themed name is flavor (R2 3.1) -->
 			<span class="dial-title">{cashOutTitle}</span>
-			<span class="dial-rig-name">[ {rig.name} ]</span>
+			<span class="dial-rig-name">[ {rigName(rig.id)} ]</span>
 		</div>
 
 		<div class="dial-readout">
 			<span class="dial-mult">{rig.targetTemp.toFixed(2)}x</span>
 			<!-- inline translation: themed label above, plain meaning here (brief 3) -->
-			<span class="dial-translate">{cashOut} at {rig.targetTemp.toFixed(2)}x</span>
+			<span class="dial-translate">
+				{t('dial_translate', { cashOut, mult: rig.targetTemp.toFixed(2) })}
+			</span>
 			<span class="dial-flavor dim">{rigFlavor}</span>
 		</div>
 
@@ -257,15 +263,15 @@
 					step="1"
 					value={rigIndex}
 					oninput={(event) => setRigIndex(Number(event.currentTarget.value))}
-					aria-label="shutdown temperature"
+					aria-label={t('a11y_shutdown_temp')}
 				/>
 				<div class="dial-heatbar" aria-hidden="true">
 					<div class="dial-heatbar-fill" style="width: {heat * 100}%"></div>
 				</div>
 				<div class="dial-scale dim" aria-hidden="true">
 					<span>1.20x</span>
-					<span>safe</span>
-					<span>spicy</span>
+					<span>{t('dial_scale_safe')}</span>
+					<span>{t('dial_scale_spicy')}</span>
 					<span>100.00x</span>
 				</div>
 			</div>
@@ -281,13 +287,13 @@
 		<!-- standalone mode descriptor: never shares a line with any other figure -->
 		<div class="dial-facts dial-odds-line">
 			<span>
-				{paysWord} something: <span class="dial-odds">{anyPayout.toFixed(1)}%</span> of runs
+				{t('dial_pays_something', { pays: paysWord, percent: anyPayout.toFixed(1) })}
 			</span>
 		</div>
 
 		<div class="dial-facts stake-facts">
 			<span class="stake-row">
-				<span class="stake-label">{stakeWord}:</span>
+				<span class="stake-label">{t('label_stake_row', { stake: stakeWord })}</span>
 				<button class="term-btn" onclick={() => stepBetAmount(-1)} disabled={atMinLevel}>-</button>
 				<input
 					class="stake-input"
@@ -307,8 +313,11 @@
 
 		<!-- one payout line carries both figures (final declutter 1.4) -->
 		<div class="dial-spice dim">
-			full send {paysWord} <span class="win">{formatMoney(winPays)}</span>,
-			up to <span class="win">{formatMoney(maxPays)}</span> on overdrive
+			{t('dial_full_send', {
+				pays: paysWord,
+				winPays: formatMoney(winPays),
+				maxPays: formatMoney(maxPays),
+			})}
 		</div>
 
 		<div class="boot-row">
@@ -316,7 +325,7 @@
 				class="boot-btn"
 				class:charging={bootCharging}
 				onclick={boot}
-				disabled={!canBoot}>&gt;&gt; BOOT RIG &lt;&lt;</button
+				disabled={!canBoot}>{t('btn_boot_rig')}</button
 			>
 			{#if !stateConfig.jurisdiction.disabledTurbo}
 				<TurboToggle
@@ -327,9 +336,9 @@
 		</div>
 		{#if !stateBetDerived.isBetCostAvailable()}
 			<!-- red is reserved for the meltdown moment (brief 7) -->
-			<div class="warn">insufficient power reserve -- lower the {stakeWord}</div>
+			<div class="warn">{t('warn_insufficient_pwr', { stake: stakeWord })}</div>
 		{/if}
-		<div class="key-hint-line">[SPACE] to boot</div>
+		<div class="key-hint-line">{t('hint_space_boot')}</div>
 	</div>
 </div>
 
@@ -348,10 +357,10 @@
 					checked={stateSession.soundEnabled}
 					onchange={(event) => (stateSession.soundEnabled = event.currentTarget.checked)}
 				/>
-				sound
+				{t('settings_sound')}
 			</label>
-			<label><input type="checkbox" bind:checked={scanlines} /> scanlines</label>
-			<label><input type="checkbox" bind:checked={flicker} /> flicker</label>
+			<label><input type="checkbox" bind:checked={scanlines} /> {t('settings_scanlines')}</label>
+			<label><input type="checkbox" bind:checked={flicker} /> {t('settings_flicker')}</label>
 		</div>
 	{/if}
 	<button
@@ -361,7 +370,7 @@
 			settingsOpen = false;
 		}}
 	>
-		[FAIRNESS]
+		{t('btn_fairness')}
 	</button>
 	<button
 		class="dots-btn"
@@ -369,7 +378,7 @@
 			settingsOpen = !settingsOpen;
 			fairnessOpen = false;
 		}}
-		aria-label="display and sound settings"
+		aria-label={t('a11y_settings')}
 	>
 		&#8943;
 	</button>

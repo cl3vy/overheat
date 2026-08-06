@@ -32,6 +32,28 @@
 	const isPositiveNumber = (value: unknown): value is number =>
 		typeof value === 'number' && Number.isFinite(value) && value > 0;
 
+	/** Optional launch `currency` — valid ISO/social code only; never fails auth. */
+	const isValidLaunchCurrency = (code: string): boolean => {
+		if (!code || code.length < 3) return false;
+		if (code === 'XGC' || code === 'XSC') return true;
+		try {
+			new Intl.NumberFormat('en', { style: 'currency', currency: code }).format(0);
+			return true;
+		} catch {
+			return false;
+		}
+	};
+
+	/** Snap a display-unit amount onto betLevels (nearest; clamp to ends if out of range). */
+	const snapToBetLevels = (displayAmount: number, levels: number[]): number => {
+		if (!levels.length) return displayAmount;
+		if (displayAmount <= levels[0]) return levels[0];
+		if (displayAmount >= levels[levels.length - 1]) return levels[levels.length - 1];
+		return levels.reduce((best, level) =>
+			Math.abs(level - displayAmount) < Math.abs(best - displayAmount) ? level : best,
+		);
+	};
+
 	/** All five bet fields are required; missing/invalid → auth failure (no local fallback). */
 	const assertBetConfig = (config: any) => {
 		const { minBet, maxBet, stepBet, defaultBetLevel, betLevels } = config ?? {};
@@ -94,6 +116,27 @@
 		};
 	};
 
+	/** Honor jurisdiction flags from this session's authenticate response. */
+	const applyJurisdiction = (jurisdiction: Record<string, unknown>) => {
+		const num = (value: unknown, fallback: number) =>
+			typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+
+		stateConfig.jurisdiction = {
+			socialCasino: !!jurisdiction.socialCasino,
+			disabledFullscreen: !!jurisdiction.disabledFullscreen,
+			disabledTurbo: !!jurisdiction.disabledTurbo,
+			disabledSuperTurbo: !!jurisdiction.disabledSuperTurbo,
+			disabledAutoplay: !!jurisdiction.disabledAutoplay,
+			disabledSlamstop: !!jurisdiction.disabledSlamstop,
+			disabledSpacebar: !!jurisdiction.disabledSpacebar,
+			disabledBuyFeature: !!jurisdiction.disabledBuyFeature,
+			displayNetPosition: !!jurisdiction.displayNetPosition,
+			displayRTP: !!jurisdiction.displayRTP,
+			displaySessionTimer: !!jurisdiction.displaySessionTimer,
+			minimumRoundDuration: num(jurisdiction.minimumRoundDuration, 0),
+		};
+	};
+
 	const assertAuthResponse = (authenticateData: any) => {
 		if (!authenticateData || typeof authenticateData !== 'object') {
 			throw { error: 'AUTH_RESPONSE', message: 'authenticate response missing' };
@@ -130,7 +173,7 @@
 			balance: balance as { amount: number; currency: string },
 			config: {
 				...betConfig,
-				jurisdiction: config.jurisdiction as typeof stateConfig.jurisdiction,
+				jurisdiction: config.jurisdiction as Record<string, unknown>,
 			},
 			round: authenticateData.round as any,
 		};
@@ -152,6 +195,7 @@
 		stateConfig.betAmountOptions = levels;
 		// full ladder — no hardcoded "most used" subset
 		stateConfig.betMenuOptions = levels;
+		return levels;
 	};
 
 	const authenticate = async () => {
@@ -163,15 +207,30 @@
 			}),
 		);
 
-		stateBet.currency = authenticateData.balance.currency;
+		// Currency: optional launch `currency` if valid, else RGS balance currency
+		const launchCurrency = stateUrlDerived.currency();
+		stateBet.currency = isValidLaunchCurrency(launchCurrency)
+			? launchCurrency
+			: authenticateData.balance.currency;
+
 		stateBet.balanceAmount = authenticateData.balance.amount / API_AMOUNT_MULTIPLIER;
 
-		stateConfig.jurisdiction = authenticateData.config.jurisdiction;
-		applyBetConfig(authenticateData.config);
+		applyJurisdiction(authenticateData.config.jurisdiction);
+		const levels = applyBetConfig(authenticateData.config);
 
-		// starting stake is defaultBetLevel unless an active/resumable round overrides it
-		stateBet.betAmount = stateConfig.defaultBetLevel;
-		stateBet.wageredBetAmount = stateConfig.defaultBetLevel;
+		// jurisdiction may forbid turbo for this market
+		if (stateConfig.jurisdiction.disabledTurbo) {
+			stateBet.isTurbo = false;
+		}
+
+		// Starting stake: optional launch `amount` snapped to betLevels, else defaultBetLevel
+		const launchAmountApi = stateUrlDerived.amount();
+		const startStake =
+			launchAmountApi > 0
+				? snapToBetLevels(launchAmountApi / API_AMOUNT_MULTIPLIER, levels)
+				: stateConfig.defaultBetLevel;
+		stateBet.betAmount = startStake;
+		stateBet.wageredBetAmount = startStake;
 
 		if (authenticateData.round) {
 			if (authenticateData.round?.state) {
@@ -184,8 +243,10 @@
 					authenticateData.round.amount > 0
 						? authenticateData.round.amount / API_AMOUNT_MULTIPLIER
 						: 0;
-				stateBet.betAmount = betAmountValue;
-				stateBet.wageredBetAmount = betAmountValue;
+				// resume amount must stay on the ladder
+				const snapped = snapToBetLevels(betAmountValue, levels);
+				stateBet.betAmount = snapped;
+				stateBet.wageredBetAmount = snapped;
 			}
 
 			if (authenticateData.round?.mode) {

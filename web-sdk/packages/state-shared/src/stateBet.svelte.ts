@@ -6,7 +6,7 @@ export type BetToResume = BaseBet | null;
 export type BetModeKey = string;
 
 export const stateBet = $state({
-	currency: 'USD' as Currency,
+	currency: '' as Currency,
 	balanceAmount: 0,
 	// display units; set to authenticate defaultBetLevel (or resume amount) before play
 	betAmount: 0,
