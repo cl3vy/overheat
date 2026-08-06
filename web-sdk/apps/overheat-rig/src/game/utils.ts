@@ -1,4 +1,4 @@
-import { stateBet, stateBetDerived } from 'state-shared';
+import { stateAuthDerived, stateBet, stateBetDerived } from 'state-shared';
 import { createPlayBookUtils } from 'utils-book';
 
 import { bookEventHandlerMap } from './bookEventHandlerMap';
@@ -18,10 +18,13 @@ let lastBootAt = 0;
 
 /**
  * The single entry point for placing a bet (BOOT button, BOOT AGAIN,
- * spacebar). Guards: machine idle (never race an in-flight round or its
- * end-round call), affordable stake, valid rig, and a short cooldown.
+ * spacebar). Guards: successful RGS auth, machine idle (never race an
+ * in-flight round or its end-round call), affordable stake, valid rig,
+ * and a short cooldown.
  */
 export const requestBoot = (context: ReturnType<typeof getContext>) => {
+	// auth failure is terminal — Game only mounts after ok; Storybook never fails auth
+	if (stateAuthDerived.isFailed()) return;
 	if (!context.stateXstateDerived.isIdle()) return;
 	if (!stateBetDerived.isBetCostAvailable()) return;
 	if (!RIGS.some((rig) => rig.id === stateBet.activeBetModeKey)) return;

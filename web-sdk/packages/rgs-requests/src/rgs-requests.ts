@@ -1,21 +1,63 @@
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import { rgsFetcher } from 'rgs-fetcher';
 
+import { assertValidRgsUrl } from './rgsUrl';
+
 export * from './types';
+export { assertValidRgsUrl } from './rgsUrl';
 
 export const requestAuthenticate = async (options: {
 	sessionID: string;
 	rgsUrl: string;
 	language: string;
 }) => {
-	const data = await rgsFetcher.post({
-		rgsUrl: options.rgsUrl,
-		url: '/wallet/authenticate',
-		variables: {
-			sessionID: options.sessionID,
-			language: options.language,
-		},
-	});
+	assertValidRgsUrl(options.rgsUrl);
+
+	const endpoint = `https://${options.rgsUrl.trim()}/wallet/authenticate`;
+	let response: Response;
+	try {
+		response = await fetch(endpoint, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				sessionID: options.sessionID,
+				language: options.language,
+			}),
+		});
+	} catch (cause) {
+		throw {
+			error: 'AUTH_NETWORK',
+			message: 'authenticate request failed',
+			cause,
+		};
+	}
+
+	if (!response.ok) {
+		let body: unknown = null;
+		try {
+			body = await response.json();
+		} catch {
+			/* non-JSON body */
+		}
+		throw (
+			body ?? {
+				error: 'AUTH_HTTP',
+				message: `authenticate returned HTTP ${response.status}`,
+				statusCode: response.status,
+			}
+		);
+	}
+
+	let data: any;
+	try {
+		data = await response.json();
+	} catch (cause) {
+		throw {
+			error: 'AUTH_PARSE',
+			message: 'authenticate response was not valid JSON',
+			cause,
+		};
+	}
 
 	return data;
 };

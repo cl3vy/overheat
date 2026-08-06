@@ -3,6 +3,7 @@
 	import { GlobalStyle } from 'components-ui-html';
 	import { Authenticate, LoadI18n } from 'components-shared';
 	import Game from '../components/Game.svelte';
+	import AuthError from '../components/AuthError.svelte';
 	import LoaderOverheat from '../components/LoaderOverheat.svelte';
 	import { setContext } from '../game/context';
 
@@ -17,6 +18,9 @@
 
 <GlobalStyle>
 	<Authenticate>
+		{#snippet error()}
+			<AuthError />
+		{/snippet}
 		<LoadI18n {messagesMap}>
 			<Game />
 		</LoadI18n>

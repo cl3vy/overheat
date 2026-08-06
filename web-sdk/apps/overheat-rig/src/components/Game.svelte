@@ -2,7 +2,7 @@
 	import './app.css';
 	import { onMount, untrack } from 'svelte';
 
-	import { stateBet, stateConfig, stateModal, stateUrlDerived } from 'state-shared';
+	import { stateAuthDerived, stateBet, stateConfig, stateModal, stateUrlDerived } from 'state-shared';
 
 	import EnableGameActor from './EnableGameActor.svelte';
 	import RigSelect from './RigSelect.svelte';
@@ -106,6 +106,7 @@
 	// prevents the default (scroll / re-click / slider nudge) and boots.
 	const onKeydown = (event: KeyboardEvent) => {
 		if (event.code !== 'Space' || event.repeat) return;
+		if (stateAuthDerived.isFailed()) return;
 		if (stateConfig.jurisdiction.disabledSpacebar) return;
 		if (stateModal.modal || rulesOpen || isReplay) return;
 		event.preventDefault();
