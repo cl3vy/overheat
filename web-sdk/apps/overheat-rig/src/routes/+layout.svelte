@@ -6,6 +6,7 @@
 	import AuthError from '../components/AuthError.svelte';
 	import LoaderOverheat from '../components/LoaderOverheat.svelte';
 	import { setContext } from '../game/context';
+	import { isSupportedCurrency } from '../game/money';
 
 	import messagesMap from '../i18n/messagesMap';
 
@@ -17,7 +18,7 @@
 </script>
 
 <GlobalStyle>
-	<Authenticate>
+	<Authenticate {isSupportedCurrency}>
 		{#snippet error()}
 			<AuthError />
 		{/snippet}

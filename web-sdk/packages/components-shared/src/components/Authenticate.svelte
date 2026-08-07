@@ -15,12 +15,18 @@
 		children: Snippet;
 		/** Optional terminal error UI; game children are never rendered on failure */
 		error?: Snippet;
+		/**
+		 * Optional launch `currency` gate — must match Stake CurrencyMeta keys.
+		 * When omitted, the launch currency param is ignored (balance.currency wins).
+		 */
+		isSupportedCurrency?: (code: string) => boolean;
 	};
 
 	const props: Props = $props();
 
 	let authenticated = $state(false);
 	let authFailed = $state(false);
+	let warnedUnsupportedLaunchCurrency = false;
 
 	const failAuth = (error: unknown) => {
 		console.error(error);
@@ -31,18 +37,6 @@
 
 	const isPositiveNumber = (value: unknown): value is number =>
 		typeof value === 'number' && Number.isFinite(value) && value > 0;
-
-	/** Optional launch `currency` — valid ISO/social code only; never fails auth. */
-	const isValidLaunchCurrency = (code: string): boolean => {
-		if (!code || code.length < 3) return false;
-		if (code === 'XGC' || code === 'XSC') return true;
-		try {
-			new Intl.NumberFormat('en', { style: 'currency', currency: code }).format(0);
-			return true;
-		} catch {
-			return false;
-		}
-	};
 
 	/** Snap a display-unit amount onto betLevels (nearest; clamp to ends if out of range). */
 	const snapToBetLevels = (displayAmount: number, levels: number[]): number => {
@@ -207,9 +201,20 @@
 			}),
 		);
 
-		// Currency: optional launch `currency` if valid, else RGS balance currency
+		// Currency: optional launch `currency` if in CurrencyMeta, else RGS balance.currency.
+		// Unsupported launch codes are ignored (never fail auth); formatter fallback is separate.
 		const launchCurrency = stateUrlDerived.currency();
-		stateBet.currency = isValidLaunchCurrency(launchCurrency)
+		const launchSupported =
+			Boolean(launchCurrency) &&
+			typeof props.isSupportedCurrency === 'function' &&
+			props.isSupportedCurrency(launchCurrency);
+		if (launchCurrency && !launchSupported && !warnedUnsupportedLaunchCurrency) {
+			warnedUnsupportedLaunchCurrency = true;
+			console.warn(
+				`[currency] unsupported launch currency "${launchCurrency}" — using balance.currency`,
+			);
+		}
+		stateBet.currency = launchSupported
 			? launchCurrency
 			: authenticateData.balance.currency;
 
