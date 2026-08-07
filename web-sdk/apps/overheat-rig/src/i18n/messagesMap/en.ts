@@ -165,6 +165,7 @@ const en = {
 	rules_no_cost_multipliers: ' (no cost multipliers)',
 	rules_th_rig: 'rig',
 	rules_th_cashout_target: '{cashOut} target',
+	rules_th_max_win: 'max win',
 	rules_th_pays_something: '{pays} something',
 	rules_th_checkpoints: 'checkpoints',
 	rules_th_cost: '{costAt} {stake}',
@@ -172,11 +173,13 @@ const en = {
 		'each rig has a ladder of checkpoints below its target. as the rig climbs, every checkpoint it crosses banks a partial {payout} that is kept even if the rig melts down afterwards. reaching the target {pays} the shutdown multiplier the rig actually reached times your {stake} -- on a clean hit that is the target itself.',
 	rules_overdrive:
 		'OVERDRIVE: on a share of winning rounds the thermal limiter slips past the target. the round still {pays} the multiplier the rig reached at shutdown (the number on the result), not a flat 1.5x / 3x / 10x of the target. those figures are tier bands for how far past the target the run went (overdrive / critical / golden) -- labels only, not the payout formula. overdrive is decided by the round outcome; it needs no input and cannot be triggered manually.',
-	rules_max_win:
-		'maximum win: {maxWin}x the {stake} (a top payout on {mode}). {payouts} are capped at the maximum win.',
+	rules_max_win_intro:
+		'each mode has its own maximum win (up to Nx your {stake}), including overdrive tops. {payouts} never exceed that mode cap. see the max win column below.',
+	rules_max_win_note:
+		'maximum win is per mode and includes the highest overdrive payout that mode can reach -- see the modes table. {payouts} are capped at that mode\'s max win.',
 	rules_rtp_heading: 'RTP',
 	rules_rtp_body:
-		'the return to player is {percent}% on every mode and every {cashOut} target.',
+		'the return to player (RTP) is {percent}% on every mode and every {cashOut} target -- the same figure for idle through plasma.',
 	rules_disclaimer_heading: 'DISCLAIMER',
 	rules_disclaimer:
 		'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',

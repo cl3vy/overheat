@@ -36,10 +36,6 @@
 		if (profile === 'balanced') return t('profile_balanced');
 		return t('profile_spike');
 	};
-
-	const maxWinMult = Math.max(...Object.values(MODE_MAX_WIN));
-	const maxWinModeId = RIGS.find((rig) => MODE_MAX_WIN[rig.id] === maxWinMult)?.id ?? 'plasma';
-	const maxWinMode = $derived(rigName(maxWinModeId));
 </script>
 
 <!-- submission checklist: RTP, max win, payout information, mode descriptions
@@ -60,6 +56,16 @@
 		</div>
 
 		<div class="rules-section">
+			<div class="rules-heading">{t('rules_rtp_heading')}</div>
+			<p>
+				{t('rules_rtp_body', {
+					percent: (RTP * 100).toFixed(1),
+					cashOut,
+				})}
+			</p>
+		</div>
+
+		<div class="rules-section">
 			<div class="rules-heading">{t('rules_modes')}</div>
 			<p class="dim">
 				{t('rules_modes_intro', {
@@ -70,12 +76,16 @@
 					payout: payoutWord,
 				})}
 			</p>
+			<p class="dim">
+				{t('rules_max_win_intro', { stake: stakeWord, payouts: payoutsWord })}
+			</p>
 			<div class="rules-table-scroll">
 				<table class="rules-table">
 					<thead>
 						<tr>
 							<th>{t('rules_th_rig')}</th>
 							<th>{t('rules_th_cashout_target', { cashOut })}</th>
+							<th>{t('rules_th_max_win')}</th>
 							<th>{t('rules_th_pays_something', { pays: paysWord })}</th>
 							<th>{t('rules_th_checkpoints')}</th>
 							<th>{t('rules_th_cost', { costAt, stake: stakeWord })}</th>
@@ -86,6 +96,7 @@
 							<tr>
 								<td>{rigName(rig.id)}</td>
 								<td>{rig.targetTemp.toFixed(2)}x</td>
+								<td>{MODE_MAX_WIN[rig.id].toFixed(0)}x</td>
 								<td>{(LADDERS[rig.id].anyPayoutProb * 100).toFixed(1)}%</td>
 								<td>{profileLabel(LADDERS[rig.id].profile)}</td>
 								<td>{formatMoney(toBaseUnits(stateBet.betAmount))}</td>
@@ -109,22 +120,7 @@
 				{t('rules_overdrive', { pays: paysWord })}
 			</p>
 			<p>
-				{t('rules_max_win', {
-					maxWin: maxWinMult.toFixed(0),
-					stake: stakeWord,
-					mode: maxWinMode,
-					payouts: payoutsWord,
-				})}
-			</p>
-		</div>
-
-		<div class="rules-section">
-			<div class="rules-heading">{t('rules_rtp_heading')}</div>
-			<p>
-				{t('rules_rtp_body', {
-					percent: (RTP * 100).toFixed(2),
-					cashOut,
-				})}
+				{t('rules_max_win_note', { stake: stakeWord, payouts: payoutsWord })}
 			</p>
 		</div>
 

@@ -41,11 +41,14 @@
 
 	// storybook only: simulate /wallet/authenticate bet config + wallet
 	// (live play gets these exclusively from the RGS — never from game defaults)
+	// 2kmax_1cent step (0.01), with session min raised to $0.10
 	if (!stateConfig.betAmountOptions.length) {
-		const levels = [0.1, 0.2, 0.5, 1, 2, 5, 10, 25, 50, 100];
-		stateConfig.minBet = levels[0];
-		stateConfig.maxBet = levels[levels.length - 1];
-		stateConfig.stepBet = 0.1;
+		const levels = [
+			0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000, 2000,
+		];
+		stateConfig.minBet = 0.1;
+		stateConfig.maxBet = 2000;
+		stateConfig.stepBet = 0.01;
 		stateConfig.defaultBetLevel = 1;
 		stateConfig.betAmountOptions = levels;
 		stateConfig.betMenuOptions = levels;
@@ -53,7 +56,7 @@
 		stateBet.wageredBetAmount = stateConfig.defaultBetLevel;
 	}
 	if (!stateBet.currency) stateBet.currency = 'USD';
-	if (stateBet.balanceAmount === 0) stateBet.balanceAmount = 1000;
+	if (stateBet.balanceAmount === 0) stateBet.balanceAmount = 10_000;
 
 	const runBook = async (fixture: FixtureBook) => {
 		// storybook only: simulate the wallet the RGS would drive in live play

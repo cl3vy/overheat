@@ -43,12 +43,12 @@ export const RIG_MAP: Record<RigId, RigInfo> = Object.fromEntries(
 	RIGS.map((rig) => [rig.id, rig]),
 ) as Record<RigId, RigInfo>;
 
-// must match tools/gen_overheat_math.py / math v4 max wins
+// must match math/config_v4.py ModeConfig.max_win (and published *_v4.csv peaks)
 export const RTP = 0.965;
 
 export type WinTier = 'clean' | 'overdrive' | 'critical' | 'golden';
 
-/** Per-mode absolute max win (v4). Golden 10×target is no longer the ceiling. */
+/** Per-mode absolute max win (v4), including overdrive ceiling. */
 export const MODE_MAX_WIN: Record<RigId, number> = {
 	idle: 20,
 	eco: 25,

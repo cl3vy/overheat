@@ -1441,17 +1441,18 @@ button.term-btn.danger {
 }
 
 .dots-btn {
-	width: 32px;
-	height: 32px;
-	border-radius: 50%;
+	width: 28px;
+	height: 22px;
+	border-radius: 0;
 	border: 1px solid var(--green-dim);
-	background: transparent;
+	background: rgba(4, 12, 4, 0.92);
 	color: var(--green-dim);
 	font-family: var(--font);
-	font-size: 16px;
+	font-size: 14px;
 	line-height: 1;
 	cursor: pointer;
 	text-shadow: inherit;
+	padding: 0;
 }
 
 .dots-btn:hover {
@@ -1814,7 +1815,7 @@ button.settled-secondary {
 
 .rules-table {
 	width: 100%;
-	min-width: 420px;
+	min-width: 520px;
 	border-collapse: collapse;
 	font-variant-numeric: tabular-nums;
 	font-size: 0.94em;
@@ -2000,7 +2001,7 @@ button.settled-secondary {
 	.boot-btn { padding: 4px 0; font-size: 0.85em; letter-spacing: 0.12em; }
 
 	.settings-corner { gap: 4px; bottom: 2px; }
-	.dots-btn { width: 26px; height: 26px; font-size: 13px; }
+	.dots-btn { width: 24px; height: 18px; font-size: 12px; }
 	.settings-pop { padding: 8px 10px; gap: 4px; font-size: 0.85em; }
 
 	/* run: compact center; checkpoints stay in the narrow reflow panel */
@@ -2215,7 +2216,7 @@ button.settled-secondary {
 	}
 
 	.settings-corner { gap: 3px; bottom: 2px; }
-	.dots-btn { width: 24px; height: 24px; font-size: 12px; }
+	.dots-btn { width: 22px; height: 16px; font-size: 11px; }
 	.settings-pop { padding: 6px 8px; gap: 3px; font-size: 0.8em; }
 
 	/* run / settled / replay -- payout + BOOT AGAIN + RIG SELECT */

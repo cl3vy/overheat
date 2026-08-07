@@ -158,6 +158,7 @@ const ja = {
 	rules_no_cost_multipliers: '（コスト倍率なし）',
 	rules_th_rig: 'rig',
 	rules_th_cashout_target: '{cashOut}目標',
+	rules_th_max_win: '最大勝利',
 	rules_th_pays_something: '{pays}あり',
 	rules_th_checkpoints: 'チェックポイント',
 	rules_th_cost: '{costAt} {stake}',
@@ -165,11 +166,13 @@ const ja = {
 		'各リグには目標未満のチェックポイント梯子がある。上昇中に通過したチェックポイントごとに部分{payout}が確保され、その後メルトダウンしても残る。目標到達で、リグが実際に到達したシャットダウン倍率×{stake}を{pays} -- クリーンヒットではそれが目標そのもの。',
 	rules_overdrive:
 		'OVERDRIVE: 勝利ラウンドの一部で熱リミッターが目標を超える。ラウンドは目標の1.5x/3x/10x固定ではなく、シャットダウン時に到達した倍率（結果の数字）を{pays}。1.5x/3x/10xは目標をどれだけ超えたかの帯ラベル（overdrive/critical/golden）であり、配当式ではない。オーバードライブはラウンド結果で決まり、入力不要・手動起動不可。',
-	rules_max_win:
-		'最大勝利: {stake}の{maxWin}x（{mode}の最高ペイアウト）。{payouts}は最大勝利で上限。',
+	rules_max_win_intro:
+		'各モードに独自の最大勝利（{stake}の最大Nx、オーバードライブ上限を含む）があります。{payouts}はその上限を超えません。下の最大勝利列を参照。',
+	rules_max_win_note:
+		'最大勝利はモードごとで、そのモードが到達できる最高のオーバードライブ配当を含みます -- モード表を参照。{payouts}はそのモードの最大勝利で上限。',
 	rules_rtp_heading: 'RTP',
 	rules_rtp_body:
-		'プレイヤー還元率は全モード・全{cashOut}目標で{percent}%。',
+		'プレイヤー還元率（RTP）は全モード・全{cashOut}目標で{percent}% -- idleからplasmaまで同じ。',
 	rules_disclaimer_heading: '免責事項',
 	rules_disclaimer:
 		'不具合が発生した場合、すべての勝利およびプレイは無効となります。安定したインターネット接続が必要です。切断時はゲームを再読み込みし、未完了ラウンドを完了してください。期待還元は多数のプレイから算出されます。ゲーム画面は物理デバイスを再現するものではなく、説明用です。勝利金はブラウザ内イベントではなく、Remote Game Serverから受け取った金額に基づき精算されます。TM and © 2026 Stake Engine.',

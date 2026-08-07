@@ -30,9 +30,16 @@
 	let panelTilt = $state({ x: 0, y: 0 });
 	let dialEl = $state<HTMLDivElement | null>(null);
 
-	const betOptions = $derived(stateConfig.betAmountOptions);
+	/** Authenticate betLevels, clamped to minBet/maxBet (hard RGS bounds). */
+	const betOptions = $derived.by(() => {
+		const levels = stateConfig.betAmountOptions;
+		const { minBet, maxBet } = stateConfig;
+		if (!levels.length) return levels;
+		if (!Number.isFinite(minBet) || !Number.isFinite(maxBet)) return levels;
+		return levels.filter((level) => level >= minBet - 1e-9 && level <= maxBet + 1e-9);
+	});
 
-	/** Index into authenticate betLevels — the only selectable set / source of truth. */
+	/** Index into the selectable ladder — source of truth for +/- / presets. */
 	const betIndex = $derived.by(() => {
 		const levels = betOptions;
 		if (!levels.length) return -1;
@@ -68,15 +75,29 @@
 		return best;
 	};
 
+	/** Highest ladder index still ≤ authenticate maxBet (and affordable via setBetAmount). */
+	const maxSelectableIndex = $derived.by(() => {
+		const levels = betOptions;
+		if (!levels.length) return -1;
+		const { maxBet } = stateConfig;
+		const cap = Number.isFinite(maxBet) ? maxBet : levels[levels.length - 1];
+		let best = 0;
+		for (let i = 0; i < levels.length; i++) {
+			if (levels[i] <= cap + 1e-9) best = i;
+		}
+		return best;
+	});
+
 	const jumpBetMin = () => setBetIndex(0);
-	const jumpBetMax = () => setBetIndex(betOptions.length - 1);
+	const jumpBetMax = () => setBetIndex(maxSelectableIndex);
 	const jumpBetHalf = () => {
 		if (betIndex < 0) return;
 		setBetIndex(nearestBetIndex(betOptions[betIndex] / 2));
 	};
 	const jumpBetDouble = () => {
 		if (betIndex < 0) return;
-		setBetIndex(nearestBetIndex(betOptions[betIndex] * 2));
+		const doubled = nearestBetIndex(betOptions[betIndex] * 2);
+		setBetIndex(Math.min(doubled, maxSelectableIndex));
 	};
 
 	const rigIndex = $derived(
@@ -128,14 +149,14 @@
 		stateBet.activeBetModeKey = RIGS[clamped].id;
 	};
 
-	/** +/- moves to adjacent betLevels entries (index-based). */
+	/** +/- moves to adjacent betLevels entries (index-based), within min/max. */
 	const stepBetAmount = (direction: 1 | -1) => {
 		if (betIndex < 0) return;
-		setBetIndex(betIndex + direction);
+		setBetIndex(Math.min(Math.max(betIndex + direction, 0), maxSelectableIndex));
 	};
 
 	const atMinLevel = $derived(betIndex <= 0);
-	const atMaxLevel = $derived(betIndex < 0 || betIndex >= betOptions.length - 1);
+	const atMaxLevel = $derived(betIndex < 0 || betIndex >= maxSelectableIndex);
 
 	const canBoot = $derived(
 		context.stateXstateDerived.isIdle() &&

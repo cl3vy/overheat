@@ -158,6 +158,7 @@ const zh = {
 	rules_no_cost_multipliers: '（无成本倍率）',
 	rules_th_rig: 'rig',
 	rules_th_cashout_target: '{cashOut}目标',
+	rules_th_max_win: '最高赢额',
 	rules_th_pays_something: '{pays}有回报',
 	rules_th_checkpoints: '检查点',
 	rules_th_cost: '{costAt} {stake}',
@@ -165,11 +166,13 @@ const zh = {
 		'每台矿机在目标下方有检查点阶梯。爬升时每越过一个检查点就存入部分{payout}，之后即使熔毁也会保留。到达目标时{pays}矿机实际关断倍率乘以你的{stake} -- 干净命中时即为目标本身。',
 	rules_overdrive:
 		'OVERDRIVE：部分获胜回合中热限幅器会越过目标。本局仍按关断时实际到达的倍率{pays}（结果上的数字），而不是目标的固定1.5x/3x/10x。那些数字只表示越过目标多远的档位标签（overdrive/critical/golden），不是派彩公式。过驱由回合结果决定；无需输入，也无法手动触发。',
-	rules_max_win:
-		'最高赢额：{stake}的 {maxWin}x（{mode}的顶级派彩）。{payouts}上限为最高赢额。',
+	rules_max_win_intro:
+		'每个模式有各自的最高赢额（最高可达你的{stake}的Nx，含过驱上限）。{payouts}不会超过该上限。见下方最高赢额列。',
+	rules_max_win_note:
+		'最高赢额按模式计，并包含该模式可到达的最高过驱派彩 -- 见模式表。{payouts}上限为该模式最高赢额。',
 	rules_rtp_heading: 'RTP',
 	rules_rtp_body:
-		'每种模式和每个{cashOut}目标的玩家返还率为 {percent}%。',
+		'玩家回报率（RTP）在每个模式和每个{cashOut}目标上均为{percent}% -- 从 idle 到 plasma 相同。',
 	rules_disclaimer_heading: '免责声明',
 	rules_disclaimer:
 		'故障将使所有赢取和游玩无效。需要稳定的互联网连接。若断线，请重新加载游戏以完成任何未完成的回合。预期返还按多次游玩计算。游戏画面不代表任何实体设备，仅供说明。赢取金额按远程游戏服务器（Remote Game Server）返回的金额结算，而非浏览器内事件。TM and © 2026 Stake Engine.',

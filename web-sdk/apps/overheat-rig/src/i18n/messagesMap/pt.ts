@@ -158,6 +158,7 @@ const pt = {
 	rules_no_cost_multipliers: ' (sem multiplicadores de custo)',
 	rules_th_rig: 'rig',
 	rules_th_cashout_target: 'alvo de {cashOut}',
+	rules_th_max_win: 'vitória máx.',
 	rules_th_pays_something: '{pays} algo',
 	rules_th_checkpoints: 'checkpoints',
 	rules_th_cost: '{costAt} {stake}',
@@ -165,11 +166,13 @@ const pt = {
 		'cada rig tem uma escada de checkpoints abaixo do alvo. conforme sobe, cada checkpoint cruzado banca um {payout} parcial que fica mesmo se o rig der meltdown depois. atingir o alvo {pays} o multiplicador de desligamento que o rig realmente alcançou vezes sua {stake} -- num acerto limpo, isso é o próprio alvo.',
 	rules_overdrive:
 		'OVERDRIVE: em parte das rodadas vencedoras o limitador térmico passa do alvo. a rodada ainda {pays} o multiplicador que o rig alcançou no desligamento (o número do resultado), não um 1.5x / 3x / 10x fixo do alvo. esses números são faixas de quão longe passou do alvo (overdrive / critical / golden) -- só rótulos, não a fórmula do pagamento. o overdrive é decidido pelo resultado da rodada; não precisa de input e não pode ser ativado manualmente.',
-	rules_max_win:
-		'prêmio máximo: {maxWin}x a {stake} (um pagamento topo em {mode}). os {payouts} são limitados ao prêmio máximo.',
+	rules_max_win_intro:
+		'cada modo tem sua própria vitória máxima (até Nx sua {stake}), incluindo os topos de overdrive. os {payouts} nunca passam desse teto. veja a coluna de vitória máx. abaixo.',
+	rules_max_win_note:
+		'a vitória máxima é por modo e inclui o overdrive mais alto que esse modo pode alcançar -- veja a tabela de modos. os {payouts} são limitados à vitória máxima desse modo.',
 	rules_rtp_heading: 'RTP',
 	rules_rtp_body:
-		'o retorno ao jogador é {percent}% em cada modo e cada alvo de {cashOut}.',
+		'o retorno ao jogador (RTP) é {percent}% em cada modo e cada alvo de {cashOut} -- o mesmo valor de idle a plasma.',
 	rules_disclaimer_heading: 'AVISO',
 	rules_disclaimer:
 		'Malfuncionamento anula todos os prêmios e jogadas. É necessária uma conexão de internet estável. Em caso de desconexão, recarregue o jogo para concluir rodadas incompletas. O retorno esperado é calculado sobre muitas jogadas. A tela do jogo não representa nenhum dispositivo físico e é apenas ilustrativa. Os prêmios são liquidados conforme o valor recebido do Remote Game Server e não por eventos no navegador. TM e © 2026 Stake Engine.',
