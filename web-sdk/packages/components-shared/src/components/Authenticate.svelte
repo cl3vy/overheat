@@ -265,6 +265,10 @@
 		stateBet.wageredBetAmount = stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER || 0;
 		stateBet.activeBetModeKey = stateUrlDerived.mode();
 
+		// replay skips /wallet/authenticate — still need a currency for formatMoney
+		const launchCurrency = stateUrlDerived.currency();
+		if (launchCurrency) stateBet.currency = launchCurrency;
+
 		const data = await requestReplay({
 			rgsUrl: stateUrlDerived.rgsUrl(),
 			game: stateUrlDerived.game(),
@@ -280,6 +284,8 @@
 				event: '0',
 				active: true,
 				mode: stateUrlDerived.mode(),
+				// keep base stake on the round so the summary can read it
+				amount: stateUrlDerived.amount() || (data as { amount?: number }).amount,
 			};
 		}
 	};

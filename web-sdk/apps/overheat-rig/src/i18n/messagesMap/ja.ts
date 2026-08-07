@@ -15,6 +15,17 @@ const ja = {
 	hdr_net: 'NET {amount}',
 	hdr_turbo: ' [TURBO]',
 	status_loading_replay: 'リプレイ読込中...',
+	replay_summary_title: '// リプレイ概要',
+	replay_summary_note:
+		'これは以前のラウンドの再生です。実際のベットは行われません。',
+	replay_row_mode: 'モード',
+	replay_row_base_bet: '基本ベット',
+	replay_row_cost_mult: 'コスト倍率',
+	replay_row_total_bet: '合計ベットコスト',
+	replay_row_payout_mult: '配当倍率',
+	replay_row_total_win: '合計勝利',
+	btn_start_replay: '>> リプレイ開始 <<',
+	a11y_replay_summary: 'リプレイベット概要',
 
 	// —— Social / standard lexicon ——
 	word_stake: 'ステーク',

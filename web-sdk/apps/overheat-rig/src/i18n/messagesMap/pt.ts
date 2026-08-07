@@ -15,6 +15,17 @@ const pt = {
 	hdr_net: 'LÍQ {amount}',
 	hdr_turbo: ' [TURBO]',
 	status_loading_replay: 'carregando replay...',
+	replay_summary_title: '// RESUMO DO REPLAY',
+	replay_summary_note:
+		'isto é a reprodução de uma rodada anterior. nenhuma aposta real é feita.',
+	replay_row_mode: 'Modo',
+	replay_row_base_bet: 'Aposta base',
+	replay_row_cost_mult: 'Multiplicador de custo',
+	replay_row_total_bet: 'Custo total da aposta',
+	replay_row_payout_mult: 'Multiplicador de pagamento',
+	replay_row_total_win: 'Ganho total',
+	btn_start_replay: '>> INICIAR REPLAY <<',
+	a11y_replay_summary: 'resumo da aposta do replay',
 
 	// —— Social / standard lexicon ——
 	word_stake: 'aposta',

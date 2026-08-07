@@ -22,6 +22,17 @@ const en = {
 	hdr_net: 'NET {amount}',
 	hdr_turbo: ' [TURBO]',
 	status_loading_replay: 'loading replay...',
+	replay_summary_title: '// REPLAY SUMMARY',
+	replay_summary_note:
+		'this is a replay of a previous round. no real bet is placed.',
+	replay_row_mode: 'Mode',
+	replay_row_base_bet: 'Base Bet',
+	replay_row_cost_mult: 'Cost Multiplier',
+	replay_row_total_bet: 'Total Bet Cost',
+	replay_row_payout_mult: 'Payout Multiplier',
+	replay_row_total_win: 'Total Win',
+	btn_start_replay: '>> START REPLAY <<',
+	a11y_replay_summary: 'replay bet summary',
 
 	// —— Social / standard lexicon ——
 	word_stake: 'stake',

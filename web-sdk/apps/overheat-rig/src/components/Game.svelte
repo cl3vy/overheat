@@ -8,6 +8,7 @@
 	import RigSelect from './RigSelect.svelte';
 	import RunView from './RunView.svelte';
 	import RulesPanel from './RulesPanel.svelte';
+	import ReplaySummaryPanel from './ReplaySummaryPanel.svelte';
 	import ErrorPanel from './ErrorPanel.svelte';
 	import { RIGS, RTP } from '../game/constants';
 	import { getContext } from '../game/context';
@@ -22,6 +23,8 @@
 
 	// read-only replay window: no wallet UI, no live betting entry (QA phase 3)
 	const isReplay = stateUrlDerived.replay();
+	// Stake: show bet summary and wait for Start Replay before any frames play
+	let replaySummaryOpen = $state(isReplay);
 
 	let scanlines = $state(true);
 	// flicker is opt-in for photosensitivity (QA 6.5); scanlines stay
@@ -136,6 +139,12 @@
 		requestBoot(context);
 	};
 
+	const startReplay = () => {
+		if (!isReplay || !replaySummaryOpen) return;
+		replaySummaryOpen = false;
+		context.eventEmitter.broadcast({ type: 'resumeBet' });
+	};
+
 	onMount(() => {
 		// no Pixi canvas in this game: release the SDK loading screen
 		context.stateApp.loaded = true;
@@ -157,11 +166,14 @@
 		document.addEventListener('fullscreenchange', blockFullscreen);
 
 		// resume an unfinished round returned by /wallet/authenticate
-		// (QA 5.5): the actor resumes active rounds and settles inactive ones
+		// (QA 5.5): the actor resumes active rounds and settles inactive ones.
+		// Replay waits on the summary popup — do not start frames yet.
 		if (stateBet.betToResume?.active && stateBet.betToResume.mode) {
 			stateBet.activeBetModeKey = stateBet.betToResume.mode;
 		}
-		context.eventEmitter.broadcast({ type: 'resumeBet' });
+		if (!isReplay) {
+			context.eventEmitter.broadcast({ type: 'resumeBet' });
+		}
 
 		// keep the balance fresh between rounds
 		const balanceInterval = setInterval(() => {
@@ -239,7 +251,9 @@
 	<div class="term-main">
 		{#if isReplay}
 			<!-- never drop a replay viewer into the live betting UI (QA phase 3) -->
-			{#if stateGame.phase === 'idle'}
+			{#if replaySummaryOpen}
+				<ReplaySummaryPanel onStart={startReplay} />
+			{:else if stateGame.phase === 'idle'}
 				<div class="log-line dim">{t('status_loading_replay')}</div>
 			{:else}
 				<RunView />

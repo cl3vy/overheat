@@ -15,6 +15,17 @@ const zh = {
 	hdr_net: '净值 {amount}',
 	hdr_turbo: ' [TURBO]',
 	status_loading_replay: '正在加载回放...',
+	replay_summary_title: '// 回放摘要',
+	replay_summary_note:
+		'这是上一局的回放。不会进行真实投注。',
+	replay_row_mode: '模式',
+	replay_row_base_bet: '基础投注',
+	replay_row_cost_mult: '费用倍数',
+	replay_row_total_bet: '总投注费用',
+	replay_row_payout_mult: '派彩倍数',
+	replay_row_total_win: '总赢额',
+	btn_start_replay: '>> 开始回放 <<',
+	a11y_replay_summary: '回放投注摘要',
 
 	// —— Social / standard lexicon ——
 	word_stake: '下注',
