@@ -3,7 +3,7 @@ import { stateBet, stateConfig } from 'state-shared';
 import { waitForTimeout } from 'utils-shared/wait';
 
 import { BOOK_AMOUNT_SCALE, LADDERS, type LadderRung } from './constants';
-import { bookPayoutCents } from './money';
+import { bookPayoutBase } from './money';
 import { stateGame, pushLog } from './stateGame.svelte';
 import { recordRound } from './stateSession.svelte';
 import {
@@ -35,16 +35,17 @@ const isInstant = (bookEvent: BookEvent) =>
 /** Light up rungs the display temperature has crossed (live, during climb). */
 const syncSecured = (rungs: LadderRung[], silent = false) => {
 	let crossed = 0;
-	let secured = 0;
+	let securedBook = 0;
 	for (const rung of rungs) {
 		if (stateGame.currentTemp >= rung.temp - 1e-9) {
 			crossed += 1;
-			secured = rung.bank;
+			securedBook = Math.round(rung.bank * BOOK_AMOUNT_SCALE);
 		} else break;
 	}
 	if (crossed > stateGame.rungsCrossed) {
 		stateGame.rungsCrossed = crossed;
-		stateGame.securedMult = secured;
+		stateGame.securedBook = securedBook;
+		stateGame.securedMult = securedBook / BOOK_AMOUNT_SCALE;
 		// the SECURED YIELD box is the single source of truth for banked
 		// progress (R2 1.3): a tick sound marks the lock, no log line
 		if (!silent) playBankTick(crossed);
@@ -86,6 +87,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.couldHaveReached = 0;
 		stateGame.winTier = null;
 		stateGame.securedMult = 0;
+		stateGame.securedBook = 0;
 		stateGame.rungsCrossed = 0;
 		stateGame.logs = [];
 
@@ -145,6 +147,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const rungIndex = ladder.rungs.findIndex(
 			(rung) => Math.round(rung.bank * BOOK_AMOUNT_SCALE) === bookEvent.amount,
 		);
+		stateGame.securedBook = bookEvent.amount;
 		stateGame.securedMult = bookEvent.amount / BOOK_AMOUNT_SCALE;
 		if (rungIndex >= 0) {
 			stateGame.rungsCrossed = Math.max(stateGame.rungsCrossed, rungIndex + 1);
@@ -154,11 +157,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	meltdown: async (bookEvent: BookEventOfType<'meltdown'>) => {
 		recordBookEvent({ bookEvent });
 		const instant = isInstant(bookEvent);
-		const kept = bookEvent.amount / BOOK_AMOUNT_SCALE;
+		const keptBook = bookEvent.amount;
 
 		stateGame.currentTemp = bookEvent.crashTemp;
 		stateGame.crashTemp = bookEvent.crashTemp;
-		stateGame.securedMult = kept;
+		stateGame.securedBook = keptBook;
+		stateGame.securedMult = keptBook / BOOK_AMOUNT_SCALE;
 		stateGame.phase = 'fried';
 		stopHum();
 		if (!instant) playMeltdown();
@@ -173,15 +177,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const instant = isInstant(bookEvent);
 		const tier = bookEvent.tier ?? 'clean';
 		const ladder = LADDERS[stateGame.rigTier];
+		const bankedBook = Math.round(bookEvent.bankedAt * BOOK_AMOUNT_SCALE);
 
 		stateGame.currentTemp = bookEvent.bankedAt;
 		stateGame.couldHaveReached = bookEvent.couldHaveReached;
 		stateGame.winTier = tier;
-		stateGame.securedMult = bookEvent.bankedAt;
+		stateGame.securedBook = bankedBook;
+		stateGame.securedMult = bankedBook / BOOK_AMOUNT_SCALE;
 		stateGame.rungsCrossed = ladder.rungs.length;
 		// seed the win display; the setTotalWin money event that follows
 		// carries the same value (payout is bankedAt by construction)
-		stateBet.winBookEventAmount = Math.round(bookEvent.bankedAt * 100);
+		stateBet.winBookEventAmount = bankedBook;
 		stateGame.phase = 'banked';
 		stopHum();
 		if (!instant) playBankLock();
@@ -215,9 +221,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				? (shutdownEvent?.couldHaveReached ?? stateGame.targetTemp)
 				: (meltdownEvent?.crashTemp ?? stateGame.crashTemp),
 			win,
-			// integer-cents payout (QA 4.2): matches the credited amount exactly,
-			// so BEST BANK can never disagree with the header balance
-			payoutMW: bookPayoutCents(bookEvent.amount, stateBet.wageredBetAmount) / 100,
+			// RGS base-unit payout (full scale precision): BEST BANK / yield
+			// displays share this integer with formatMoney
+			payoutMW: bookPayoutBase(bookEvent.amount, stateBet.wageredBetAmount),
 			payoutMult: bookEvent.amount / BOOK_AMOUNT_SCALE,
 			tier: shutdownEvent?.tier,
 		});

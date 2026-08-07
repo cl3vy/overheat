@@ -2,7 +2,7 @@
 	import { stateBet } from 'state-shared';
 
 	import { LADDERS, MODE_MAX_WIN, RIGS, RTP } from '../game/constants';
-	import { formatMoney } from '../game/money';
+	import { formatMoney, toBaseUnits } from '../game/money';
 	import {
 		isSocialCasino,
 		labelCostAt,
@@ -88,7 +88,7 @@
 								<td>{rig.targetTemp.toFixed(2)}x</td>
 								<td>{(LADDERS[rig.id].anyPayoutProb * 100).toFixed(1)}%</td>
 								<td>{profileLabel(LADDERS[rig.id].profile)}</td>
-								<td>{formatMoney(stateBet.betAmount)}</td>
+								<td>{formatMoney(toBaseUnits(stateBet.betAmount))}</td>
 							</tr>
 						{/each}
 					</tbody>

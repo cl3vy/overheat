@@ -5,7 +5,7 @@
 
 	import { BOOK_AMOUNT_SCALE, LADDERS, RIG_MAP, type WinTier } from '../game/constants';
 	import { getContext } from '../game/context';
-	import { bookPayoutCents, formatMoney, formatMW } from '../game/money';
+	import { bookPayoutBase, formatMoney, formatMW, toBaseUnits } from '../game/money';
 	import { prefersReducedMotion } from '../game/motion';
 	import { labelStake, wordCashOut, wordPayout, wordStake } from '../game/socialCopy';
 	import { stateGame, resetRound } from '../game/stateGame.svelte';
@@ -20,19 +20,20 @@
 	const isReplay = stateUrlDerived.replay();
 
 	// checkpoint lock hits: discrete reward pulses (not random garnish)
+	// `amount` is RGS integer base units for formatMoney
 	type CoinToast = { id: number; amount: number; offset: number };
 	type LockBurst = { id: number; sparks: { sx: number; sy: number }[] };
 	let coinToasts = $state([] as CoinToast[]);
 	let lockBursts = $state([] as LockBurst[]);
 	let toastId = 0;
 	let lockPulse = $state(false);
-	let lastSecured = 0;
+	let lastSecuredBook = 0;
 
-	const spawnLockHit = (deltaMult: number) => {
+	const spawnLockHit = (deltaBook: number) => {
 		const id = (toastId += 1);
 		coinToasts.push({
 			id,
-			amount: stateBet.wageredBetAmount * deltaMult,
+			amount: bookPayoutBase(deltaBook, stateBet.wageredBetAmount),
 			offset: -50 + Math.random() * 100,
 		});
 		lockPulse = true;
@@ -61,17 +62,17 @@
 	};
 
 	$effect(() => {
-		const secured = stateGame.securedMult;
+		const securedBook = stateGame.securedBook;
 		const phase = stateGame.phase;
 		untrack(() => {
 			if (phase !== 'heating') {
-				lastSecured = secured;
+				lastSecuredBook = securedBook;
 				return;
 			}
-			if (secured > lastSecured + 1e-9) {
-				spawnLockHit(secured - lastSecured);
+			if (securedBook > lastSecuredBook) {
+				spawnLockHit(securedBook - lastSecuredBook);
 			}
-			lastSecured = secured;
+			lastSecuredBook = securedBook;
 		});
 	});
 
@@ -166,13 +167,13 @@
 				: 'warn',
 	);
 
-	// one shared money path (QA 4.2): payouts computed in integer cents from
-	// the book amount, so the yield box, stats and header can never disagree
-	const securedMW = $derived(
-		bookPayoutCents(stateGame.securedMult * BOOK_AMOUNT_SCALE, stateBet.wageredBetAmount) / 100,
+	// one shared money path: payouts as RGS base-unit integers from book-unit
+	// multipliers × stake (API scale), never cents / float×100 display paths
+	const securedBase = $derived(
+		bookPayoutBase(stateGame.securedBook, stateBet.wageredBetAmount),
 	);
-	const winMW = $derived(
-		bookPayoutCents(stateBet.winBookEventAmount, stateBet.wageredBetAmount) / 100,
+	const winBase = $derived(
+		bookPayoutBase(stateBet.winBookEventAmount, stateBet.wageredBetAmount),
 	);
 
 	// the next checkpoint the climb is reaching for (null once all are crossed)
@@ -276,6 +277,7 @@
 
 	let celebration = $state<Celebration | null>(null);
 	let rain = $state<RainGlyph[]>([]);
+	/** win count-up in RGS base units */
 	let displayedWin = $state(0);
 	let celebrationId = 0;
 
@@ -300,13 +302,13 @@
 				playWinFanfare(tier.level);
 
 				// count the payout up from zero, easing out into the final figure
-				const target = winMW;
+				const target = winBase;
 				const countMs = stateBet.isTurbo ? 500 : 1400;
 				const startedAt = performance.now();
 				while (performance.now() - startedAt < countMs) {
 					if (id !== celebrationId) return;
 					const t = (performance.now() - startedAt) / countMs;
-					displayedWin = target * (1 - (1 - t) ** 3);
+					displayedWin = Math.round(target * (1 - (1 - t) ** 3));
 					await waitForTimeout(33);
 				}
 				displayedWin = target;
@@ -349,7 +351,7 @@
 		{t('run_topline', {
 			rig: rig ? rigName(rig.id) : stateGame.rigTier,
 			stakeLabel,
-			amount: formatMoney(stateBet.wageredBetAmount),
+			amount: formatMoney(toBaseUnits(stateBet.wageredBetAmount)),
 		})}
 	</div>
 
@@ -403,9 +405,9 @@
 				<div class="yield-box" style="--yglow: {(0.35 + fillFraction * 0.65).toFixed(3)}">
 					<div class="yield-label dim">{t('label_secured_yield')}</div>
 					<div class="yield-amount" class:lock-hit={lockPulse}>
-						{formatMoney(securedMW)}
+						{formatMoney(securedBase)}
 					</div>
-					<div class="mw-garnish dim">{formatMW(securedMW)}</div>
+					<div class="mw-garnish dim">{formatMW(securedBase)}</div>
 					{#each lockBursts as burst (burst.id)}
 						<div class="lock-burst" aria-hidden="true">
 							{#each burst.sparks as spark, index (index)}
@@ -448,10 +450,10 @@
 				<div class="aimed-line dim">
 					{t('result_aimed_for', { mult: stateGame.targetTemp.toFixed(2) })}
 				</div>
-				{#if stateGame.securedMult > 0}
+				{#if stateGame.securedBook > 0}
 					<!-- the checkpoints held: part of the climb survived the fry -->
 					<div class="secured-line warn">
-						{t('result_checkpoints_held', { amount: formatMoney(securedMW) })}
+						{t('result_checkpoints_held', { amount: formatMoney(securedBase) })}
 					</div>
 				{/if}
 			{/if}

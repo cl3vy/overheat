@@ -7,6 +7,7 @@ export type RoundRecord = {
 	crashTemp: number;
 	/** true when the run reached the shutdown target (any tier) */
 	win: boolean;
+	/** payout in RGS integer base units (for formatMoney / best-bank display) */
 	payoutMW: number;
 	/** payout as a multiple of the stake (0 bust, <1 partial, >=1 profit) */
 	payoutMult: number;

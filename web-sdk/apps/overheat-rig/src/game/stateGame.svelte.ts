@@ -16,6 +16,11 @@ export const stateGame = $state({
 	winTier: null as WinTier | null,
 	/** cumulative payout secured by crossed checkpoint rungs (x stake) */
 	securedMult: 0,
+	/**
+	 * Same secured payout in book units (mult × BOOK_AMOUNT_SCALE).
+	 * Integer source of truth for money display — avoids float×100 → 0.
+	 */
+	securedBook: 0,
 	/** number of checkpoint rungs crossed so far this round */
 	rungsCrossed: 0,
 	logs: [] as LogLine[],
@@ -39,6 +44,7 @@ export const resetRound = () => {
 	stateGame.couldHaveReached = 0;
 	stateGame.winTier = null;
 	stateGame.securedMult = 0;
+	stateGame.securedBook = 0;
 	stateGame.rungsCrossed = 0;
 	stateGame.logs = [];
 	stateGame.skipUntilIndex = 0;

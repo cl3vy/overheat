@@ -4,7 +4,7 @@
 	import { stateBet, stateBetDerived, stateConfig } from 'state-shared';
 
 	import { LADDERS, MODE_MAX_WIN, RIGS } from '../game/constants';
-	import { formatMoney, formatMW } from '../game/money';
+	import { formatMoney, formatMW, toBaseUnits } from '../game/money';
 	import {
 		flavorForRig,
 		labelCashOutTarget,
@@ -290,9 +290,9 @@
 				<span class="stake-label">{t('label_stake_row', { stake: stakeWord })}</span>
 				<button class="term-btn" onclick={() => stepBetAmount(-1)} disabled={atMinLevel}>-</button>
 				<!-- read-only selected level — no free typing -->
-				<span class="stake-value" aria-live="polite">{formatMoney(stateBet.betAmount)}</span>
+				<span class="stake-value" aria-live="polite">{formatMoney(toBaseUnits(stateBet.betAmount))}</span>
 				<button class="term-btn" onclick={() => stepBetAmount(1)} disabled={atMaxLevel}>+</button>
-				<span class="dim mw-garnish">{formatMW(stateBet.betAmount)}</span>
+				<span class="dim mw-garnish">{formatMW(toBaseUnits(stateBet.betAmount))}</span>
 			</span>
 			<span class="stake-presets" role="group" aria-label={stakeWord}>
 				<button class="term-btn stake-preset" onclick={jumpBetMin} disabled={atMinLevel}>Min</button>
@@ -306,8 +306,8 @@
 		<div class="dial-spice dim">
 			{t('dial_full_send', {
 				pays: paysWord,
-				winPays: formatMoney(winPays),
-				maxPays: formatMoney(maxPays),
+				winPays: formatMoney(toBaseUnits(winPays)),
+				maxPays: formatMoney(toBaseUnits(maxPays)),
 			})}
 		</div>
 

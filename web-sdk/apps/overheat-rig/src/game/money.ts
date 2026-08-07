@@ -2,7 +2,9 @@
  * Single money formatter for the Overheat UI.
  *
  * Based on Stake Engine CurrencyMeta + DisplayBalance, with reviewer overrides:
- * - DisplayBalance always ÷ API_AMOUNT_MULTIPLIER (RGS base → whole units).
+ * - Amounts are RGS integer base units (API_AMOUNT_MULTIPLIER = 1 whole unit).
+ * - Precision: format at CurrencyMeta.decimals; only rescue extra places (up to
+ *   scale precision) when that would wrongly show zero for a nonzero amount.
  * - Decimal places reconciled to Stake's published display table where the
  *   pasted meta disagreed (KWD/JOD/TND/OMR/BHD → 2; ISK/XGC → 2).
  * - Unknown currency: code as suffix, 2 decimals, one-shot warn.
@@ -12,6 +14,8 @@
 
 import { API_AMOUNT_MULTIPLIER } from 'constants-shared/bet';
 import { stateBet } from 'state-shared';
+
+import { BOOK_AMOUNT_SCALE } from './constants';
 
 /** Available currency codes for Stake Engine */
 type Currency =
@@ -126,40 +130,115 @@ const CurrencyMeta: Record<Currency, CurrencyMetaEntry> = {
 	XEC: { symbol: 'SC', decimals: 2 },
 };
 
+/** Fractional digits representable by the RGS base-unit scale (1e6 → 6). */
+const maxDecimalsFromScale = (scale: number): number => {
+	let n = Math.abs(Math.trunc(scale));
+	let decimals = 0;
+	while (n > 1) {
+		n = Math.floor(n / 10);
+		decimals += 1;
+	}
+	return decimals;
+};
+
+const MAX_DECIMALS = maxDecimalsFromScale(API_AMOUNT_MULTIPLIER);
+
+const pow10 = (n: number): bigint => 10n ** BigInt(n);
+
 type Balance = { amount: number; currency: string };
 
 /** True when `code` is a key in Stake's CurrencyMeta (single supported set). */
 export const isSupportedCurrency = (code: string): boolean =>
 	Object.prototype.hasOwnProperty.call(CurrencyMeta, code);
 
-const warnedUnknown = new Set<string>();
+/**
+ * Whole currency units (game state) → nearest RGS integer base units.
+ * Used only at the display boundary for values that still live as whole units
+ * (stake, balance); payouts should already be base integers.
+ */
+export const toBaseUnits = (wholeUnits: number): number =>
+	Math.round(Number(wholeUnits) * API_AMOUNT_MULTIPLIER);
 
 /**
- * Stake DisplayBalance, with the required base-unit scale step.
- * `balance.amount` is RGS base units (1_000_000 = 1.00 whole unit).
+ * Payout in RGS base units from a book amount (mult × BOOK_AMOUNT_SCALE) and
+ * a wagered stake in whole currency units. Integer math only — no cent rounding.
+ *
+ * Book units are a multiplier scale (100 = 1x), not currency. The product is
+ * always API-scale base units for the formatter.
+ */
+export const bookPayoutBase = (bookAmount: number, wageredWhole: number): number => {
+	const wageredBase = toBaseUnits(wageredWhole);
+	const book = Math.round(Number(bookAmount));
+	return Number((BigInt(wageredBase) * BigInt(book)) / BigInt(BOOK_AMOUNT_SCALE));
+};
+
+/** True when a digit string is numerically zero (-0, 0, 0.00, …). */
+const isZeroDigits = (digits: string): boolean => /^[-]?0(?:\.0+)?$/.test(digits);
+
+/**
+ * Round integer base units to `decimals` places and build the digit string
+ * with integer/BigInt math only (no float division of the money value).
+ */
+const formatAtDecimals = (baseUnits: number, decimals: number): string => {
+	const negative = baseUnits < 0;
+	const abs = BigInt(Math.abs(Math.trunc(baseUnits)));
+	const clamped = Math.max(0, Math.min(decimals, MAX_DECIMALS));
+	const drop = MAX_DECIMALS - clamped;
+	const divisor = pow10(drop);
+	// half-up rounding in the integer domain
+	const rounded = (abs + divisor / 2n) / divisor;
+	const fracScale = pow10(clamped);
+	const intPart = rounded / fracScale;
+	const fracPart = rounded % fracScale;
+	const sign = negative ? '-' : '';
+	if (clamped === 0) return `${sign}${intPart.toString()}`;
+	return `${sign}${intPart.toString()}.${fracPart.toString().padStart(clamped, '0')}`;
+};
+
+/**
+ * Rescue-based precision:
+ * 1. Format at CurrencyMeta stdDecimals (rounded).
+ * 2. If that is nonzero, keep it (JPY stays whole; USD stays 2 dp).
+ * 3. Only if stdDecimals shows zero but the true amount is nonzero, extend
+ *    one place at a time up to MAX_DECIMALS until a significant digit appears.
+ */
+const formatDigitsFromBase = (baseUnits: number, stdDecimals: number): string => {
+	const abs = Math.abs(Math.trunc(baseUnits));
+	const standard = formatAtDecimals(baseUnits, stdDecimals);
+	if (!isZeroDigits(standard) || abs === 0) return standard;
+
+	for (let d = stdDecimals + 1; d <= MAX_DECIMALS; d++) {
+		const rescued = formatAtDecimals(baseUnits, d);
+		if (!isZeroDigits(rescued)) return rescued;
+	}
+	return standard;
+};
+
+const warnedUnknown = new Set<string>();
+
+const resolveMeta = (currency: string): CurrencyMetaEntry => {
+	const known = CurrencyMeta[currency as Currency];
+	if (known) return known;
+	if (currency && !warnedUnknown.has(currency)) {
+		warnedUnknown.add(currency);
+		console.warn(
+			`[formatMoney] unknown currency "${currency}" — using code suffix, 2 decimals`,
+		);
+	}
+	return {
+		symbol: currency || '',
+		decimals: 2,
+		symbolAfter: true,
+	};
+};
+
+/**
+ * Stake DisplayBalance with rescue-based scale precision.
+ * `balance.amount` is an integer RGS base-unit amount.
  */
 const displayBalance = (balance: Balance): string => {
-	const known = CurrencyMeta[balance.currency as Currency];
-	let meta: CurrencyMetaEntry;
-	if (known) {
-		meta = known;
-	} else {
-		if (balance.currency && !warnedUnknown.has(balance.currency)) {
-			warnedUnknown.add(balance.currency);
-			console.warn(
-				`[formatMoney] unknown currency "${balance.currency}" — using code suffix, 2 decimals`,
-			);
-		}
-		meta = {
-			symbol: balance.currency || '',
-			decimals: 2,
-			symbolAfter: true,
-		};
-	}
-
-	// RGS base → whole units (Stake DisplayBalance assumes whole units)
-	const wholeUnits = balance.amount / API_AMOUNT_MULTIPLIER;
-	const formattedAmount = wholeUnits.toFixed(meta.decimals);
+	const meta = resolveMeta(balance.currency);
+	const formattedAmount = formatDigitsFromBase(balance.amount, meta.decimals);
 	if (meta.symbolAfter) {
 		return meta.symbol ? `${formattedAmount} ${meta.symbol}` : formattedAmount;
 	}
@@ -170,39 +249,20 @@ const displayBalance = (balance: Balance): string => {
 export const activeCurrency = (): string => stateBet.currency;
 
 /**
- * Format a money amount for the UI (stake, balance, payouts, header, etc.).
- *
- * Game state stores whole currency units (scaled at authenticate). We convert
- * back to RGS base units here so {@link displayBalance} always applies the
- * official ÷1_000_000 step.
+ * Format a money amount for the UI.
+ * `baseUnits` must be an integer RGS base-unit amount (1_000_000 = 1.00).
  */
-export const formatMoney = (wholeUnits: number): string =>
+export const formatMoney = (baseUnits: number): string =>
 	displayBalance({
-		amount: wholeUnits * API_AMOUNT_MULTIPLIER,
+		amount: Math.trunc(baseUnits),
 		currency: activeCurrency(),
 	});
 
-/** Format a raw RGS base-unit amount directly. */
-export const formatMoneyFromApi = (apiAmount: number): string =>
-	displayBalance({ amount: apiAmount, currency: activeCurrency() });
+/** Alias: format a raw RGS base-unit amount. */
+export const formatMoneyFromApi = (apiAmount: number): string => formatMoney(apiAmount);
 
-/** Round to integer cents — shared helper for payout math display paths. */
-export const toCents = (amount: number): number => Math.round(amount * 100);
-
-/**
- * Payout for a book-event amount (payout multiplier x 100) on a wagered
- * stake, computed in integer cents so sub-cent float drift cannot leak
- * into the display.
- */
-export const bookPayoutCents = (bookAmount: number, wageredAmount: number): number =>
-	Math.round((bookAmount * toCents(wageredAmount)) / 100);
-
-/** Format integer cents in the session currency. */
-export const formatCents = (cents: number): string => formatMoney(cents / 100);
-
-/** Themed garnish: megawatts — NOT money; never uses CurrencyMeta. */
-export const formatMW = (amount: number): string =>
-	`${(toCents(amount) / 100).toLocaleString('en-US', {
-		minimumFractionDigits: 2,
-		maximumFractionDigits: 2,
-	})} MW`;
+/** Themed garnish: megawatts — NOT money; never uses CurrencyMeta. Takes base units. */
+export const formatMW = (baseUnits: number): string => {
+	const digits = formatAtDecimals(Math.trunc(baseUnits), 2);
+	return `${digits} MW`;
+};

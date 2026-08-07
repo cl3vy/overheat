@@ -11,7 +11,7 @@
 	import ErrorPanel from './ErrorPanel.svelte';
 	import { RIGS, RTP } from '../game/constants';
 	import { getContext } from '../game/context';
-	import { formatMoney, formatMW } from '../game/money';
+	import { formatMoney, formatMW, toBaseUnits } from '../game/money';
 	import { prefersReducedMotion } from '../game/motion';
 	import { refreshBalance } from '../game/rgs';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -221,13 +221,13 @@
 			{:else}
 				{t('hdr_pwr_reserve')}
 				<span class="win pwr-reserve" class:flash={balanceFlash}>
-					{formatMoney(displayedBalance)}
+					{formatMoney(toBaseUnits(displayedBalance))}
 				</span>
-				<span class="dim mw-garnish">{formatMW(displayedBalance)}</span>
+				<span class="dim mw-garnish">{formatMW(toBaseUnits(displayedBalance))}</span>
 				{#if stateConfig.jurisdiction.displayNetPosition}
 					<span class="dim">
 						{t('hdr_net', {
-							amount: `${netPosition >= 0 ? '+' : ''}${formatMoney(netPosition)}`,
+							amount: `${netPosition >= 0 ? '+' : ''}${formatMoney(toBaseUnits(netPosition))}`,
 						})}
 					</span>
 				{/if}
