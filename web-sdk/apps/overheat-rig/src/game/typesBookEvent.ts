@@ -37,7 +37,7 @@ type BookEventMeltdown = {
 type BookEventShutdown = {
 	index: number;
 	type: 'shutdown';
-	/** payout multiplier: targetTemp for clean, up to 10x targetTemp on golden */
+	/** payout multiplier: the shutdown mult reached (clean ≈ target; overdrive bands above) */
 	bankedAt: number;
 	couldHaveReached: number;
 	tier: WinTier;

@@ -7,7 +7,7 @@
 	import { getContext } from '../game/context';
 	import { bookPayoutBase, formatMoney, formatMW, toBaseUnits } from '../game/money';
 	import { prefersReducedMotion } from '../game/motion';
-	import { labelStake, wordCashOut, wordPayout, wordStake } from '../game/socialCopy';
+	import { labelStake, wordCashOut, wordPays, wordStake } from '../game/socialCopy';
 	import { stateGame, resetRound } from '../game/stateGame.svelte';
 	import { stateSession } from '../game/stateSession.svelte';
 	import { playMilestoneChirp, playCoinTick, playWinFanfare } from '../game/sound';
@@ -325,7 +325,7 @@
 	const stakeLabel = $derived(labelStake());
 	const stakeWord = $derived(wordStake());
 	const cashOut = $derived(wordCashOut());
-	const payoutWord = $derived(wordPayout());
+	const paysWord = $derived(wordPays());
 
 	const bootAgain = () => {
 		requestBoot(context);
@@ -464,16 +464,12 @@
 					<div class="win-amount">+{formatMoney(displayedWin)}</div>
 					<div class="mw-garnish dim">{formatMW(displayedWin)}</div>
 					{#if winTier !== 'clean'}
-						<!-- clean wins: CLEAN BANK is the whole story, no second
-						     "clean" line -- special tiers keep their explainer -->
+						<!-- tier band label — payout is the reached shutdown mult -->
 						<div class="win-headline">{celebration.headline}</div>
-					{/if}
-					{#if winTier !== 'clean'}
-						<!-- overdrive/golden taught the moment one lands (brief 2 / 8) -->
 						<div class="win-translate dim">
-							{t('win_bonus_mult', {
-								mult: winTier === 'golden' ? '10' : winTier === 'critical' ? '3' : '1.5',
-								payout: payoutWord,
+							{t('win_tier_note', {
+								pays: paysWord,
+								mult: stateGame.currentTemp.toFixed(2),
 							})}
 						</div>
 					{/if}

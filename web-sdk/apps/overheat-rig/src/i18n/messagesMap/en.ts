@@ -127,9 +127,9 @@ const en = {
 	result_checkpoints_held: '>> CHECKPOINTS HELD: +{amount} secured',
 
 	win_headline_clean: 'SHUTDOWN CLEAN',
-	win_headline_overdrive: 'THERMAL LIMITER SLIPPED -- 1.5x TARGET',
-	win_headline_critical: 'BREAKER SLAMMED -- 3x TARGET',
-	win_headline_golden: 'THE SILICON ASCENDED -- 10x TARGET',
+	win_headline_overdrive: 'THERMAL LIMITER SLIPPED -- OVERDRIVE TIER',
+	win_headline_critical: 'BREAKER SLAMMED -- CRITICAL TIER',
+	win_headline_golden: 'THE SILICON ASCENDED -- GOLDEN TIER',
 	win_label_golden: 'GOLDEN SHUTDOWN',
 	win_label_legendary: 'LEGENDARY RUN',
 	win_label_massive: 'MASSIVE BANK',
@@ -137,7 +137,8 @@ const en = {
 	win_label_big: 'BIG BANK',
 	win_label_clean: 'CLEAN BANK',
 	win_banner: '>>> {label} <<<',
-	win_bonus_mult: '{mult}x bonus multiplier on your {payout}',
+	win_tier_note:
+		'tier label only -- the round {pays} the {mult}x shutdown reached, not a flat multiple of your target',
 	win_peaked: 'ran clean -- peaked at {mult}x',
 	win_survived: '{mult}x survived',
 	badge_personal_best: '★ NEW PERSONAL BEST ★',
@@ -168,9 +169,9 @@ const en = {
 	rules_th_checkpoints: 'checkpoints',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'each rig has a ladder of checkpoints below its target. as the rig climbs, every checkpoint it crosses banks a partial {payout} that is kept even if the rig melts down afterwards. reaching the target {pays} the full target multiplier times your {stake}.',
+		'each rig has a ladder of checkpoints below its target. as the rig climbs, every checkpoint it crosses banks a partial {payout} that is kept even if the rig melts down afterwards. reaching the target {pays} the shutdown multiplier the rig actually reached times your {stake} -- on a clean hit that is the target itself.',
 	rules_overdrive:
-		'OVERDRIVE: on a small share of winning rounds the thermal limiter slips past the target and the round {pays} a bonus multiplier on shutdown -- 1.5x the target (overdrive), 3x the target (critical), or 10x the target (golden shutdown). overdrive is decided by the round outcome; it needs no input and cannot be triggered manually.',
+		'OVERDRIVE: on a share of winning rounds the thermal limiter slips past the target. the round still {pays} the multiplier the rig reached at shutdown (the number on the result), not a flat 1.5x / 3x / 10x of the target. those figures are tier bands for how far past the target the run went (overdrive / critical / golden) -- labels only, not the payout formula. overdrive is decided by the round outcome; it needs no input and cannot be triggered manually.',
 	rules_max_win:
 		'maximum win: {maxWin}x the {stake} (a top payout on {mode}). {payouts} are capped at the maximum win.',
 	rules_rtp_heading: 'RTP',

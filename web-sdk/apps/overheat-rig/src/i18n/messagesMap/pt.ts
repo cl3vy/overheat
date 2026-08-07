@@ -120,9 +120,9 @@ const pt = {
 	result_checkpoints_held: '>> CHECKPOINTS RETIDOS: +{amount} garantido',
 
 	win_headline_clean: 'DESLIGAMENTO LIMPO',
-	win_headline_overdrive: 'LIMITADOR TÉRMICO FALHOU -- ALVO 1.5x',
-	win_headline_critical: 'BREAKER BATEU -- ALVO 3x',
-	win_headline_golden: 'O SILÍCIO ASCENDEU -- ALVO 10x',
+	win_headline_overdrive: 'LIMITADOR TÉRMICO FALHOU -- FAIXA OVERDRIVE',
+	win_headline_critical: 'BREAKER BATEU -- FAIXA CRITICAL',
+	win_headline_golden: 'O SILÍCIO ASCENDEU -- FAIXA GOLDEN',
 	win_label_golden: 'DESLIGAMENTO DOURADO',
 	win_label_legendary: 'RODADA LENDÁRIA',
 	win_label_massive: 'BANCO MASSIVO',
@@ -130,7 +130,8 @@ const pt = {
 	win_label_big: 'GRANDE BANCO',
 	win_label_clean: 'BANCO LIMPO',
 	win_banner: '>>> {label} <<<',
-	win_bonus_mult: 'multiplicador bônus {mult}x no seu {payout}',
+	win_tier_note:
+		'só rótulo de faixa -- a rodada {pays} o desligamento de {mult}x alcançado, não um múltiplo fixo do seu alvo',
 	win_peaked: 'rodada limpa -- pico em {mult}x',
 	win_survived: '{mult}x sobrevivido',
 	badge_personal_best: '★ NOVO RECORDE PESSOAL ★',
@@ -161,9 +162,9 @@ const pt = {
 	rules_th_checkpoints: 'checkpoints',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'cada rig tem uma escada de checkpoints abaixo do alvo. conforme sobe, cada checkpoint cruzado banca um {payout} parcial que fica mesmo se o rig der meltdown depois. atingir o alvo {pays} o multiplicador cheio do alvo vezes sua {stake}.',
+		'cada rig tem uma escada de checkpoints abaixo do alvo. conforme sobe, cada checkpoint cruzado banca um {payout} parcial que fica mesmo se o rig der meltdown depois. atingir o alvo {pays} o multiplicador de desligamento que o rig realmente alcançou vezes sua {stake} -- num acerto limpo, isso é o próprio alvo.',
 	rules_overdrive:
-		'OVERDRIVE: em uma pequena parcela das rodadas vencedoras o limitador térmico passa do alvo e a rodada {pays} um multiplicador bônus no desligamento -- 1.5x o alvo (overdrive), 3x o alvo (critical), ou 10x o alvo (desligamento dourado). o overdrive é decidido pelo resultado da rodada; não precisa de input e não pode ser ativado manualmente.',
+		'OVERDRIVE: em parte das rodadas vencedoras o limitador térmico passa do alvo. a rodada ainda {pays} o multiplicador que o rig alcançou no desligamento (o número do resultado), não um 1.5x / 3x / 10x fixo do alvo. esses números são faixas de quão longe passou do alvo (overdrive / critical / golden) -- só rótulos, não a fórmula do pagamento. o overdrive é decidido pelo resultado da rodada; não precisa de input e não pode ser ativado manualmente.',
 	rules_max_win:
 		'prêmio máximo: {maxWin}x a {stake} (um pagamento topo em {mode}). os {payouts} são limitados ao prêmio máximo.',
 	rules_rtp_heading: 'RTP',

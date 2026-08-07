@@ -120,9 +120,9 @@ const ja = {
 	result_checkpoints_held: '>> チェックポイント保持: +{amount} 確保',
 
 	win_headline_clean: 'クリーンシャットダウン',
-	win_headline_overdrive: '熱リミッター逸脱 -- 目標の1.5x',
-	win_headline_critical: 'ブレーカー作動 -- 目標の3x',
-	win_headline_golden: 'シリコン昇華 -- 目標の10x',
+	win_headline_overdrive: '熱リミッター逸脱 -- オーバードライブ帯',
+	win_headline_critical: 'ブレーカー作動 -- クリティカル帯',
+	win_headline_golden: 'シリコン昇華 -- ゴールデン帯',
 	win_label_golden: 'ゴールデンシャットダウン',
 	win_label_legendary: '伝説のラン',
 	win_label_massive: '超巨大バンク',
@@ -130,7 +130,8 @@ const ja = {
 	win_label_big: 'ビッグバンク',
 	win_label_clean: 'クリーンバンク',
 	win_banner: '>>> {label} <<<',
-	win_bonus_mult: '{payout}に{mult}xボーナス倍率',
+	win_tier_note:
+		'帯ラベルのみ -- ラウンドは到達したシャットダウン{mult}xを{pays}（目標の固定倍ではない）',
 	win_peaked: 'クリーン完走 -- ピーク{mult}x',
 	win_survived: '{mult}x 生存',
 	badge_personal_best: '★ 自己ベスト更新 ★',
@@ -161,9 +162,9 @@ const ja = {
 	rules_th_checkpoints: 'チェックポイント',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'各リグには目標未満のチェックポイント梯子がある。上昇中に通過したチェックポイントごとに部分{payout}が確保され、その後メルトダウンしても残る。目標到達で目標倍率×{stake}を{pays}。',
+		'各リグには目標未満のチェックポイント梯子がある。上昇中に通過したチェックポイントごとに部分{payout}が確保され、その後メルトダウンしても残る。目標到達で、リグが実際に到達したシャットダウン倍率×{stake}を{pays} -- クリーンヒットではそれが目標そのもの。',
 	rules_overdrive:
-		'OVERDRIVE: 勝利ラウンドの一部で熱リミッターが目標を超え、シャットダウン時にボーナス倍率を{pays} -- 目標の1.5x（overdrive）、3x（critical）、または10x（ゴールデンシャットダウン）。オーバードライブはラウンド結果で決まり、入力不要・手動起動不可。',
+		'OVERDRIVE: 勝利ラウンドの一部で熱リミッターが目標を超える。ラウンドは目標の1.5x/3x/10x固定ではなく、シャットダウン時に到達した倍率（結果の数字）を{pays}。1.5x/3x/10xは目標をどれだけ超えたかの帯ラベル（overdrive/critical/golden）であり、配当式ではない。オーバードライブはラウンド結果で決まり、入力不要・手動起動不可。',
 	rules_max_win:
 		'最大勝利: {stake}の{maxWin}x（{mode}の最高ペイアウト）。{payouts}は最大勝利で上限。',
 	rules_rtp_heading: 'RTP',

@@ -120,9 +120,9 @@ const es = {
 	result_checkpoints_held: '>> CHECKPOINTS RETENIDOS: +{amount} asegurado',
 
 	win_headline_clean: 'APAGADO LIMPIO',
-	win_headline_overdrive: 'LIMITADOR TÉRMICO FALLÓ -- OBJETIVO 1.5x',
-	win_headline_critical: 'BREAKER GOLPEADO -- OBJETIVO 3x',
-	win_headline_golden: 'EL SILICIO ASCENDIÓ -- OBJETIVO 10x',
+	win_headline_overdrive: 'LIMITADOR TÉRMICO FALLÓ -- RANGO OVERDRIVE',
+	win_headline_critical: 'BREAKER GOLPEADO -- RANGO CRITICAL',
+	win_headline_golden: 'EL SILICIO ASCENDIÓ -- RANGO GOLDEN',
 	win_label_golden: 'APAGADO DORADO',
 	win_label_legendary: 'RONDA LEGENDARIA',
 	win_label_massive: 'BANCO MASIVO',
@@ -130,7 +130,8 @@ const es = {
 	win_label_big: 'GRAN BANCO',
 	win_label_clean: 'BANCO LIMPIO',
 	win_banner: '>>> {label} <<<',
-	win_bonus_mult: 'multiplicador bonus {mult}x sobre tu {payout}',
+	win_tier_note:
+		'solo etiqueta de rango -- la ronda {pays} el apagado de {mult}x alcanzado, no un múltiplo fijo de tu objetivo',
 	win_peaked: 'corrido limpio -- pico en {mult}x',
 	win_survived: '{mult}x sobrevivido',
 	badge_personal_best: '★ NUEVO RÉCORD PERSONAL ★',
@@ -161,9 +162,9 @@ const es = {
 	rules_th_checkpoints: 'checkpoints',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'cada rig tiene una escalera de checkpoints por debajo de su objetivo. al subir, cada checkpoint que cruza banca un {payout} parcial que se conserva aunque el rig se funda después. alcanzar el objetivo {pays} el multiplicador completo del objetivo por tu {stake}.',
+		'cada rig tiene una escalera de checkpoints por debajo de su objetivo. al subir, cada checkpoint que cruza banca un {payout} parcial que se conserva aunque el rig se funda después. alcanzar el objetivo {pays} el multiplicador de apagado que el rig alcanzó de verdad por tu {stake} -- en un acierto limpio, eso es el propio objetivo.',
 	rules_overdrive:
-		'OVERDRIVE: en una pequeña parte de las rondas ganadoras el limitador térmico se pasa del objetivo y la ronda {pays} un multiplicador bonus al apagar -- 1.5x el objetivo (overdrive), 3x el objetivo (critical), o 10x el objetivo (apagado dorado). el overdrive lo decide el resultado de la ronda; no requiere input y no se puede activar manualmente.',
+		'OVERDRIVE: en una parte de las rondas ganadoras el limitador térmico se pasa del objetivo. la ronda igual {pays} el multiplicador que el rig alcanzó al apagar (el número del resultado), no un 1.5x / 3x / 10x fijo del objetivo. esas cifras son rangos de cómo de lejos pasó del objetivo (overdrive / critical / golden) -- solo etiquetas, no la fórmula del pago. el overdrive lo decide el resultado de la ronda; no requiere input y no se puede activar manualmente.',
 	rules_max_win:
 		'premio máximo: {maxWin}x la {stake} (un pago tope en {mode}). los {payouts} están limitados al premio máximo.',
 	rules_rtp_heading: 'RTP',

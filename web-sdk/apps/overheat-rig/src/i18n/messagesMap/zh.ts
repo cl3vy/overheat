@@ -120,9 +120,9 @@ const zh = {
 	result_checkpoints_held: '>> 检查点保留: +{amount} 已锁定',
 
 	win_headline_clean: '干净关断',
-	win_headline_overdrive: '热限幅器失效 -- 目标 1.5x',
-	win_headline_critical: '断路器砸下 -- 目标 3x',
-	win_headline_golden: '硅片飞升 -- 目标 10x',
+	win_headline_overdrive: '热限幅器失效 -- 过驱档',
+	win_headline_critical: '断路器砸下 -- 临界档',
+	win_headline_golden: '硅片飞升 -- 黄金档',
 	win_label_golden: '黄金关断',
 	win_label_legendary: '传奇回合',
 	win_label_massive: '巨额银行',
@@ -130,7 +130,8 @@ const zh = {
 	win_label_big: '大银行',
 	win_label_clean: '干净银行',
 	win_banner: '>>> {label} <<<',
-	win_bonus_mult: '你的{payout}获得 {mult}x 奖励倍率',
+	win_tier_note:
+		'仅为档位标签 -- 本局{pays}实际到达的{mult}x关断，而非目标的固定倍数',
 	win_peaked: '干净完跑 -- 峰值 {mult}x',
 	win_survived: '{mult}x 存活',
 	badge_personal_best: '★ 新个人纪录 ★',
@@ -161,9 +162,9 @@ const zh = {
 	rules_th_checkpoints: '检查点',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'每台矿机在目标下方有检查点阶梯。爬升时每越过一个检查点就存入部分{payout}，之后即使熔毁也会保留。到达目标时{pays}完整目标倍率乘以你的{stake}。',
+		'每台矿机在目标下方有检查点阶梯。爬升时每越过一个检查点就存入部分{payout}，之后即使熔毁也会保留。到达目标时{pays}矿机实际关断倍率乘以你的{stake} -- 干净命中时即为目标本身。',
 	rules_overdrive:
-		'OVERDRIVE：少数获胜回合中热限幅器会越过目标，关断时{pays}奖励倍率 -- 目标的 1.5x（overdrive）、3x（critical）或 10x（黄金关断）。过驱由回合结果决定；无需输入，也无法手动触发。',
+		'OVERDRIVE：部分获胜回合中热限幅器会越过目标。本局仍按关断时实际到达的倍率{pays}（结果上的数字），而不是目标的固定1.5x/3x/10x。那些数字只表示越过目标多远的档位标签（overdrive/critical/golden），不是派彩公式。过驱由回合结果决定；无需输入，也无法手动触发。',
 	rules_max_win:
 		'最高赢额：{stake}的 {maxWin}x（{mode}的顶级派彩）。{payouts}上限为最高赢额。',
 	rules_rtp_heading: 'RTP',
