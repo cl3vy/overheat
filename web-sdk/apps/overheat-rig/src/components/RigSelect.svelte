@@ -17,7 +17,6 @@
 	import { stateSession, sessionStats } from '../game/stateSession.svelte';
 	import { rigName, t } from '../game/t';
 	import { requestBoot } from '../game/utils';
-	import FairnessPanel from './FairnessPanel.svelte';
 	import TurboToggle from './TurboToggle.svelte';
 
 	type Props = { scanlines: boolean; flicker: boolean };
@@ -27,7 +26,6 @@
 	const context = getContext();
 
 	let settingsOpen = $state(false);
-	let fairnessOpen = $state(false);
 	let bootCharging = $state(false);
 	let panelTilt = $state({ x: 0, y: 0 });
 	let dialEl = $state<HTMLDivElement | null>(null);
@@ -337,9 +335,6 @@
 </div>
 
 <div class="settings-corner">
-	{#if fairnessOpen}
-		<FairnessPanel onClose={() => (fairnessOpen = false)} />
-	{/if}
 	{#if settingsOpen}
 		<div class="settings-pop">
 			<label>
@@ -355,20 +350,8 @@
 		</div>
 	{/if}
 	<button
-		class="fairness-btn"
-		onclick={() => {
-			fairnessOpen = !fairnessOpen;
-			settingsOpen = false;
-		}}
-	>
-		{t('btn_fairness')}
-	</button>
-	<button
 		class="dots-btn"
-		onclick={() => {
-			settingsOpen = !settingsOpen;
-			fairnessOpen = false;
-		}}
+		onclick={() => (settingsOpen = !settingsOpen)}
 		aria-label={t('a11y_settings')}
 	>
 		&#8943;

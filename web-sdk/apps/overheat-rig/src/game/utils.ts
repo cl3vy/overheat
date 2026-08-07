@@ -39,8 +39,8 @@ export const requestBoot = (context: ReturnType<typeof getContext>) => {
 let lastPlayedBet: Bet | null = null;
 
 export const playBet = async (bet: Bet) => {
-	// fairness reference: the RGS round id for this settled bet, shown in
-	// the fairness panel and on the result screen (absent in Storybook)
+	// result-screen reference: the RGS round id for this settled bet
+	// (absent in Storybook)
 	stateSession.lastRoundID = bet.roundID ?? null;
 	lastPlayedBet = bet;
 	stateBet.winBookEventAmount = 0;

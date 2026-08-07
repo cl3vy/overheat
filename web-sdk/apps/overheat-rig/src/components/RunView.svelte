@@ -358,7 +358,7 @@
 	<div class="run-grid">
 		<div class="run-col run-left sys-log-ambient">
 			<!-- ambient boot flavor only (R2 1.3/1.4): banked progress lives in
-			     the SECURED YIELD box, fairness data behind [FAIRNESS] -->
+			     the SECURED YIELD box -->
 			<div class="col-title dim">{t('col_sys_log')}</div>
 			{#each stateGame.logs as line, index (index)}
 				<div class="log-line dim">{line.text}</div>

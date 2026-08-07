@@ -220,8 +220,7 @@ a {
 .term-main {
 	flex: 1;
 	min-height: 0;
-	/* no native scrollbar in any state (QA 2.1) -- content adapts via the
-	   responsive tiers instead of scrolling the frame */
+	/* Frame never scrolls — content must fit via responsive tightening. */
 	overflow: hidden;
 	position: relative;
 }
@@ -643,7 +642,8 @@ button.term-btn.danger {
 
 /* ---- run dashboard: full-screen money printer ---- */
 .run-dash {
-	min-height: 100%;
+	height: 100%;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
 	box-sizing: border-box;
@@ -651,11 +651,13 @@ button.term-btn.danger {
 	   context so the negative-z rain can never escape behind the app */
 	position: relative;
 	z-index: 0;
+	overflow: hidden;
 }
 
 .run-topline {
 	letter-spacing: 0.06em;
 	margin-bottom: 8px;
+	flex: 0 0 auto;
 }
 
 /* symmetric side columns (equal fr) keep the game truly centered:
@@ -664,12 +666,14 @@ button.term-btn.danger {
 	flex: 1;
 	min-height: 0;
 	display: grid;
-	grid-template-columns: minmax(170px, 1fr) minmax(0, 2.2fr) minmax(170px, 1fr);
-	gap: clamp(10px, 2.2vw, 30px);
+	grid-template-columns: minmax(140px, 1fr) minmax(0, 2.2fr) minmax(140px, 1fr);
+	gap: clamp(8px, 2.2vw, 30px);
+	overflow: hidden;
 }
 
 .run-col {
 	min-width: 0;
+	min-height: 0;
 	overflow: hidden;
 	font-size: 0.82em;
 	display: flex;
@@ -688,7 +692,12 @@ button.term-btn.danger {
 }
 
 /* simple checkpoint ladder: rungs + target only, lighting as they're crossed */
-.run-right { justify-content: center; }
+.run-right {
+	justify-content: center;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+}
 
 .ladder {
 	display: flex;
@@ -1078,10 +1087,41 @@ button.term-btn.danger {
 
 .settling { margin-top: 6px; }
 
-/* narrow screens: keep the money center-stage, drop side columns */
+/* narrow / popout: stack center above a scrollable checkpoint panel —
+   never hide the ladder off-screen */
 @media (max-width: 720px) {
-	.run-grid { grid-template-columns: 1fr; }
-	.run-left, .run-right { display: none; }
+	.run-grid {
+		grid-template-columns: 1fr;
+		grid-template-rows: minmax(0, 1fr) auto;
+		gap: 6px;
+	}
+	.run-left {
+		display: none;
+	}
+	.run-right {
+		display: flex;
+		max-height: min(34vh, 200px);
+		min-height: 3.5em;
+		justify-content: flex-start;
+		overflow-y: auto;
+		border-top: 1px solid rgba(0, 255, 65, 0.2);
+		padding-top: 4px;
+	}
+	/* result screens omit the ladder — don't leave an empty strip */
+	.run-right:not(:has(.ladder)) {
+		display: none;
+	}
+	.run-right .col-title {
+		margin-bottom: 2px;
+		font-size: 0.85em;
+	}
+	.run-right .ladder {
+		gap: 1px;
+	}
+	.run-right .rung {
+		font-size: 0.88em;
+		gap: 4px;
+	}
 }
 
 .gauge-row {
@@ -1286,16 +1326,19 @@ button.term-btn.danger {
 	white-space: normal;
 }
 
-/* select screen proportions: hint block, dial and switch panel share one
-   centered column that fills the terminal vertically */
+/* select screen: dial column vertically centered in the stage.
+   Settings sits absolute so it does not steal flex space and top-align the dial. */
 .select-screen {
-	min-height: 100%;
+	height: 100%;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
 	justify-content: center;
+	align-items: stretch;
 	box-sizing: border-box;
-	padding-bottom: 12px;
+	padding-bottom: 0;
 	position: relative;
+	overflow: hidden;
 }
 
 .select-col {
@@ -1303,6 +1346,9 @@ button.term-btn.danger {
 	max-width: 760px;
 	margin: 0 auto;
 	box-sizing: border-box;
+	flex: 0 1 auto;
+	min-width: 0;
+	min-height: 0;
 }
 
 /* boot button with the turbo switch mounted beside it */
@@ -1381,7 +1427,8 @@ button.term-btn.danger {
 
 .turbo-text { position: relative; z-index: 1; }
 
-/* accessibility switches hidden behind three dots */
+/* accessibility switches behind three dots — out of flow so the dial
+   stays vertically centered; always on-screen in the stage corner */
 .settings-corner {
 	position: absolute;
 	right: 4px;
@@ -1715,23 +1762,6 @@ button.settled-secondary {
 }
 
 /* chip weight tiers: same values, the eye lands on the wins (brief 2.3) */
-/* provably-fair panel (brief 1.6): terminal pop, truth only */
-.fairness-btn {
-	background: none;
-	border: 1px solid rgba(51, 255, 102, 0.35);
-	color: var(--dim);
-	font: inherit;
-	font-size: 0.78em;
-	letter-spacing: 0.1em;
-	padding: 3px 8px;
-	cursor: pointer;
-}
-
-.fairness-btn:hover {
-	color: var(--green);
-	border-color: var(--green);
-	text-shadow: 0 0 8px rgba(51, 255, 102, 0.6);
-}
 
 /* rules overlay: internally scrollable, the frame behind it never moves */
 .rules-overlay {
@@ -1805,44 +1835,43 @@ button.settled-secondary {
 
 .rules-close { margin-top: 4px; }
 
-.fairness-pop {
-	display: flex;
-	flex-direction: column;
-	gap: 8px;
-	width: min(340px, 80vw);
-	padding: 12px 14px;
-	background: rgba(0, 10, 2, 0.96);
-	border: 1px solid var(--green);
-	box-shadow: 0 0 18px rgba(51, 255, 102, 0.25);
-	font-size: 0.85em;
-	text-align: left;
-	white-space: normal;
-}
-
-.fairness-title {
-	color: var(--green);
-	letter-spacing: 0.14em;
-	text-shadow: 0 0 8px rgba(51, 255, 102, 0.5);
-}
-
-.fairness-row {
-	display: flex;
-	justify-content: space-between;
-	gap: 12px;
-}
-
-.fairness-copy { line-height: 1.5; }
-
 /* ---------------------------------------------------- responsive tiers (QA 2.2)
    Kept at the very end of the file on purpose: these override base rules
    defined above (.loop-text, .dial-panel, .stake-row, ...) by viewport, and
    CSS breaks ties between equal-specificity selectors by source order --
    a media-scoped override placed before the rule it targets loses the
-   cascade even when its condition matches. */
+   cascade even when its condition matches.
+
+   One coherent approach: tighten spacing on short viewports, reflow the
+   checkpoint ladder on narrow widths (never hide it), keep settings in the
+   corner, never scroll the page — content must fit the stage. */
 
 /* MW garnish wraps the header onto a second line on short viewports */
 @media (max-height: 720px) {
 	.mw-garnish { display: none; }
+}
+
+/* short landscape desktop (1200x675, 1024x576, …): denser config, still centered */
+@media (max-height: 700px) and (min-width: 481px) {
+	.select-screen {
+		justify-content: center;
+		padding: 0;
+	}
+	.strip-empty { display: none; }
+	.loop-callout { padding: 4px 8px; margin-bottom: 2px; }
+	.loop-text { font-size: 0.88em; line-height: 1.3; }
+	.dial-panel { padding: 6px 14px 8px; margin: 2px auto; }
+	.dial-mult { font-size: 2.1em; }
+	.dial-readout { margin: 2px 0; }
+	.dial-slider-row { margin: 2px 0; }
+	.dial-facts { margin: 2px 0 0; }
+	.dial-flavor { margin-top: 2px; }
+	.boot-row { margin-top: 4px; }
+	.key-hint-line { margin-top: 2px; }
+	.stats-block { min-height: 0; }
+	.peak-strip { margin: 0; font-size: 0.95em; }
+	.run-topline { margin-bottom: 4px; }
+	.run-center { gap: 6px; }
 }
 
 /* short desktop/tablet viewports (e.g. 1280x600) */
@@ -1852,6 +1881,7 @@ button.settled-secondary {
 	.loop-text { font-size: 0.88em; line-height: 1.3; }
 	.dial-mult { font-size: 2.2em; }
 	.key-hint-line { margin-top: 2px; }
+	.dial-spice { font-size: 0.85em; }
 }
 
 /* mobile (<=480px): single column. The frame itself never scrolls (QA 2.1),
@@ -1933,8 +1963,8 @@ button.settled-secondary {
 	.settled-buttons { gap: 8px; }
 }
 
-/* popout / mini (~450x260 and smaller): multiplier, stake, BOOT -- nothing
-   else fits, and the frame is not allowed to scroll to reveal the rest */
+/* popout / mini (~450x260 and smaller): tighten chrome; keep settings and
+   checkpoints reachable (settings sticky, ladder reflows under center) */
 @media (max-height: 300px) {
 	.loop-callout,
 	.stats-block,
@@ -1946,7 +1976,6 @@ button.settled-secondary {
 	.mw-garnish,
 	.stake-label,
 	.key-hint-line,
-	.settings-corner,
 	.run-topline,
 	.gauge-big {
 		display: none;
@@ -1954,13 +1983,12 @@ button.settled-secondary {
 
 	/* the chrome around term-main (tv-shell + crt padding, the header) is
 	   sized for a full-height game and eats most of a 260px-tall popout on
-	   its own -- shrink it so term-main (which clips, QA 2.1) has enough
-	   room to show BOOT RIG instead of cutting it off mid-button */
+	   its own -- shrink it so term-main has enough room for BOOT + settings */
 	.tv-shell { padding: 4px; }
 	.crt { padding: 6px clamp(10px, 4vw, 24px); }
 	.term-header { padding-bottom: 3px; margin-bottom: 3px; font-size: 0.8em; }
 
-	.select-screen { justify-content: center; padding-top: 0; padding-bottom: 4px; }
+	.select-screen { justify-content: center; padding: 0; }
 	.dial-panel { margin: 2px auto; padding: 4px 10px; border: none; box-shadow: none; width: 100%; max-width: 100%; box-sizing: border-box; }
 	.dial-readout { margin: 0; }
 	.dial-mult { font-size: 1.5em; }
@@ -1971,9 +1999,11 @@ button.settled-secondary {
 	.boot-row { margin-top: 2px; }
 	.boot-btn { padding: 4px 0; font-size: 0.85em; letter-spacing: 0.12em; }
 
-	/* result screen: same "must fit, frame never scrolls" budget applies
-	   once a round is live -- keep the payout and the primary action
-	   (BOOT AGAIN / REPLAY AGAIN), drop everything else */
+	.settings-corner { gap: 4px; bottom: 2px; }
+	.dots-btn { width: 26px; height: 26px; font-size: 13px; }
+	.settings-pop { padding: 8px 10px; gap: 4px; font-size: 0.85em; }
+
+	/* run: compact center; checkpoints stay in the narrow reflow panel */
 	.temp-label,
 	.round-id-line,
 	.new-best,
@@ -2023,10 +2053,16 @@ button.settled-secondary {
 	}
 	.settled-return-full { display: none; }
 	.settled-return-mini { display: inline; }
+
+	.run-right {
+		max-height: min(28vh, 88px);
+		min-height: 2.8em;
+	}
+	.run-right .rung { font-size: 0.8em; }
 }
 
 /* Popout S (400x225): keep the CONFIG composition (mult → slider → stake →
-   BOOT), just tighter chrome. Do not flatten into a top-packed control strip. */
+   BOOT), just tighter chrome. Settings stay sticky/reachable. */
 @media (max-width: 420px) and (max-height: 240px) {
 	.loop-callout,
 	.stats-block,
@@ -2040,7 +2076,6 @@ button.settled-secondary {
 	.mw-garnish,
 	.stake-label,
 	.key-hint-line,
-	.settings-corner,
 	.run-topline,
 	.gauge-big,
 	.header-turbo,
@@ -2079,10 +2114,9 @@ button.settled-secondary {
 		font-size: 0.9em;
 	}
 
-	/* center the dial in leftover height — empty bottom looked broken */
 	.select-screen {
 		justify-content: center;
-		padding: 4px 0;
+		padding: 0;
 		box-sizing: border-box;
 	}
 	.select-col {
@@ -2180,6 +2214,10 @@ button.settled-secondary {
 		flex: 0 0 auto;
 	}
 
+	.settings-corner { gap: 3px; bottom: 2px; }
+	.dots-btn { width: 24px; height: 24px; font-size: 12px; }
+	.settings-pop { padding: 6px 8px; gap: 3px; font-size: 0.8em; }
+
 	/* run / settled / replay -- payout + BOOT AGAIN + RIG SELECT */
 	.temp-label,
 	.round-id-line,
@@ -2232,6 +2270,13 @@ button.settled-secondary {
 	}
 	.settled-return-full { display: none; }
 	.settled-return-mini { display: inline; }
+
+	.run-right {
+		max-height: min(30vh, 72px);
+		min-height: 2.4em;
+	}
+	.run-right .col-title { font-size: 0.75em; }
+	.run-right .rung { font-size: 0.75em; gap: 3px; }
 }
 
 /* no keyboard on a touch device -- every SPACE hint is dead copy there

@@ -68,7 +68,6 @@ const es = {
 	settings_sound: 'sonido',
 	settings_scanlines: 'líneas de barrido',
 	settings_flicker: 'parpadeo',
-	btn_fairness: '[EQUIDAD]',
 	a11y_settings: 'ajustes de pantalla y sonido',
 
 	// —— Rig names ——
@@ -175,14 +174,6 @@ const es = {
 		'Un fallo anula todos los premios y jugadas. Se requiere una conexión a internet estable. En caso de desconexión, recarga el juego para terminar cualquier ronda incompleta. El retorno esperado se calcula sobre muchas jugadas. La pantalla del juego no representa ningún dispositivo físico y es solo ilustrativa. Los premios se liquidan según el importe recibido del Remote Game Server y no por eventos dentro del navegador. TM y © 2026 Stake Engine.',
 	rules_social_entertainment: 'Este juego se ofrece solo con fines de entretenimiento.',
 	btn_close: 'CERRAR',
-
-	// —— Fairness ——
-	a11y_fairness: 'detalles de equidad demostrable',
-	fairness_title: '// EQUIDAD DEMOSTRABLE',
-	fairness_rtp: '{percent}% -- cada rig',
-	fairness_last_round: 'ID DE ÚLTIMA RONDA',
-	fairness_body:
-		'cada resultado se extrae de una tabla de resultados precargada y sellada, y se liquida en el servidor por el Stake Engine RGS antes de que se anime la revelación. la revelación no puede cambiar el resultado. cita un id de ronda al operador para auditar cualquier ronda liquidada.',
 
 	// —— Errors ——
 	error_system_fault: '!! FALLO DE SISTEMA {code}',

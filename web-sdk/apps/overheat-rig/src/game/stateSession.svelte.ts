@@ -87,7 +87,7 @@ export const stateSession = $state({
 	heatStreak: 0,
 	/** set for one round when a personal best was just broken */
 	newBest: null as { rigTier: RigId; kind: 'mult' } | null,
-	/** RGS round id of the most recent bet (fairness panel reference) */
+	/** RGS round id of the most recent bet (result-screen reference) */
 	lastRoundID: null as number | string | null,
 	meta: loadMeta(),
 });

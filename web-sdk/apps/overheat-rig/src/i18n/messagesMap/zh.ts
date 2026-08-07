@@ -68,7 +68,6 @@ const zh = {
 	settings_sound: '声音',
 	settings_scanlines: '扫描线',
 	settings_flicker: '闪烁',
-	btn_fairness: '[公平性]',
 	a11y_settings: '显示与声音设置',
 
 	// —— Rig names ——
@@ -175,14 +174,6 @@ const zh = {
 		'故障将使所有赢取和游玩无效。需要稳定的互联网连接。若断线，请重新加载游戏以完成任何未完成的回合。预期返还按多次游玩计算。游戏画面不代表任何实体设备，仅供说明。赢取金额按远程游戏服务器（Remote Game Server）返回的金额结算，而非浏览器内事件。TM and © 2026 Stake Engine.',
 	rules_social_entertainment: '本游戏仅供娱乐。',
 	btn_close: '关闭',
-
-	// —— Fairness ——
-	a11y_fairness: '可验证公平详情',
-	fairness_title: '// 可验证公平',
-	fairness_rtp: '{percent}% -- 每台矿机',
-	fairness_last_round: '上一回合 ID',
-	fairness_body:
-		'每个结果均从密封的预计算结果表抽取，并在揭晓动画之前由 Stake Engine RGS 在服务端结算。揭晓无法改变结果。向运营商提供回合 id 即可审计任何已结算回合。',
 
 	// —— Errors ——
 	error_system_fault: '!! 系统故障 {code}',

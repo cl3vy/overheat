@@ -68,7 +68,6 @@ const ja = {
 	settings_sound: 'サウンド',
 	settings_scanlines: 'スキャンライン',
 	settings_flicker: 'フリッカー',
-	btn_fairness: '[フェアネス]',
 	a11y_settings: '表示とサウンド設定',
 
 	// —— Rig names ——
@@ -175,14 +174,6 @@ const ja = {
 		'不具合が発生した場合、すべての勝利およびプレイは無効となります。安定したインターネット接続が必要です。切断時はゲームを再読み込みし、未完了ラウンドを完了してください。期待還元は多数のプレイから算出されます。ゲーム画面は物理デバイスを再現するものではなく、説明用です。勝利金はブラウザ内イベントではなく、Remote Game Serverから受け取った金額に基づき精算されます。TM and © 2026 Stake Engine.',
 	rules_social_entertainment: '本ゲームは娯楽目的のみで提供されています。',
 	btn_close: '閉じる',
-
-	// —— Fairness ——
-	a11y_fairness: '証明可能な公平性の詳細',
-	fairness_title: '// 証明可能な公平性',
-	fairness_rtp: '{percent}% -- 全リグ',
-	fairness_last_round: '最終ラウンドID',
-	fairness_body:
-		'すべての結果は封印済みの事前計算結果テーブルから抽選され、リビール演出の前にStake Engine RGSがサーバー側で精算する。リビールでは結果は変わらない。精算済みラウンドの監査にはラウンドIDをオペレーターに提示せよ。',
 
 	// —— Errors ——
 	error_system_fault: '!! システム故障 {code}',

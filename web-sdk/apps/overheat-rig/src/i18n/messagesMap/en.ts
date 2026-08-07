@@ -75,7 +75,6 @@ const en = {
 	settings_sound: 'sound',
 	settings_scanlines: 'scanlines',
 	settings_flicker: 'flicker',
-	btn_fairness: '[FAIRNESS]',
 	a11y_settings: 'display and sound settings',
 
 	// —— Rig names ——
@@ -182,14 +181,6 @@ const en = {
 		'Malfunction voids all wins and plays. A consistent internet connection is required. In the event of a disconnection, reload the game to finish any uncompleted rounds. The expected return is calculated over many plays. The game display is not representative of any physical device and is for illustrative purposes only. Winnings are settled according to the amount received from the Remote Game Server and not from events within the web browser. TM and © 2026 Stake Engine.',
 	rules_social_entertainment: 'This game is provided for entertainment purposes only.',
 	btn_close: 'CLOSE',
-
-	// —— Fairness ——
-	a11y_fairness: 'provably fair details',
-	fairness_title: '// PROVABLY FAIR',
-	fairness_rtp: '{percent}% -- every rig',
-	fairness_last_round: 'LAST ROUND ID',
-	fairness_body:
-		'every outcome is drawn from a sealed, precomputed outcome table and settled server-side by the Stake Engine RGS before the reveal animates. the reveal cannot change the result. quote a round id to the operator to audit any settled round.',
 
 	// —— Errors ——
 	error_system_fault: '!! SYSTEM FAULT {code}',
