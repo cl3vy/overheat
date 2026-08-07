@@ -20,9 +20,12 @@ const es = {
 		'esto es una reproducción de una ronda anterior. no se coloca ninguna apuesta real.',
 	replay_row_mode: 'Modo',
 	replay_row_base_bet: 'Apuesta base',
+	replay_row_base_bet_social: 'Jugada base',
 	replay_row_cost_mult: 'Multiplicador de coste',
 	replay_row_total_bet: 'Coste total de apuesta',
+	replay_row_total_bet_social: 'Coste total de jugada',
 	replay_row_payout_mult: 'Multiplicador de pago',
+	replay_row_payout_mult_social: 'Multiplicador de premio',
 	replay_row_total_win: 'Premio total',
 	btn_start_replay: '>> INICIAR REPLAY <<',
 	a11y_replay_summary: 'resumen de apuesta del replay',
@@ -60,11 +63,11 @@ const es = {
 	loop_body_return:
 		'> fija tu objetivo auto de {cashOut} -- el rig sube solo y se detiene ahí automáticamente. {meltdownClause}',
 	loop_melt_keep_checkpoints:
-		'si se funde antes, solo conservas lo que los checkpoints hayan bancado.',
+		'si se funde antes, solo conservas lo que los checkpoints hayan bloqueado.',
 	loop_melt_lose_stake: 'si se funde antes, pierdes la {stake}.',
 	stat_hottest: 'MÁS CALIENTE',
 	stat_hottest_value: '{mult}x',
-	stat_best_bank: 'MEJOR BANCO',
+	stat_best_bank: 'MEJOR BOTÍN',
 	stat_hottest_empty: 'MÁS CALIENTE --',
 	dial_translate: '{cashOut} a {mult}x',
 	a11y_shutdown_temp: 'temperatura de apagado',
@@ -95,7 +98,7 @@ const es = {
 	rig_plasma_name: 'PLASMA',
 
 	// —— Rig flavors ——
-	flavor_idle: 'apenas tibio. básicamente una cuenta de ahorro.',
+	flavor_idle: 'apenas tibio. básicamente en ralentí.',
 	flavor_eco: 'subvoltado. aburrido. paga el alquiler.',
 	flavor_eco_social: 'subvoltado. aburrido. gana el alquiler.',
 	flavor_standard: 'cooler de fábrica, nervios de fábrica.',
@@ -136,10 +139,10 @@ const es = {
 	win_headline_golden: 'EL SILICIO ASCENDIÓ -- RANGO GOLDEN',
 	win_label_golden: 'APAGADO DORADO',
 	win_label_legendary: 'RONDA LEGENDARIA',
-	win_label_massive: 'BANCO MASIVO',
-	win_label_huge: 'BANCO ENORME',
-	win_label_big: 'GRAN BANCO',
-	win_label_clean: 'BANCO LIMPIO',
+	win_label_massive: 'BOTÍN MASIVO',
+	win_label_huge: 'BOTÍN ENORME',
+	win_label_big: 'GRAN BOTÍN',
+	win_label_clean: 'ASEGURADO',
 	win_banner: '>>> {label} <<<',
 	win_tier_note:
 		'solo etiqueta de rango -- la ronda {pays} el apagado de {mult}x alcanzado, no un múltiplo fijo de tu objetivo',
@@ -160,7 +163,7 @@ const es = {
 	rules_title: '// REGLAS DEL JUEGO',
 	rules_how_to_play: 'CÓMO JUGAR',
 	rules_howto_body:
-		'fija tu objetivo auto de {cashOut} y tu {stake}, luego arranca el rig. el rig sube solo y se detiene en tu objetivo automáticamente -- no hay acción que tomar durante la ronda. si se funde antes del objetivo, solo conservas lo que los checkpoints hayan bancado por el camino.',
+		'fija tu objetivo auto de {cashOut} y tu {stake}, luego arranca el rig. el rig sube solo y se detiene en tu objetivo automáticamente -- no hay acción que tomar durante la ronda. si se funde antes del objetivo, solo conservas lo que los checkpoints hayan bloqueado por el camino.',
 	rules_controls:
 		'controles: elige un rig con el slider o los botones - / + (eso fija el objetivo de {cashOut}), ajusta la {stake} con - / + o Min / 1/2 / 2x / Max, luego pulsa ARRANCAR RIG. en escritorio, ESPACIO arranca. los resultados se liquidan solos; ARRANCAR OTRA VEZ repite la misma ronda.',
 	rules_modes: 'MODOS',
@@ -174,7 +177,7 @@ const es = {
 	rules_th_checkpoints: 'checkpoints',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'cada rig tiene una escalera de checkpoints por debajo de su objetivo. al subir, cada checkpoint que cruza banca un {payout} parcial que se conserva aunque el rig se funda después. alcanzar el objetivo {pays} el multiplicador de apagado que el rig alcanzó de verdad por tu {stake} -- en un acierto limpio, eso es el propio objetivo.',
+		'cada rig tiene una escalera de checkpoints por debajo de su objetivo. al subir, cada checkpoint que cruza bloquea un {payout} parcial que se conserva aunque el rig se funda después. alcanzar el objetivo {pays} el multiplicador de apagado que el rig alcanzó de verdad por tu {stake} -- en un acierto limpio, eso es el propio objetivo.',
 	rules_overdrive:
 		'OVERDRIVE: en una parte de las rondas ganadoras el limitador térmico se pasa del objetivo. la ronda igual {pays} el multiplicador que el rig alcanzó al apagar (el número del resultado), no un 1.5x / 3x / 10x fijo del objetivo. esas cifras son rangos de cómo de lejos pasó del objetivo (overdrive / critical / golden) -- solo etiquetas, no la fórmula del pago. el overdrive lo decide el resultado de la ronda; no requiere input y no se puede activar manualmente.',
 	rules_max_win_intro:

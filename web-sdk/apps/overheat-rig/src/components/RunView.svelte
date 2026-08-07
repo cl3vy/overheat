@@ -217,8 +217,8 @@
 	const winTier = $derived(stateGame.winTier ?? 'clean');
 
 	// ------------------------------------------------ win celebration (in-place)
-	// single win presentation: CLEAN BANK / tier label + payout. no amber
-	// LOCKED / BANKED YIELD intermediate before it.
+	// single win presentation: SECURED / tier label + payout. no amber
+	// intermediate before it.
 
 	type Celebration = {
 		label: string;

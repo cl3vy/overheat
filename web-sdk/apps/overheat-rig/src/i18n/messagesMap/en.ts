@@ -27,9 +27,12 @@ const en = {
 		'this is a replay of a previous round. no real bet is placed.',
 	replay_row_mode: 'Mode',
 	replay_row_base_bet: 'Base Bet',
+	replay_row_base_bet_social: 'Base Play',
 	replay_row_cost_mult: 'Cost Multiplier',
 	replay_row_total_bet: 'Total Bet Cost',
+	replay_row_total_bet_social: 'Total Play Cost',
 	replay_row_payout_mult: 'Payout Multiplier',
+	replay_row_payout_mult_social: 'Win Multiplier',
 	replay_row_total_win: 'Total Win',
 	btn_start_replay: '>> START REPLAY <<',
 	a11y_replay_summary: 'replay bet summary',
@@ -67,11 +70,11 @@ const en = {
 	loop_body_return:
 		'> set your auto {cashOut} target -- the rig climbs on its own and stops there automatically. {meltdownClause}',
 	loop_melt_keep_checkpoints:
-		'if it melts down first, you keep only what the checkpoints banked.',
+		'if it melts down first, you keep only what the checkpoints locked.',
 	loop_melt_lose_stake: 'if it melts down first, you lose the {stake}.',
 	stat_hottest: 'HOTTEST',
 	stat_hottest_value: '{mult}x',
-	stat_best_bank: 'BEST BANK',
+	stat_best_bank: 'BEST HAUL',
 	stat_hottest_empty: 'HOTTEST --',
 	dial_translate: '{cashOut} at {mult}x',
 	a11y_shutdown_temp: 'shutdown temperature',
@@ -102,7 +105,7 @@ const en = {
 	rig_plasma_name: 'PLASMA',
 
 	// —— Rig flavors ——
-	flavor_idle: 'barely warm. basically a savings account.',
+	flavor_idle: 'barely warm. basically idling.',
 	flavor_eco: 'undervolted. boring. pays the rent.',
 	flavor_eco_social: 'undervolted. boring. wins the rent.',
 	flavor_standard: 'stock cooler, stock nerves.',
@@ -137,16 +140,16 @@ const en = {
 	result_aimed_for: 'aimed for {mult}x',
 	result_checkpoints_held: '>> CHECKPOINTS HELD: +{amount} secured',
 
-	win_headline_clean: 'SHUTDOWN CLEAN',
+	win_headline_clean: 'CLEAN SHUTDOWN',
 	win_headline_overdrive: 'THERMAL LIMITER SLIPPED -- OVERDRIVE TIER',
 	win_headline_critical: 'BREAKER SLAMMED -- CRITICAL TIER',
 	win_headline_golden: 'THE SILICON ASCENDED -- GOLDEN TIER',
 	win_label_golden: 'GOLDEN SHUTDOWN',
 	win_label_legendary: 'LEGENDARY RUN',
-	win_label_massive: 'MASSIVE BANK',
-	win_label_huge: 'HUGE BANK',
-	win_label_big: 'BIG BANK',
-	win_label_clean: 'CLEAN BANK',
+	win_label_massive: 'MASSIVE HAUL',
+	win_label_huge: 'HUGE HAUL',
+	win_label_big: 'BIG HAUL',
+	win_label_clean: 'SECURED',
 	win_banner: '>>> {label} <<<',
 	win_tier_note:
 		'tier label only -- the round {pays} the {mult}x shutdown reached, not a flat multiple of your target',
@@ -167,7 +170,7 @@ const en = {
 	rules_title: '// GAME RULES',
 	rules_how_to_play: 'HOW TO PLAY',
 	rules_howto_body:
-		'set your auto {cashOut} target and your {stake}, then boot the rig. the rig climbs on its own and stops at your target automatically -- there is no action to take during the round. if it melts down before the target, you keep only what the checkpoints banked along the way.',
+		'set your auto {cashOut} target and your {stake}, then boot the rig. the rig climbs on its own and stops at your target automatically -- there is no action to take during the round. if it melts down before the target, you keep only what the checkpoints locked along the way.',
 	rules_controls:
 		'controls: pick a rig with the slider or the - / + buttons (that sets the {cashOut} target), set the {stake} with - / + or Min / 1/2 / 2x / Max, then press BOOT RIG. on desktop, SPACE boots. results settle automatically; BOOT AGAIN repeats the same round.',
 	rules_modes: 'MODES',
@@ -181,7 +184,7 @@ const en = {
 	rules_th_checkpoints: 'checkpoints',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'each rig has a ladder of checkpoints below its target. as the rig climbs, every checkpoint it crosses banks a partial {payout} that is kept even if the rig melts down afterwards. reaching the target {pays} the shutdown multiplier the rig actually reached times your {stake} -- on a clean hit that is the target itself.',
+		'each rig has a ladder of checkpoints below its target. as the rig climbs, every checkpoint it crosses locks a partial {payout} that is kept even if the rig melts down afterwards. reaching the target {pays} the shutdown multiplier the rig actually reached times your {stake} -- on a clean hit that is the target itself.',
 	rules_overdrive:
 		'OVERDRIVE: on a share of winning rounds the thermal limiter slips past the target. the round still {pays} the multiplier the rig reached at shutdown (the number on the result), not a flat 1.5x / 3x / 10x of the target. those figures are tier bands for how far past the target the run went (overdrive / critical / golden) -- labels only, not the payout formula. overdrive is decided by the round outcome; it needs no input and cannot be triggered manually.',
 	rules_max_win_intro:

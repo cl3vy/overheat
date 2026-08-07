@@ -4,6 +4,11 @@
 
 	import { BOOK_AMOUNT_SCALE } from '../game/constants';
 	import { formatMoney, toBaseUnits } from '../game/money';
+	import {
+		labelReplayBaseBet,
+		labelReplayPayoutMult,
+		labelReplayTotalBet,
+	} from '../game/socialCopy';
 	import { rigName, t } from '../game/t';
 	import type { Bet } from '../game/typesBookEvent';
 
@@ -70,6 +75,14 @@
 	const totalBetCost = $derived(baseBet * costMultiplier);
 	const totalWin = $derived(totalBetCost * payoutMultiplier);
 
+	// Stake template labels; socialCasino swaps bet/payout via socialCopy
+	const rowMode = $derived(t('replay_row_mode'));
+	const rowBaseBet = $derived(labelReplayBaseBet());
+	const rowCostMult = $derived(t('replay_row_cost_mult'));
+	const rowTotalBet = $derived(labelReplayTotalBet());
+	const rowPayoutMult = $derived(labelReplayPayoutMult());
+	const rowTotalWin = $derived(t('replay_row_total_win'));
+
 	const formatMult = (value: number) => {
 		if (!Number.isFinite(value)) return '0x';
 		const rounded = Math.round(value * 1000) / 1000;
@@ -88,27 +101,27 @@
 		<table class="replay-table">
 			<tbody>
 				<tr>
-					<th scope="row">{t('replay_row_mode')}</th>
+					<th scope="row">{rowMode}</th>
 					<td>{modeLabel}</td>
 				</tr>
 				<tr>
-					<th scope="row">{t('replay_row_base_bet')}</th>
+					<th scope="row">{rowBaseBet}</th>
 					<td>{formatMoney(toBaseUnits(baseBet))}</td>
 				</tr>
 				<tr>
-					<th scope="row">{t('replay_row_cost_mult')}</th>
+					<th scope="row">{rowCostMult}</th>
 					<td>{formatMult(costMultiplier)}</td>
 				</tr>
 				<tr>
-					<th scope="row">{t('replay_row_total_bet')}</th>
+					<th scope="row">{rowTotalBet}</th>
 					<td>{formatMoney(toBaseUnits(totalBetCost))}</td>
 				</tr>
 				<tr>
-					<th scope="row">{t('replay_row_payout_mult')}</th>
+					<th scope="row">{rowPayoutMult}</th>
 					<td>{formatMult(payoutMultiplier)}</td>
 				</tr>
 				<tr>
-					<th scope="row">{t('replay_row_total_win')}</th>
+					<th scope="row">{rowTotalWin}</th>
 					<td class="win">{formatMoney(toBaseUnits(totalWin))}</td>
 				</tr>
 			</tbody>

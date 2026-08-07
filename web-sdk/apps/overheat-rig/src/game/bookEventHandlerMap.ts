@@ -191,7 +191,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.phase = 'banked';
 		stopHum();
 		if (!instant) playBankLock();
-		// win fanfare + CLEAN BANK / tier stage render immediately in RunView;
+		// win fanfare + SECURED / tier stage render immediately in RunView;
 		// brief hold so the book sequence doesn't yank past the count-up
 		if (!instant) await waitForTimeout(stateBet.isTurbo ? 200 : 400);
 	},

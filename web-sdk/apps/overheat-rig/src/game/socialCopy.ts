@@ -50,6 +50,18 @@ export const phraseModeCosts = (): string =>
 export const wordPayoutsPlural = (): string =>
 	pick('word_payouts_plural', 'word_payouts_plural_social');
 
+/** Replay summary: Base Bet → Base Play (Stake template; social scrub) */
+export const labelReplayBaseBet = (): string =>
+	pick('replay_row_base_bet', 'replay_row_base_bet_social');
+
+/** Replay summary: Total Bet Cost → Total Play Cost */
+export const labelReplayTotalBet = (): string =>
+	pick('replay_row_total_bet', 'replay_row_total_bet_social');
+
+/** Replay summary: Payout Multiplier → Win Multiplier */
+export const labelReplayPayoutMult = (): string =>
+	pick('replay_row_payout_mult', 'replay_row_payout_mult_social');
+
 /** Rig flavor for the active locale (social eco flavor when needed). */
 export const flavorForRig = (rigId: string): string => {
 	if (rigId === 'eco' && isSocialCasino()) return t('flavor_eco_social');

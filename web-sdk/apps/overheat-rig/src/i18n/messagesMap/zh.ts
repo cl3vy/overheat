@@ -20,9 +20,12 @@ const zh = {
 		'这是上一局的回放。不会进行真实投注。',
 	replay_row_mode: '模式',
 	replay_row_base_bet: '基础投注',
+	replay_row_base_bet_social: '基础游戏额',
 	replay_row_cost_mult: '费用倍数',
 	replay_row_total_bet: '总投注费用',
+	replay_row_total_bet_social: '总游戏费用',
 	replay_row_payout_mult: '派彩倍数',
+	replay_row_payout_mult_social: '胜利倍数',
 	replay_row_total_win: '总赢额',
 	btn_start_replay: '>> 开始回放 <<',
 	a11y_replay_summary: '回放投注摘要',
@@ -60,11 +63,11 @@ const zh = {
 	loop_body_return:
 		'> 设定自动{cashOut}目标 -- 矿机自行爬升并在该处自动停下。{meltdownClause}',
 	loop_melt_keep_checkpoints:
-		'若先熔毁，你只保留检查点已存入的部分。',
+		'若先熔毁，你只保留检查点已锁定的部分。',
 	loop_melt_lose_stake: '若先熔毁，你失去{stake}。',
 	stat_hottest: '最高温',
 	stat_hottest_value: '{mult}x',
-	stat_best_bank: '最佳银行',
+	stat_best_bank: '最佳收获',
 	stat_hottest_empty: '最高温 --',
 	dial_translate: '{cashOut} @ {mult}x',
 	a11y_shutdown_temp: '关断温度',
@@ -95,7 +98,7 @@ const zh = {
 	rig_plasma_name: 'PLASMA',
 
 	// —— Rig flavors ——
-	flavor_idle: '勉强温热。基本是个存折。',
+	flavor_idle: '勉强温热。基本在空转。',
 	flavor_eco: '降压运行。无聊。能付房租。',
 	flavor_eco_social: '降压运行。无聊。能赢房租。',
 	flavor_standard: '原装散热，原装胆量。',
@@ -136,10 +139,10 @@ const zh = {
 	win_headline_golden: '硅片飞升 -- 黄金档',
 	win_label_golden: '黄金关断',
 	win_label_legendary: '传奇回合',
-	win_label_massive: '巨额银行',
-	win_label_huge: '超大银行',
-	win_label_big: '大银行',
-	win_label_clean: '干净银行',
+	win_label_massive: '巨额收获',
+	win_label_huge: '超大收获',
+	win_label_big: '大收获',
+	win_label_clean: '已锁定',
 	win_banner: '>>> {label} <<<',
 	win_tier_note:
 		'仅为档位标签 -- 本局{pays}实际到达的{mult}x关断，而非目标的固定倍数',
@@ -160,7 +163,7 @@ const zh = {
 	rules_title: '// 游戏规则',
 	rules_how_to_play: '如何游玩',
 	rules_howto_body:
-		'设定自动{cashOut}目标和{stake}，然后启动矿机。矿机自行爬升并在目标处自动停下 -- 回合中无需操作。若在目标前熔毁，你只保留沿途检查点已存入的部分。',
+		'设定自动{cashOut}目标和{stake}，然后启动矿机。矿机自行爬升并在目标处自动停下 -- 回合中无需操作。若在目标前熔毁，你只保留沿途检查点已锁定的部分。',
 	rules_controls:
 		'操作：用滑块或 - / + 按钮选择矿机（设定{cashOut}目标），用 - / + 或 Min / 1/2 / 2x / Max 设定{stake}，然后按启动矿机。桌面端按空格启动。结果自动结算；再次启动重复同一回合。',
 	rules_modes: '模式',
@@ -174,7 +177,7 @@ const zh = {
 	rules_th_checkpoints: '检查点',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'每台矿机在目标下方有检查点阶梯。爬升时每越过一个检查点就存入部分{payout}，之后即使熔毁也会保留。到达目标时{pays}矿机实际关断倍率乘以你的{stake} -- 干净命中时即为目标本身。',
+		'每台矿机在目标下方有检查点阶梯。爬升时每越过一个检查点就锁定部分{payout}，之后即使熔毁也会保留。到达目标时{pays}矿机实际关断倍率乘以你的{stake} -- 干净命中时即为目标本身。',
 	rules_overdrive:
 		'OVERDRIVE：部分获胜回合中热限幅器会越过目标。本局仍按关断时实际到达的倍率{pays}（结果上的数字），而不是目标的固定1.5x/3x/10x。那些数字只表示越过目标多远的档位标签（overdrive/critical/golden），不是派彩公式。过驱由回合结果决定；无需输入，也无法手动触发。',
 	rules_max_win_intro:

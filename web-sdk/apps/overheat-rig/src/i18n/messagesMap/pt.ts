@@ -20,9 +20,12 @@ const pt = {
 		'isto é a reprodução de uma rodada anterior. nenhuma aposta real é feita.',
 	replay_row_mode: 'Modo',
 	replay_row_base_bet: 'Aposta base',
+	replay_row_base_bet_social: 'Jogada base',
 	replay_row_cost_mult: 'Multiplicador de custo',
 	replay_row_total_bet: 'Custo total da aposta',
+	replay_row_total_bet_social: 'Custo total da jogada',
 	replay_row_payout_mult: 'Multiplicador de pagamento',
+	replay_row_payout_mult_social: 'Multiplicador de ganho',
 	replay_row_total_win: 'Ganho total',
 	btn_start_replay: '>> INICIAR REPLAY <<',
 	a11y_replay_summary: 'resumo da aposta do replay',
@@ -60,11 +63,11 @@ const pt = {
 	loop_body_return:
 		'> defina seu alvo auto de {cashOut} -- o rig sobe sozinho e para lá automaticamente. {meltdownClause}',
 	loop_melt_keep_checkpoints:
-		'se der meltdown antes, você fica só com o que os checkpoints bancaram.',
+		'se der meltdown antes, você fica só com o que os checkpoints travaram.',
 	loop_melt_lose_stake: 'se der meltdown antes, você perde a {stake}.',
 	stat_hottest: 'MAIS QUENTE',
 	stat_hottest_value: '{mult}x',
-	stat_best_bank: 'MELHOR BANCO',
+	stat_best_bank: 'MELHOR BOTIM',
 	stat_hottest_empty: 'MAIS QUENTE --',
 	dial_translate: '{cashOut} a {mult}x',
 	a11y_shutdown_temp: 'temperatura de desligamento',
@@ -95,7 +98,7 @@ const pt = {
 	rig_plasma_name: 'PLASMA',
 
 	// —— Rig flavors ——
-	flavor_idle: 'quase morno. basicamente uma poupança.',
+	flavor_idle: 'quase morno. basicamente em marcha lenta.',
 	flavor_eco: 'undervoltado. chato. paga o aluguel.',
 	flavor_eco_social: 'undervoltado. chato. ganha o aluguel.',
 	flavor_standard: 'cooler de fábrica, nervos de fábrica.',
@@ -136,10 +139,10 @@ const pt = {
 	win_headline_golden: 'O SILÍCIO ASCENDEU -- FAIXA GOLDEN',
 	win_label_golden: 'DESLIGAMENTO DOURADO',
 	win_label_legendary: 'RODADA LENDÁRIA',
-	win_label_massive: 'BANCO MASSIVO',
-	win_label_huge: 'BANCO ENORME',
-	win_label_big: 'GRANDE BANCO',
-	win_label_clean: 'BANCO LIMPO',
+	win_label_massive: 'BOTIM MASSIVO',
+	win_label_huge: 'BOTIM ENORME',
+	win_label_big: 'GRANDE BOTIM',
+	win_label_clean: 'ASSEGURADO',
 	win_banner: '>>> {label} <<<',
 	win_tier_note:
 		'só rótulo de faixa -- a rodada {pays} o desligamento de {mult}x alcançado, não um múltiplo fixo do seu alvo',
@@ -160,7 +163,7 @@ const pt = {
 	rules_title: '// REGRAS DO JOGO',
 	rules_how_to_play: 'COMO JOGAR',
 	rules_howto_body:
-		'defina seu alvo auto de {cashOut} e sua {stake}, depois ligue o rig. o rig sobe sozinho e para no seu alvo automaticamente -- não há ação a tomar durante a rodada. se der meltdown antes do alvo, você fica só com o que os checkpoints bancaram no caminho.',
+		'defina seu alvo auto de {cashOut} e sua {stake}, depois ligue o rig. o rig sobe sozinho e para no seu alvo automaticamente -- não há ação a tomar durante a rodada. se der meltdown antes do alvo, você fica só com o que os checkpoints travaram no caminho.',
 	rules_controls:
 		'controles: escolha um rig com o slider ou os botões - / + (isso define o alvo de {cashOut}), ajuste a {stake} com - / + ou Min / 1/2 / 2x / Max, depois pressione LIGAR RIG. no desktop, ESPAÇO liga. os resultados liquidam sozinhos; LIGAR DE NOVO repete a mesma rodada.',
 	rules_modes: 'MODOS',
@@ -174,7 +177,7 @@ const pt = {
 	rules_th_checkpoints: 'checkpoints',
 	rules_th_cost: '{costAt} {stake}',
 	rules_payouts_body:
-		'cada rig tem uma escada de checkpoints abaixo do alvo. conforme sobe, cada checkpoint cruzado banca um {payout} parcial que fica mesmo se o rig der meltdown depois. atingir o alvo {pays} o multiplicador de desligamento que o rig realmente alcançou vezes sua {stake} -- num acerto limpo, isso é o próprio alvo.',
+		'cada rig tem uma escada de checkpoints abaixo do alvo. conforme sobe, cada checkpoint cruzado trava um {payout} parcial que fica mesmo se o rig der meltdown depois. atingir o alvo {pays} o multiplicador de desligamento que o rig realmente alcançou vezes sua {stake} -- num acerto limpo, isso é o próprio alvo.',
 	rules_overdrive:
 		'OVERDRIVE: em parte das rodadas vencedoras o limitador térmico passa do alvo. a rodada ainda {pays} o multiplicador que o rig alcançou no desligamento (o número do resultado), não um 1.5x / 3x / 10x fixo do alvo. esses números são faixas de quão longe passou do alvo (overdrive / critical / golden) -- só rótulos, não a fórmula do pagamento. o overdrive é decidido pelo resultado da rodada; não precisa de input e não pode ser ativado manualmente.',
 	rules_max_win_intro:
